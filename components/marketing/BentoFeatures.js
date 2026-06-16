@@ -363,9 +363,6 @@ export default function BentoFeatures() {
                 >
                   <span className="coin-badge-icon">{coin.symbol}</span>
                   <span style={{ fontWeight: 800 }}>{coin.name}</span>
-                  <span className="coin-rate-text" style={{ color: 'var(--text-muted)', fontSize: '0.65rem', marginLeft: 'auto', fontFamily: 'monospace' }}>
-                    ${coin.rate}
-                  </span>
                 </div>
               ))}
             </div>
