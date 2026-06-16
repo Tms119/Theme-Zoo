@@ -86,7 +86,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
         ) : (
           <SignInButton mode="modal">
             <button className="connect-wallet-btn" style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
-              SIGN IN / SIGN UP
+              SIGN IN
             </button>
           </SignInButton>
         )}
