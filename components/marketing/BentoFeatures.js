@@ -341,8 +341,8 @@ export default function BentoFeatures() {
                 We accept top coins like Solana, Ethereum, Bitcoin, and USDT. Prices update automatically.
               </p>
             </div>
-            {/* Visual element: coin badges in a stable 2x2 grid */}
-            <div className="coin-grid" style={{ marginTop: '1rem', width: '100%' }}>
+            {/* Visual element: coin badges in a flexible wrapping container */}
+            <div className="coin-grid" style={{ marginTop: '1rem', width: '100%', display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
               {[
                 { name: 'USDT', symbol: '₮', className: 'coin-badge-usdt', rate: '1.00' },
                 { name: 'SOL', symbol: 'S', className: 'coin-badge-sol', rate: rates.SOL, hasFlash: flash.SOL },
@@ -357,13 +357,15 @@ export default function BentoFeatures() {
                     borderColor: coin.hasFlash ? 'rgba(255, 255, 255, 0.4)' : undefined,
                     transform: coin.hasFlash ? 'scale(1.05)' : undefined,
                     transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-                    width: '100%',
-                    margin: 0
+                    margin: 0,
+                    flex: '1 1 auto', /* Allow badges to grow and wrap nicely */
+                    justifyContent: 'flex-start',
+                    overflow: 'hidden'
                   }}
                 >
-                  <span className="coin-badge-icon">{coin.symbol}</span>
-                  <span style={{ fontWeight: 800 }}>{coin.name}</span>
-                  <span className="coin-rate-text" style={{ color: 'var(--text-muted)', fontSize: '0.65rem', marginLeft: '0.2rem', fontFamily: 'monospace' }}>
+                  <span className="coin-badge-icon" style={{ flexShrink: 0 }}>{coin.symbol}</span>
+                  <span style={{ fontWeight: 800, flexShrink: 0 }}>{coin.name}</span>
+                  <span className="coin-rate-text" style={{ color: 'var(--text-muted)', fontSize: '0.65rem', marginLeft: 'auto', fontFamily: 'monospace' }}>
                     ${coin.rate}
                   </span>
                 </div>
