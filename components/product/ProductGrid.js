@@ -1,0 +1,195 @@
+'use client';
+import { useState, useEffect } from 'react';
+import ProductCard from './ProductCard';
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+
+export default function ProductGrid() {
+  const [filter, setFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  
+  const products = useQuery(api.products.listActive);
+  const dbCategories = useQuery(api.categories.listAll);
+  const itemsPerPage = 6;
+
+  // Reset pagination if user changes filters
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter, searchQuery]);
+  
+  // Intersection Observer for products
+  useEffect(() => {
+    if (!products) return;
+    
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.05, rootMargin: '0px 0px -20px 0px' });
+
+    const elements = document.querySelectorAll('.grid-3 .reveal-on-scroll');
+    elements.forEach(el => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, [products, currentPage, filter, searchQuery]);
+  
+  // Loading state
+  if (products === undefined) {
+    return (
+      <section style={{ padding: '6rem 0 4rem 0' }}>
+        <div className="container">
+          {/* Skeleton Header */}
+          <div style={{ marginBottom: '3.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <div className="skeleton skeleton-text" style={{ height: '2rem', width: '300px' }}></div>
+            <div className="skeleton skeleton-text short"></div>
+            <div className="skeleton" style={{ height: '40px', width: '100%', maxWidth: '440px', borderRadius: '100px' }}></div>
+          </div>
+          
+          {/* Skeleton Grid */}
+          <div className="grid-3">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="skeleton skeleton-card"></div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+  
+  const filteredProducts = products.filter(product => {
+    const matchesCategory = filter === 'all' || product.category?.toLowerCase() === filter;
+    const matchesSearch = product.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          product.short_desc?.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
+
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  const paginatedProducts = filteredProducts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const handlePrev = () => setCurrentPage(p => Math.max(1, p - 1));
+  const handleNext = () => setCurrentPage(p => Math.min(totalPages, p + 1));
+
+  return (
+    <section style={{ padding: '6rem 0 4rem 0' }}>
+      <div className="container">
+        
+        {/* Section Header with Left-Aligned Search and Category Pills (Product Hub Style) */}
+        <div style={{ marginBottom: '3.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div className="section-title-wrapper" style={{ textAlign: 'left', maxWidth: '600px' }}>
+            <h2 className="section-title" style={{ textAlign: 'left' }}>Explore Web Resources</h2>
+            <p className="section-subtitle" style={{ textAlign: 'left', marginTop: '0.5rem' }}>
+              Choose from our curated collection of verified resources. Filter by platform or technology.
+            </p>
+          </div>
+          
+          {/* Search Input Bar */}
+          <div style={{ position: 'relative', maxWidth: '440px', width: '100%' }}>
+            <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}>
+              <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" style={{ opacity: 0.6 }}>
+                <circle cx="11" cy="11" r="8" />
+                <path d="M21 21l-4.3-4.3" />
+              </svg>
+            </span>
+            <input 
+              type="text" 
+              placeholder="Search templates..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '0.8rem 1rem 0.8rem 2.6rem',
+                borderRadius: '100px',
+                background: 'rgba(255, 255, 255, 0.015)',
+                border: '1px solid var(--border-color)',
+                color: 'var(--text-main)',
+                fontSize: '0.85rem',
+                outline: 'none',
+                transition: 'all 0.3s ease',
+              }}
+              className="search-input-field"
+            />
+          </div>
+
+          {/* Filter Toolbar - Category Pills */}
+          <div className="filter-container" style={{ margin: 0, display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            {[{ id: 'all', label: 'All Resources' }, ...(dbCategories || []).map(c => ({ id: c.slug, label: c.name }))].map(pill => (
+              <button 
+                key={pill.id}
+                onClick={() => setFilter(pill.id)} 
+                className={`filter-btn-new ${filter === pill.id ? 'active' : ''}`}
+                style={{
+                  padding: '0.5rem 1.1rem',
+                  borderRadius: '100px',
+                  border: filter === pill.id ? '1px solid var(--primary)' : '1px solid var(--border-color)',
+                  background: filter === pill.id ? 'var(--primary)' : 'rgba(255, 255, 255, 0.015)',
+                  color: filter === pill.id ? '#06060c' : 'var(--text-secondary)',
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                {pill.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        
+        {/* Responsive Grid */}
+        {filteredProducts.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '4rem 0', color: 'var(--text-secondary)' }}>
+            No products found matching your search.
+          </div>
+        ) : (
+          <>
+            <div className="grid-3">
+              {paginatedProducts.map((product, index) => (
+                <div 
+                  key={product._id || product.slug} 
+                  className="reveal-on-scroll" 
+                  style={{ 
+                    transitionDelay: `${index * 0.08}s`
+                  }}
+                >
+                  <ProductCard product={product} />
+                </div>
+              ))}
+            </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '4rem', gap: '1rem' }}>
+                <button 
+                  onClick={handlePrev}
+                  disabled={currentPage === 1}
+                  className="btn"
+                  style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', borderRadius: '12px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', color: currentPage === 1 ? 'var(--text-muted)' : 'var(--text-main)', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
+                >
+                  <ChevronLeft size={16} /> Prev
+                </button>
+                
+                <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                  Page <span style={{ color: 'var(--text-main)' }}>{currentPage}</span> of {totalPages}
+                </div>
+                
+                <button 
+                  onClick={handleNext}
+                  disabled={currentPage === totalPages}
+                  className="btn"
+                  style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', borderRadius: '12px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', color: currentPage === totalPages ? 'var(--text-muted)' : 'var(--text-main)', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
+                >
+                  Next <ChevronRight size={16} />
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </section>
+  );
+}
