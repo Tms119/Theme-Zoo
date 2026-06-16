@@ -84,9 +84,6 @@ export default function AdminLayout({ children }) {
               <Link href="/admin/categories" className="admin-nav-link">
                 <Tags size={16} /> <span>Categories</span>
               </Link>
-              <Link href="/admin/bulk-upload" className="admin-nav-link">
-                <Archive size={16} /> <span>Bulk Upload</span>
-              </Link>
             </nav>
           </div>
 
