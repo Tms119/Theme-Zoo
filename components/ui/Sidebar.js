@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Compass, Layers, ShoppingBag, Settings, LogOut, Tags, X, Shield, FileText, LifeBuoy } from 'lucide-react';
+import { LayoutDashboard, Compass, Layers, ShoppingBag, Settings, LogOut, Tags, X, Shield, FileText, LifeBuoy, Briefcase } from 'lucide-react';
 import { useAuth, useUser, SignInButton, SignOutButton } from '@clerk/nextjs';
 
 export default function Sidebar({ isOpen, setIsOpen }) {
@@ -14,6 +14,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
   const navItems = [
     { name: 'Discover', href: '/', icon: <Compass size={18} /> },
     { name: 'Templates', href: '/templates', icon: <Layers size={18} /> },
+    { name: 'Custom Services', href: '/#custom-order', icon: <Briefcase size={18} /> },
     { name: 'Privacy Policy', href: '/privacy', icon: <Shield size={18} /> },
     { name: 'Terms & Conditions', href: '/terms', icon: <FileText size={18} /> },
   ];

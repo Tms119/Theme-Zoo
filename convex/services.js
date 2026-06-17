@@ -43,11 +43,13 @@ export const createOrder = mutation({
     service_type: v.string(),
     budget: v.string(),
     message: v.string(),
+    tx_hash: v.optional(v.string()),
+    price_usd: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     return await ctx.db.insert("custom_orders", {
       ...args,
-      status: "open",
+      status: args.tx_hash ? "pending" : "open",
     });
   },
 });
@@ -66,5 +68,22 @@ export const updateOrderStatus = mutation({
   },
   handler: async (ctx, args) => {
     await ctx.db.patch(args.id, { status: args.status });
+  },
+});
+
+export const updateOrderPaymentStatus = mutation({
+  args: {
+    tx_hash: v.string(),
+    status: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const order = await ctx.db
+      .query("custom_orders")
+      .filter((q) => q.eq(q.field("tx_hash"), args.tx_hash))
+      .first();
+    
+    if (order) {
+      await ctx.db.patch(order._id, { status: args.status });
+    }
   },
 });

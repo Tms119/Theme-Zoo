@@ -111,6 +111,18 @@ export async function POST(req) {
           status: payment_status,
         });
       }
+    } else if (order_id.startsWith('srv_')) {
+      // It's a service order
+      if (isSuccess) {
+        // We need to update the custom_orders table where tx_hash == order_id
+        await convex.mutation(api.services.updateOrderPaymentStatus, {
+          tx_hash: order_id,
+          status: 'paid',
+        });
+        
+        // Optional: Send a different email here confirming receipt of service payment
+        console.log('Service payment verified!');
+      }
     } else {
       if (isSuccess) {
         await convex.mutation(api.orders.updateStatus, {

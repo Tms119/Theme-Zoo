@@ -1,6 +1,6 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
-import { Palette, Zap, CheckCircle, Send, Sparkles, Clock, Shield, Monitor, Layout, X } from 'lucide-react';
+import { Palette, Zap, CheckCircle, Send, Sparkles, Clock, Shield, Monitor, Layout, X, QrCode } from 'lucide-react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 
@@ -17,16 +17,27 @@ const DEFAULT_CONFIG = {
   design_desc: 'Need a custom logo, banner, or infographics? Our elite design team will craft visually stunning assets for your brand.',
 };
 
+const CRYPTO_OPTIONS = [
+  { id: 'btc', name: 'Bitcoin (BTC)' },
+  { id: 'eth', name: 'Ethereum (ETH)' },
+  { id: 'ltc', name: 'Litecoin (LTC)' },
+  { id: 'usdttrc20', name: 'USDT (TRC20)' },
+  { id: 'sol', name: 'Solana (SOL)' },
+];
+
 export default function Services() {
   const sectionRef = useRef(null);
   const [visible, setVisible] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedService, setSelectedService] = useState('');
+  const [servicePrice, setServicePrice] = useState(0);
+  const [isPaymentMode, setIsPaymentMode] = useState(false);
   
   // Form State
-  const [status, setStatus] = useState('idle'); // idle | loading | success | error
+  const [status, setStatus] = useState('idle'); // idle | loading | success | payment_generated | error
   const [errorMsg, setErrorMsg] = useState('');
-  const [form, setForm] = useState({ name: '', email: '', budget: '', message: '' });
+  const [form, setForm] = useState({ name: '', email: '', budget: '', message: '', coin: 'usdttrc20' });
+  const [paymentInfo, setPaymentInfo] = useState(null);
 
   const configData = useQuery(api.services.getConfig);
   const createOrder = useMutation(api.services.createOrder);
@@ -46,11 +57,14 @@ export default function Services() {
     return () => observer.disconnect();
   }, []);
 
-  const openModal = (serviceType) => {
+  const openModal = (serviceType, price, requiresPayment = false) => {
     setSelectedService(serviceType);
+    setServicePrice(price);
+    setIsPaymentMode(requiresPayment);
     setIsModalOpen(true);
     setStatus('idle');
-    setForm({ name: '', email: '', budget: '', message: '' });
+    setPaymentInfo(null);
+    setForm({ name: '', email: '', budget: requiresPayment ? `$${price}` : '', message: '', coin: 'usdttrc20' });
   };
 
   const handleChange = (e) => setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -63,24 +77,48 @@ export default function Services() {
     }
     setErrorMsg('');
     setStatus('loading');
+
     try {
-      // 1. Save to DB
-      await createOrder({
-        name: form.name,
-        email: form.email,
-        service_type: selectedService,
-        budget: form.budget,
-        message: form.message,
-      });
+      if (isPaymentMode) {
+        // Direct crypto checkout flow
+        const res = await fetch('/api/checkout-service', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: form.name,
+            email: form.email,
+            service_type: selectedService,
+            message: form.message,
+            price_usd: servicePrice,
+            coin: form.coin,
+          }),
+        });
 
-      // 2. Send Email Notification
-      await fetch('/api/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, projectType: selectedService }),
-      });
+        const data = await res.json();
+        
+        if (!res.ok) throw new Error(data.error || 'Failed to generate payment.');
 
-      setStatus('success');
+        setPaymentInfo(data);
+        setStatus('payment_generated');
+
+      } else {
+        // Standard contact form flow
+        await createOrder({
+          name: form.name,
+          email: form.email,
+          service_type: selectedService,
+          budget: form.budget,
+          message: form.message,
+        });
+
+        await fetch('/api/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...form, projectType: selectedService }),
+        });
+
+        setStatus('success');
+      }
     } catch (err) {
       setStatus('error');
       setErrorMsg(err.message || 'Something went wrong.');
@@ -111,7 +149,7 @@ export default function Services() {
             <h3>{config.tier1_name}</h3>
             <div className="price">${config.tier1_price}</div>
             <p>{config.tier1_desc}</p>
-            <button className="btn btn-primary" onClick={() => openModal('Tier 1: ' + config.tier1_name)}>Request Now</button>
+            <button className="btn btn-primary" onClick={() => openModal('Tier 1: ' + config.tier1_name, config.tier1_price, true)}>Buy Now</button>
           </div>
 
           {/* Tier 2 */}
@@ -120,7 +158,7 @@ export default function Services() {
             <h3>{config.tier2_name}</h3>
             <div className="price">${config.tier2_price}</div>
             <p>{config.tier2_desc}</p>
-            <button className="btn btn-primary" onClick={() => openModal('Tier 2: ' + config.tier2_name)}>Request Now</button>
+            <button className="btn btn-primary" onClick={() => openModal('Tier 2: ' + config.tier2_name, config.tier2_price, true)}>Buy Now</button>
           </div>
 
           {/* Tier 3 */}
@@ -129,7 +167,7 @@ export default function Services() {
             <h3>{config.tier3_name}</h3>
             <div className="price">Custom Quote</div>
             <p>{config.tier3_desc}</p>
-            <button className="btn btn-secondary" style={{ width: '100%' }} onClick={() => openModal('Tier 3: ' + config.tier3_name)}>Contact Us</button>
+            <button className="btn btn-secondary" style={{ width: '100%' }} onClick={() => openModal('Tier 3: ' + config.tier3_name, 0, false)}>Contact Us</button>
           </div>
 
         </div>
@@ -143,13 +181,13 @@ export default function Services() {
             <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.8rem', fontWeight: 800, marginBottom: '1rem' }}>{config.design_title}</h3>
             <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>{config.design_desc}</p>
           </div>
-          <button className="btn btn-primary" style={{ padding: '1rem 2rem', fontSize: '1rem' }} onClick={() => openModal('Custom Design')}>
+          <button className="btn btn-primary" style={{ padding: '1rem 2rem', fontSize: '1rem' }} onClick={() => openModal('Custom Design', 0, false)}>
             Hire Our Designers
           </button>
         </div>
       </div>
 
-      {/* Contact Modal */}
+      {/* Modal */}
       {isModalOpen && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
           {/* Backdrop */}
@@ -168,10 +206,38 @@ export default function Services() {
                 <p style={{ color: 'var(--text-secondary)' }}>We've received your request for <strong>{selectedService}</strong> and will be in touch within 24 hours.</p>
                 <button className="btn btn-primary" style={{ marginTop: '2rem', width: '100%' }} onClick={() => setIsModalOpen(false)}>Close</button>
               </div>
+            ) : status === 'payment_generated' && paymentInfo ? (
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ width: '48px', height: '48px', background: 'rgba(124,58,237,0.1)', color: 'var(--primary)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem auto' }}>
+                  <QrCode size={24} />
+                </div>
+                <h3 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '0.5rem' }}>Awaiting Payment</h3>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+                  Send exactly <strong>{paymentInfo.payAmount} {paymentInfo.payCurrency.toUpperCase()}</strong>
+                </p>
+
+                <div style={{ background: '#fff', padding: '1.5rem', borderRadius: '16px', display: 'inline-block', marginBottom: '1.5rem' }}>
+                  <img src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${paymentInfo.payAddress}`} alt="QR Code" width="160" height="160" />
+                </div>
+
+                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '1rem', marginBottom: '1.5rem' }}>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>Deposit Address:</div>
+                  <div style={{ fontSize: '0.9rem', wordBreak: 'break-all', fontWeight: 600, color: 'var(--text-main)' }}>{paymentInfo.payAddress}</div>
+                </div>
+
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                  Once the transaction is confirmed on the blockchain, we will email you to begin your {selectedService} service!
+                </p>
+                <button className="btn btn-secondary" style={{ marginTop: '1.5rem', width: '100%' }} onClick={() => setIsModalOpen(false)}>I've made the payment</button>
+              </div>
             ) : (
               <>
-                <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>Start Your Project</h3>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>Requesting: <strong style={{ color: 'var(--primary)' }}>{selectedService}</strong></p>
+                <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>{isPaymentMode ? 'Checkout Service' : 'Start Your Project'}</h3>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+                  {isPaymentMode ? `Service: ` : `Requesting: `} 
+                  <strong style={{ color: 'var(--primary)' }}>{selectedService}</strong>
+                  {isPaymentMode && <span> - <strong>${servicePrice}</strong></span>}
+                </p>
 
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
@@ -185,26 +251,39 @@ export default function Services() {
                     </div>
                   </div>
                   
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>Budget Range (Optional)</label>
-                    <select name="budget" value={form.budget} onChange={handleChange} style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', color: '#fff', outline: 'none' }}>
-                      <option value="" disabled>Select a budget...</option>
-                      <option value="<$200">Under $200</option>
-                      <option value="$200-$500">$200 - $500</option>
-                      <option value="$500-$1000">$500 - $1,000</option>
-                      <option value="$1000+">$1,000+</option>
-                    </select>
-                  </div>
+                  {!isPaymentMode && (
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>Budget Range (Optional)</label>
+                      <select name="budget" value={form.budget} onChange={handleChange} style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', color: '#fff', outline: 'none', appearance: 'none' }}>
+                        <option value="" disabled>Select a budget...</option>
+                        <option value="<$200">Under $200</option>
+                        <option value="$200-$500">$200 - $500</option>
+                        <option value="$500-$1000">$500 - $1,000</option>
+                        <option value="$1000+">$1,000+</option>
+                      </select>
+                    </div>
+                  )}
+
+                  {isPaymentMode && (
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>Select Crypto Currency</label>
+                      <select name="coin" value={form.coin} onChange={handleChange} style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', color: '#fff', outline: 'none', appearance: 'none' }}>
+                        {CRYPTO_OPTIONS.map(opt => (
+                          <option key={opt.id} value={opt.id} style={{ background: '#0a0a0f', color: '#fff' }}>{opt.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
 
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>Project Details</label>
+                    <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>{isPaymentMode ? 'Project Details / What do you need cloned?' : 'Project Details'}</label>
                     <textarea name="message" value={form.message} onChange={handleChange} required rows={4} placeholder="Tell us about your requirements..." style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', color: '#fff', outline: 'none', resize: 'vertical' }} />
                   </div>
 
                   {errorMsg && <div style={{ color: '#ef4444', fontSize: '0.85rem' }}>{errorMsg}</div>}
 
                   <button type="submit" disabled={status === 'loading'} className="btn btn-primary" style={{ width: '100%', marginTop: '0.5rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}>
-                    {status === 'loading' ? 'Sending...' : <><Send size={16} /> Submit Request</>}
+                    {status === 'loading' ? (isPaymentMode ? 'Generating Invoice...' : 'Sending...') : (isPaymentMode ? `Pay $${servicePrice} Now` : <><Send size={16} /> Submit Request</>)}
                   </button>
                 </form>
               </>

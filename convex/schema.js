@@ -100,7 +100,9 @@ export default defineSchema({
     service_type: v.string(), // "Tier 1", "Tier 2", "Tier 3", "Design"
     budget: v.string(),
     message: v.string(),
-    status: v.string(), // "open", "contacted", "closed"
+    status: v.string(), // "pending", "paid", "open", "contacted", "closed"
+    tx_hash: v.optional(v.string()), // For direct payments
+    price_usd: v.optional(v.number()),
   })
     .index("by_email", ["email"])
     .index("by_status", ["status"]),

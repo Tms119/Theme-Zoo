@@ -43,3 +43,24 @@ export const incrementUse = mutation({
     }
   },
 });
+
+export const listAll = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db.query("promo_codes").order("desc").collect();
+  },
+});
+
+export const toggleStatus = mutation({
+  args: { id: v.id("promo_codes"), isActive: v.boolean() },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.id, { isActive: args.isActive });
+  },
+});
+
+export const deleteCode = mutation({
+  args: { id: v.id("promo_codes") },
+  handler: async (ctx, args) => {
+    await ctx.db.delete(args.id);
+  },
+});
