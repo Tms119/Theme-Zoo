@@ -28,11 +28,19 @@ const TIME_AGO = [
   "just now", "1 minute ago", "2 minutes ago", "5 minutes ago", "12 minutes ago", "18 minutes ago", "34 minutes ago", "about an hour ago"
 ];
 
+import { usePathname } from 'next/navigation';
+
 export default function SocialProof() {
   const [isVisible, setIsVisible] = useState(false);
   const [currentNotification, setCurrentNotification] = useState(null);
+  const pathname = usePathname();
 
   const activeProducts = useQuery(api.products.listActive) || [];
+
+  // Hide on admin pages
+  if (pathname && pathname.startsWith('/admin')) {
+    return null;
+  }
 
   useEffect(() => {
     if (activeProducts.length === 0) return;
