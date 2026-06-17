@@ -21,6 +21,14 @@ export const listByStatus = query({
   },
 });
 
+// ── Get order by id ──────────────────────────────────────────────
+export const getById = query({
+  args: { id: v.id("orders") },
+  handler: async (ctx, { id }) => {
+    return await ctx.db.get(id);
+  },
+});
+
 // ── List by user id ───────────────────────────────────────────────
 export const listByUser = query({
   args: { buyer_id: v.string() },
