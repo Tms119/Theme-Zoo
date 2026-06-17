@@ -34,6 +34,9 @@ export async function POST(req) {
     let pc = null;
     let totalUsdPrice = cartTotalBase;
 
+    // 2a. First, fetch any active volume campaign
+    const activeCampaign = await convex.query(api.marketing.getActiveVolumeCampaign);
+
     if (promoCode) {
       pc = await convex.query(api.promo_codes.getByCode, { code: promoCode });
       if (pc && pc.isActive) {
@@ -46,6 +49,13 @@ export async function POST(req) {
       } else {
         pc = null; // invalid code
       }
+    } else if (activeCampaign && items.length >= activeCampaign.minItems) {
+      // 2b. If no promo code is used, apply volume campaign if threshold met
+      if (activeCampaign.discountType === 'percentage') {
+        totalUsdPrice = cartTotalBase * (1 - activeCampaign.discountValue / 100);
+      } else if (activeCampaign.discountType === 'fixed') {
+        totalUsdPrice = Math.max(0, cartTotalBase - activeCampaign.discountValue);
+      }
     }
 
     const cartId = `cart_${Math.random().toString(36).substr(2, 9)}_${Date.now()}`;
@@ -55,17 +65,24 @@ export async function POST(req) {
       let finalItemPrice = product.price_usd;
       
       if (pc && cartTotalBase > 0) {
-        // Distribute discount
+        // Distribute manual promo discount
+        const itemWeight = product.price_usd / cartTotalBase;
+        const discountAmount = cartTotalBase - totalUsdPrice;
+        finalItemPrice = Math.max(0, product.price_usd - (discountAmount * itemWeight));
+      } else if (!pc && activeCampaign && items.length >= activeCampaign.minItems && cartTotalBase > 0) {
+        // Distribute volume campaign discount
         const itemWeight = product.price_usd / cartTotalBase;
         const discountAmount = cartTotalBase - totalUsdPrice;
         finalItemPrice = Math.max(0, product.price_usd - (discountAmount * itemWeight));
       }
 
+      const isDiscounted = pc || (!pc && activeCampaign && items.length >= activeCampaign.minItems);
+
       await convex.mutation(api.orders.create, {
         product_id: product._id,
         product_name: product.name,
         price_usd: finalItemPrice,
-        original_price: pc ? product.price_usd : undefined,
+        original_price: isDiscounted ? product.price_usd : undefined,
         promo_code: pc ? pc.code : undefined,
         buyer_email: buyerEmail,
         buyer_name: buyerName || '',
@@ -86,17 +103,22 @@ export async function POST(req) {
       });
       
       const orders = await convex.query(api.orders.listByTxHash, { tx_hash: `promo_${cartId}` });
-      await sendInvoiceEmail(orders, baseUrl);
+      
+      console.log(`DEBUG CHECKOUT: Found ${orders.length} orders for tx_hash promo_${cartId}`);
+      
+      const emailResponse = await sendInvoiceEmail(orders, baseUrl);
       
       return NextResponse.json({
         cartId,
-        isFree: true,
         paymentId: `promo_${cartId}`,
         payAddress: '',
         payAmount: 0,
         payCurrency: coin,
         usdPrice: 0,
-      });
+        isFree: true,
+        debug_orders: orders.length,
+        resend_response: emailResponse
+      }, { status: 200 });
     }
 
     // 4. Call NOWPayments API to generate crypto invoice for the total cart amount

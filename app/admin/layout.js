@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ShieldAlert, LayoutDashboard, FilePlus, LogOut, ArrowLeft, KeySquare, Archive, Tags, Package, Tag, LifeBuoy, Briefcase } from 'lucide-react';
+import { ShieldAlert, LayoutDashboard, FilePlus, LogOut, ArrowLeft, KeySquare, Archive, Tags, Package, Tag, LifeBuoy, Briefcase, Megaphone } from 'lucide-react';
 
 import { useUser, SignInButton } from '@clerk/nextjs';
 
@@ -14,6 +14,7 @@ export default function AdminLayout({ children }) {
     { href: '/admin/products', label: 'Products', icon: <Package size={16} /> },
     { href: '/admin/categories', label: 'Categories', icon: <Tags size={16} /> },
     { href: '/admin/promo', label: 'Promo Codes', icon: <Tag size={16} /> },
+    { href: '/admin/marketing', label: 'Marketing', icon: <Megaphone size={16} /> },
     { href: '/admin/support', label: 'Support Tickets', icon: <LifeBuoy size={16} /> },
     { href: '/admin/services', label: 'Custom Services', icon: <Briefcase size={16} /> },
   ];

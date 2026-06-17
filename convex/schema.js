@@ -110,7 +110,26 @@ export default defineSchema({
 
   // ── Categories ──────────────────────────────────────────────────
   categories: defineTable({
-    name: v.string(), // e.g. "WordPress", "Web Templates"
-    slug: v.string(), // e.g. "wordpress", "web-templates"
-  }).index("by_slug", ["slug"]),
+    name: v.string(), // "Dashboard", "E-commerce", "Landing Page", "Admin"
+    description: v.optional(v.string()),
+    slug: v.string(),
+  })
+    .index("by_slug", ["slug"]),
+    
+  // ── Marketing & Campaigns ──────────────────────────────────────────────────
+  globalSettings: defineTable({
+    key: v.string(), // e.g. "announcement_banner"
+    value: v.any(),
+  }).index("by_key", ["key"]),
+
+  campaigns: defineTable({
+    name: v.string(),
+    type: v.string(), // "volume_discount" (e.g., Buy X for Y)
+    isActive: v.boolean(),
+    minItems: v.number(), // The "Buy X" part
+    discountType: v.string(), // "percentage" or "fixed"
+    discountValue: v.number(), // The "Y" part
+    startDate: v.optional(v.number()),
+    endDate: v.optional(v.number()),
+  }).index("by_active", ["isActive"]),
 });

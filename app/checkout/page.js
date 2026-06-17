@@ -52,10 +52,10 @@ export default function CheckoutCartPage() {
   const [timer, setTimer] = useState(1800); // 30 mins
   
   // Real-time order tracking via Convex
-  // Real-time order tracking via Convex
   const liveOrders = useQuery(api.orders.listByTxHash, cartId ? { tx_hash: cartId } : 'skip');
   
   const promoData = useQuery(api.promo_codes.getByCode, codeToCheck ? { code: codeToCheck } : 'skip');
+  const activeCampaign = useQuery(api.marketing.getActiveVolumeCampaign);
 
   useEffect(() => {
     if (codeToCheck) {
@@ -187,13 +187,25 @@ export default function CheckoutCartPage() {
   
   // Calculate discounted total
   let finalTotalUsd = totalCartUsd;
+  let activeDiscountLabel = null;
+
+  // Manual Promo Codes completely override Volume Campaigns (NO STACKING)
   if (appliedPromo) {
     if (appliedPromo.discountType === 'percentage') {
       finalTotalUsd = totalCartUsd * (1 - appliedPromo.discountValue / 100);
     } else if (appliedPromo.discountType === 'fixed') {
       finalTotalUsd = Math.max(0, totalCartUsd - appliedPromo.discountValue);
     }
+    activeDiscountLabel = `${appliedPromo.discountType === 'percentage' ? `${appliedPromo.discountValue}% OFF` : `$${appliedPromo.discountValue} OFF`} PROMO`;
+  } else if (activeCampaign && items.length >= activeCampaign.minItems) {
+    if (activeCampaign.discountType === 'percentage') {
+      finalTotalUsd = totalCartUsd * (1 - activeCampaign.discountValue / 100);
+    } else if (activeCampaign.discountType === 'fixed') {
+      finalTotalUsd = Math.max(0, totalCartUsd - activeCampaign.discountValue);
+    }
+    activeDiscountLabel = `${activeCampaign.name} Applied`;
   }
+  
   const isFree = finalTotalUsd <= 0;
 
   if (!isLoaded) {
@@ -226,10 +238,10 @@ export default function CheckoutCartPage() {
                   <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
                     Purchasing <span style={{ color: 'var(--text-main)', fontWeight: 600 }}>{items.length} items</span> for a total of <span style={{ color: 'var(--text-main)', fontWeight: 600 }}>${totalCartUsd.toFixed(2)}</span>
                   </p>
-                  {appliedPromo && (
+                  {activeDiscountLabel && (
                     <div style={{ marginTop: '0.5rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(16, 189, 129, 0.1)', color: 'var(--accent-emerald)', padding: '0.3rem 0.8rem', borderRadius: '12px', fontSize: '0.85rem', fontWeight: 600 }}>
                       <Tag size={14} /> 
-                      {appliedPromo.discountType === 'percentage' ? `${appliedPromo.discountValue}% OFF` : `$${appliedPromo.discountValue} OFF`} APPLIED
+                      {activeDiscountLabel}
                       <span style={{ marginLeft: '0.5rem', color: 'var(--text-main)' }}>Final Total: ${finalTotalUsd.toFixed(2)}</span>
                     </div>
                   )}
