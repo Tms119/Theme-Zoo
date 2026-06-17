@@ -1,5 +1,6 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { requireAdmin } from "./auth";
 
 // ── Get all categories ─────────────────────────────────────────
 export const listAll = query({
@@ -16,6 +17,7 @@ export const create = mutation({
     slug: v.string(),
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx);
     // Check if category exists
     const existing = await ctx.db
       .query("categories")
@@ -34,6 +36,7 @@ export const create = mutation({
 export const remove = mutation({
   args: { id: v.id("categories") },
   handler: async (ctx, { id }) => {
+    await requireAdmin(ctx);
     await ctx.db.delete(id);
   },
 });
@@ -42,6 +45,7 @@ export const remove = mutation({
 export const seed = mutation({
   args: {},
   handler: async (ctx) => {
+    await requireAdmin(ctx);
     const existing = await ctx.db.query("categories").collect();
     if (existing.length > 0) return { message: "Categories already seeded" };
 

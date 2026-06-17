@@ -1,6 +1,6 @@
-import { query } from "./_generated/server";
-import { mutation } from "./_generated/server";
+import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { requireAdmin } from "./auth";
 
 // ── Get all active products (for store) ─────────────────────────
 export const listActive = query({
@@ -18,6 +18,7 @@ export const listActive = query({
 export const listAll = query({
   args: {},
   handler: async (ctx) => {
+    await requireAdmin(ctx);
     return await ctx.db.query("products").order("asc").collect();
   },
 });
@@ -69,6 +70,7 @@ export const create = mutation({
     sort_order:  v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx);
     return await ctx.db.insert("products", args);
   },
 });
@@ -95,6 +97,7 @@ export const update = mutation({
     sort_order:  v.optional(v.number()),
   },
   handler: async (ctx, { id, ...fields }) => {
+    await requireAdmin(ctx);
     await ctx.db.patch(id, fields);
   },
 });
@@ -103,6 +106,7 @@ export const update = mutation({
 export const toggleActive = mutation({
   args: { id: v.id("products"), is_active: v.boolean() },
   handler: async (ctx, { id, is_active }) => {
+    await requireAdmin(ctx);
     await ctx.db.patch(id, { is_active });
   },
 });
@@ -111,6 +115,7 @@ export const toggleActive = mutation({
 export const remove = mutation({
   args: { id: v.id("products") },
   handler: async (ctx, { id }) => {
+    await requireAdmin(ctx);
     const existing = await ctx.db.get(id);
     if (existing) {
       await ctx.db.delete(id);
@@ -122,6 +127,7 @@ export const remove = mutation({
 export const seed = mutation({
   args: {},
   handler: async (ctx) => {
+    await requireAdmin(ctx);
     const existing = await ctx.db.query("products").collect();
     if (existing.length > 0) return { message: "Already seeded" };
 

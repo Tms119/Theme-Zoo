@@ -45,7 +45,7 @@ export async function POST(req) {
         } else if (pc.discountType === 'fixed') {
           totalUsdPrice = Math.max(0, cartTotalBase - pc.discountValue);
         }
-        await convex.mutation(api.promo_codes.incrementUse, { codeId: pc._id });
+        // Moved incrementUse to webhook
       } else {
         pc = null; // invalid code
       }

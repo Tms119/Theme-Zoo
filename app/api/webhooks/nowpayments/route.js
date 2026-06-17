@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
-import crypto from 'crypto';
 import { ConvexHttpClient } from 'convex/browser';
+import crypto from 'crypto';
 import { api } from '@/convex/_generated/api';
-import { sendInvoiceEmail } from '@/lib/email';
+import { sendInvoiceEmail, sendServiceConfirmationEmail } from '@/lib/email';
 
 const convex = new ConvexHttpClient((process.env.NEXT_PUBLIC_CONVEX_URL || '').replace('.site', '.cloud'));
 const IPN_SECRET = process.env.NOWPAYMENTS_IPN_SECRET;
@@ -69,6 +69,13 @@ export async function POST(req) {
           } catch (e) {
             console.error('Webhook: Email failed:', e);
           }
+          
+          // Increment promo code if used
+          const promoCodeStr = emailOrders[0].promo_code;
+          if (promoCodeStr) {
+            const pc = await convex.query(api.promo_codes.getByCode, { code: promoCodeStr });
+            if (pc) await convex.mutation(api.promo_codes.incrementUse, { codeId: pc._id });
+          }
         }
         
       } else if (isFailed) {
@@ -86,8 +93,16 @@ export async function POST(req) {
           status: 'paid',
         });
         
-        // Optional: Send a different email here confirming receipt of service payment
-        console.log('Service payment verified!');
+        // Fetch the service order to get details for the email
+        const serviceOrder = await convex.query(api.services.getOrderByTx, { tx_hash: order_id });
+        if (serviceOrder) {
+          try {
+            await sendServiceConfirmationEmail(serviceOrder, baseUrl);
+            console.log('Webhook: Sent service confirmation email.');
+          } catch (e) {
+            console.error('Webhook: Service email failed:', e);
+          }
+        }
       }
     } else {
       if (isSuccess) {
@@ -112,6 +127,11 @@ export async function POST(req) {
             console.log(`Webhook: Sent invoice email for single paid item.`);
           } catch (e) {
             console.error('Webhook: Email failed:', e);
+          }
+          
+          if (order.promo_code) {
+            const pc = await convex.query(api.promo_codes.getByCode, { code: order.promo_code });
+            if (pc) await convex.mutation(api.promo_codes.incrementUse, { codeId: pc._id });
           }
         }
       } else if (isFailed) {

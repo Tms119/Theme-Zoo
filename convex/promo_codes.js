@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { requireAdmin } from "./auth";
 
 // Create a promo code
 export const create = mutation({
@@ -10,6 +11,7 @@ export const create = mutation({
     isActive: v.boolean(),
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx);
     return await ctx.db.insert("promo_codes", {
       code: args.code.toUpperCase(),
       discountType: args.discountType,
@@ -54,6 +56,7 @@ export const listAll = query({
 export const toggleStatus = mutation({
   args: { id: v.id("promo_codes"), isActive: v.boolean() },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx);
     await ctx.db.patch(args.id, { isActive: args.isActive });
   },
 });
@@ -61,6 +64,7 @@ export const toggleStatus = mutation({
 export const deleteCode = mutation({
   args: { id: v.id("promo_codes") },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx);
     await ctx.db.delete(args.id);
   },
 });

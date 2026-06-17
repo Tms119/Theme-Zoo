@@ -53,7 +53,8 @@ export default function AdminLayout({ children }) {
   }
 
   const userEmail = user?.primaryEmailAddress?.emailAddress;
-  const isAuthorized = userEmail === adminEmail || userEmail === 'htmlocean@gmail.com';
+  const adminEmails = ['mohammadsayemweb@gmail.com', 'htmlocean@gmail.com'];
+  const isAuthorized = userEmail && adminEmails.includes(userEmail);
 
   if (!isAuthorized) {
     return (

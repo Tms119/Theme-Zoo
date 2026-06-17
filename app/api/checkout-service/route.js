@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { ConvexHttpClient } from 'convex/browser';
 import { api } from '@/convex/_generated/api';
+import { sendServiceConfirmationEmail } from '@/lib/email';
 
 const convex = new ConvexHttpClient((process.env.NEXT_PUBLIC_CONVEX_URL || '').replace('.site', '.cloud'));
 
@@ -27,7 +28,7 @@ export async function POST(req) {
         } else if (pc.discountType === 'fixed') {
           finalUsdPrice = Math.max(0, price_usd - pc.discountValue);
         }
-        await convex.mutation(api.promo_codes.incrementUse, { codeId: pc._id });
+        // Moved incrementUse to webhook
       }
     }
 
@@ -51,6 +52,11 @@ export async function POST(req) {
         tx_hash: freeOrderId,
         status: 'paid',
       });
+      
+      const serviceOrder = await convex.query(api.services.getOrderByTx, { tx_hash: freeOrderId });
+      if (serviceOrder) {
+        await sendServiceConfirmationEmail(serviceOrder, baseUrl);
+      }
 
       return NextResponse.json({
         orderId: freeOrderId,

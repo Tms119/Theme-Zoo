@@ -56,9 +56,11 @@ export default function AdminSupport() {
                     <td style={{ padding: '1.5rem', verticalAlign: 'top' }}>
                       <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>{contact.name}</div>
                       <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.25rem', marginTop: '0.25rem' }}>
-                        {contact.email} 
-                        <a href={`mailto:${contact.email}`} style={{ color: 'var(--primary)', marginLeft: '0.5rem' }}><Mail size={12} /></a>
+                        {contact.email}
                       </div>
+                      <a href={`mailto:${contact.email}?subject=Re: Your Custom Website Enquiry`} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(139,92,246,0.1)', color: 'var(--primary)', padding: '0.4rem 0.8rem', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600, marginTop: '0.75rem', textDecoration: 'none' }}>
+                        <Mail size={14} /> Reply
+                      </a>
                     </td>
                     <td style={{ padding: '1.5rem', verticalAlign: 'top' }}>
                       {contact.project_type ? (

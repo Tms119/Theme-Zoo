@@ -1,5 +1,6 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { requireAdmin } from "./auth";
 
 // ── Global Settings (Banner) ──────────────────────────────────────
 
@@ -16,6 +17,7 @@ export const getGlobalSetting = query({
 export const setGlobalSetting = mutation({
   args: { key: v.string(), value: v.any() },
   handler: async (ctx, { key, value }) => {
+    await requireAdmin(ctx);
     const existing = await ctx.db
       .query("globalSettings")
       .withIndex("by_key", (q) => q.eq("key", key))
@@ -60,6 +62,7 @@ export const createCampaign = mutation({
     discountValue: v.number(),
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx);
     // If making active, deactivate others of the same type to prevent stacking conflicts
     if (args.isActive) {
       const activeOthers = await ctx.db
@@ -83,6 +86,7 @@ export const updateCampaign = mutation({
     isActive: v.boolean(),
   },
   handler: async (ctx, { id, isActive }) => {
+    await requireAdmin(ctx);
     const target = await ctx.db.get(id);
     if (!target) throw new Error("Campaign not found");
 
@@ -107,6 +111,7 @@ export const updateCampaign = mutation({
 export const deleteCampaign = mutation({
   args: { id: v.id("campaigns") },
   handler: async (ctx, { id }) => {
+    await requireAdmin(ctx);
     await ctx.db.delete(id);
   },
 });
