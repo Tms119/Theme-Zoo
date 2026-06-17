@@ -29,6 +29,18 @@ export const getById = query({
   },
 });
 
+// ── List by user email ───────────────────────────────────────────────
+export const listByEmail = query({
+  args: { email: v.string() },
+  handler: async (ctx, { email }) => {
+    return await ctx.db
+      .query("orders")
+      .withIndex("by_buyer_email", (q) => q.eq("buyer_email", email))
+      .order("desc")
+      .collect();
+  },
+});
+
 // ── List by user id ───────────────────────────────────────────────
 export const listByUser = query({
   args: { buyer_id: v.string() },
@@ -109,13 +121,13 @@ export const listByTxHash = query({
 
 // ── Get Download URL for Purchased Product ───────────────────────
 export const getDownloadUrl = query({
-  args: { order_id: v.id("orders"), buyer_id: v.string() },
-  handler: async (ctx, { order_id, buyer_id }) => {
+  args: { order_id: v.id("orders"), email: v.string() },
+  handler: async (ctx, { order_id, email }) => {
     const order = await ctx.db.get(order_id);
     if (!order) throw new Error("Order not found");
     
     // Verify ownership
-    if (order.buyer_id !== buyer_id) {
+    if (order.buyer_email !== email) {
       throw new Error("Unauthorized to access this download");
     }
 

@@ -59,13 +59,13 @@ export default function Dashboard() {
           <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem' }}>
             <button 
               onClick={() => setActiveTab('purchases')}
-              className={`dashboard-tab ${activeTab === 'purchases' ? 'active' : ''}`}
+              style={{ background: activeTab === 'purchases' ? 'var(--primary)' : 'transparent', color: activeTab === 'purchases' ? '#fff' : 'var(--text-secondary)', padding: '0.6rem 1.25rem', borderRadius: '8px', fontWeight: 600, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', transition: 'all 0.2s' }}
             >
               <PackageOpen size={18} /> Purchases
             </button>
             <button 
               onClick={() => setActiveTab('wishlist')}
-              className={`dashboard-tab ${activeTab === 'wishlist' ? 'active' : ''}`}
+              style={{ background: activeTab === 'wishlist' ? 'var(--primary)' : 'transparent', color: activeTab === 'wishlist' ? '#fff' : 'var(--text-secondary)', padding: '0.6rem 1.25rem', borderRadius: '8px', fontWeight: 600, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', transition: 'all 0.2s' }}
             >
               <Heart size={18} /> Wishlist
             </button>
