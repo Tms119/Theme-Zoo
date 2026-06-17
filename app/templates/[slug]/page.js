@@ -5,7 +5,6 @@ import ImageGallery from '@/components/product/ImageGallery';
 import { ArrowLeft, Check, Sparkles, FileCode, Cpu, ShieldCheck, Tag, ShoppingCart, FileText, Layers } from 'lucide-react';
 import useCart from '@/store/useCart';
 import toast from 'react-hot-toast';
-import ReactMarkdown from 'react-markdown';
 import ProductCard from '@/components/product/ProductCard';
 
 import { useQuery } from "convex/react";
@@ -91,8 +90,8 @@ export default function TemplateDetail() {
                 <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.6rem', fontWeight: 800, marginBottom: '0.85rem', letterSpacing: '-0.5px' }}>
                   Overview
                 </h2>
-                <div style={{ color: 'var(--text-secondary)', lineHeight: '1.7', fontSize: '1rem', marginBottom: '2rem' }} className="markdown-body">
-                  <ReactMarkdown>{product.desc}</ReactMarkdown>
+                <div style={{ color: 'var(--text-secondary)', lineHeight: '1.7', fontSize: '1rem', marginBottom: '2rem', whiteSpace: 'pre-wrap' }}>
+                  {product.desc}
                 </div>
 
                 <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', fontWeight: 700, marginBottom: '1rem' }}>
