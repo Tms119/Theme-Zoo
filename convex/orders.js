@@ -135,3 +135,30 @@ export const getDownloadUrl = query({
     throw new Error("No file associated with this product");
   },
 });
+
+// ── Get Download URL via Token (Guest Checkout) ──────────────────
+export const getGuestDownloadUrl = mutation({
+  args: { order_id: v.id("orders") },
+  handler: async (ctx, { order_id }) => {
+    const order = await ctx.db.get(order_id);
+    if (!order) throw new Error("Order not found");
+    
+    // Verify payment status
+    if (order.status !== "paid") {
+      throw new Error("Order is not paid. Cannot access download.");
+    }
+
+    const product = await ctx.db.get(order.product_id);
+    if (!product) throw new Error("Product no longer exists");
+
+    if (product.file_url) {
+      return product.file_url;
+    }
+
+    if (product.file_id) {
+      return await ctx.storage.getUrl(product.file_id);
+    }
+
+    throw new Error("No file associated with this product");
+  },
+});
