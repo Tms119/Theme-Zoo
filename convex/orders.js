@@ -56,14 +56,16 @@ export const listByUser = query({
 // ── Create order ─────────────────────────────────────────────────
 export const create = mutation({
   args: {
-    product_id:   v.id("products"),
-    product_name: v.string(),
-    price_usd:    v.number(),
-    buyer_email:  v.string(),
-    buyer_name:   v.string(),
-    buyer_id:     v.optional(v.string()),
-    tx_hash:      v.optional(v.string()),
-    status:       v.string(),
+    product_id:     v.id("products"),
+    product_name:   v.string(),
+    price_usd:      v.number(),
+    original_price: v.optional(v.number()),
+    promo_code:     v.optional(v.string()),
+    buyer_email:    v.string(),
+    buyer_name:     v.string(),
+    buyer_id:       v.optional(v.string()),
+    tx_hash:        v.optional(v.string()),
+    status:         v.string(),
   },
   handler: async (ctx, args) => {
     return await ctx.db.insert("orders", args);

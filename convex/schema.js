@@ -27,11 +27,12 @@ export default defineSchema({
     .index("by_category", ["category"])
     .index("by_active",   ["is_active"]),
 
-  // ── Orders ──────────────────────────────────────────────────────
   orders: defineTable({
     product_id:   v.id("products"),
     product_name: v.string(),
-    price_usd:    v.number(),
+    price_usd:    v.number(), // The final price they paid
+    original_price: v.optional(v.number()), // Price before discount
+    promo_code:   v.optional(v.string()),
     buyer_email:  v.string(),
     buyer_name:   v.string(),
     buyer_id:     v.optional(v.string()),  // clerk user id

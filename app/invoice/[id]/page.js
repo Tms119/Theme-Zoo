@@ -90,6 +90,18 @@ export default function InvoicePage() {
 
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
           <div style={{ width: '300px' }}>
+            {order.original_price && order.promo_code && (
+              <>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', color: '#4b5563', fontSize: '0.9rem' }}>
+                  <span>Original Price:</span>
+                  <span style={{ textDecoration: 'line-through' }}>${order.original_price.toFixed(2)}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', color: '#10b981', fontSize: '0.9rem', fontWeight: 600 }}>
+                  <span>Promo Applied ({order.promo_code}):</span>
+                  <span>-${(order.original_price - order.price_usd).toFixed(2)}</span>
+                </div>
+              </>
+            )}
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', color: '#4b5563', fontSize: '0.9rem' }}>
               <span>Subtotal:</span>
               <span>${order.price_usd.toFixed(2)}</span>

@@ -18,39 +18,61 @@ export async function POST(req) {
     const protocol = host.includes('localhost') ? 'http' : 'https';
     const baseUrl = `${protocol}://${host}`;
 
-    let totalUsdPrice = 0;
-    const cartId = `cart_${Math.random().toString(36).substr(2, 9)}_${Date.now()}`;
+    let cartTotalBase = 0;
+    const validProducts = [];
 
-    // 1. Fetch products securely and create pending orders grouped by cartId
+    // 1. Fetch products securely and compute base cart total
     for (const item of items) {
       const product = await convex.query(api.products.getById, { id: item._id });
-      if (!product) continue;
+      if (product) {
+        cartTotalBase += product.price_usd;
+        validProducts.push(product);
+      }
+    }
 
-      totalUsdPrice += product.price_usd;
+    // 2. Promo Code Validation & Calculation
+    let pc = null;
+    let totalUsdPrice = cartTotalBase;
+
+    if (promoCode) {
+      pc = await convex.query(api.promo_codes.getByCode, { code: promoCode });
+      if (pc && pc.isActive) {
+        if (pc.discountType === 'percentage') {
+          totalUsdPrice = cartTotalBase * (1 - pc.discountValue / 100);
+        } else if (pc.discountType === 'fixed') {
+          totalUsdPrice = Math.max(0, cartTotalBase - pc.discountValue);
+        }
+        await convex.mutation(api.promo_codes.incrementUse, { codeId: pc._id });
+      } else {
+        pc = null; // invalid code
+      }
+    }
+
+    const cartId = `cart_${Math.random().toString(36).substr(2, 9)}_${Date.now()}`;
+
+    // 3. Create Orders (Distribute discount proportionally so each item shows correct price)
+    for (const product of validProducts) {
+      let finalItemPrice = product.price_usd;
+      
+      if (pc && cartTotalBase > 0) {
+        // Distribute discount
+        const itemWeight = product.price_usd / cartTotalBase;
+        const discountAmount = cartTotalBase - totalUsdPrice;
+        finalItemPrice = Math.max(0, product.price_usd - (discountAmount * itemWeight));
+      }
 
       await convex.mutation(api.orders.create, {
         product_id: product._id,
         product_name: product.name,
-        price_usd: product.price_usd,
+        price_usd: finalItemPrice,
+        original_price: pc ? product.price_usd : undefined,
+        promo_code: pc ? pc.code : undefined,
         buyer_email: buyerEmail,
         buyer_name: buyerName || '',
         buyer_id: buyerId || '',
         status: 'pending',
-        tx_hash: cartId, // Temporarily store the cart ID to group them
+        tx_hash: cartId,
       });
-    }
-
-    // 2. Promo Code Calculation
-    if (promoCode) {
-      const pc = await convex.query(api.promo_codes.getByCode, { code: promoCode });
-      if (pc && pc.isActive) {
-        if (pc.discountType === 'percentage') {
-          totalUsdPrice = totalUsdPrice * (1 - pc.discountValue / 100);
-        } else if (pc.discountType === 'fixed') {
-          totalUsdPrice = Math.max(0, totalUsdPrice - pc.discountValue);
-        }
-        await convex.mutation(api.promo_codes.incrementUse, { codeId: pc._id });
-      }
     }
 
     // 3. 100% Free Bypass Logic
