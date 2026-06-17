@@ -6,7 +6,7 @@ const convex = new ConvexHttpClient((process.env.NEXT_PUBLIC_CONVEX_URL || '').r
 
 export async function POST(req) {
   try {
-    const { name, email, service_type, message, price_usd, coin } = await req.json();
+    const { name, email, service_type, message, price_usd, coin, promoCode } = await req.json();
 
     if (!email || !service_type || !price_usd || !coin) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -16,7 +16,52 @@ export async function POST(req) {
     const protocol = host.includes('localhost') ? 'http' : 'https';
     const baseUrl = `${protocol}://${host}`;
 
+    let finalUsdPrice = price_usd;
+    let pc = null;
+
+    if (promoCode) {
+      pc = await convex.query(api.promo_codes.getByCode, { code: promoCode });
+      if (pc && pc.isActive) {
+        if (pc.discountType === 'percentage') {
+          finalUsdPrice = price_usd * (1 - pc.discountValue / 100);
+        } else if (pc.discountType === 'fixed') {
+          finalUsdPrice = Math.max(0, price_usd - pc.discountValue);
+        }
+        await convex.mutation(api.promo_codes.incrementUse, { codeId: pc._id });
+      }
+    }
+
     const orderId = `srv_${Math.random().toString(36).substr(2, 9)}_${Date.now()}`;
+
+    // 100% Free Bypass Logic
+    if (finalUsdPrice <= 0) {
+      const freeOrderId = `promo_${orderId}`;
+      await convex.mutation(api.services.createOrder, {
+        name: name || '',
+        email,
+        service_type,
+        budget: `$${price_usd}`,
+        message: message || '',
+        tx_hash: freeOrderId,
+        price_usd: price_usd,
+      });
+
+      // Instantly mark as paid since it's free
+      await convex.mutation(api.services.updateOrderPaymentStatus, {
+        tx_hash: freeOrderId,
+        status: 'paid',
+      });
+
+      return NextResponse.json({
+        orderId: freeOrderId,
+        paymentId: freeOrderId,
+        payAddress: '',
+        payAmount: 0,
+        payCurrency: coin,
+        usdPrice: 0,
+        isFree: true,
+      }, { status: 200 });
+    }
 
     const payCurrency = coin.toLowerCase();
     
@@ -28,7 +73,7 @@ export async function POST(req) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        price_amount: price_usd,
+        price_amount: finalUsdPrice,
         price_currency: 'usd',
         pay_currency: payCurrency,
         order_id: orderId, // We use this in the webhook to identify it's a service
@@ -52,7 +97,7 @@ export async function POST(req) {
       budget: `$${price_usd}`,
       message: message || '',
       tx_hash: orderId,
-      price_usd: price_usd,
+      price_usd: finalUsdPrice,
     });
 
     return NextResponse.json({
@@ -61,7 +106,7 @@ export async function POST(req) {
       payAddress: paymentData.pay_address,
       payAmount: paymentData.pay_amount,
       payCurrency: paymentData.pay_currency,
-      usdPrice: price_usd,
+      usdPrice: finalUsdPrice,
     });
   } catch (error) {
     console.error('Service Checkout API Error:', error);

@@ -61,6 +61,17 @@ export const listOrders = query({
   },
 });
 
+export const listOrdersByEmail = query({
+  args: { email: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("custom_orders")
+      .filter((q) => q.eq(q.field("email"), args.email))
+      .order("desc")
+      .collect();
+  },
+});
+
 export const getOrderStatusByTx = query({
   args: { tx_hash: v.string() },
   handler: async (ctx, args) => {

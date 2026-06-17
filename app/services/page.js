@@ -20,6 +20,13 @@ export default function ServicesPage() {
   const [budget, setBudget] = useState('');
   const [coin, setCoin] = useState('usdttrc20');
 
+  // Promo Code State
+  const [promoInput, setPromoInput] = useState('');
+  const [codeToCheck, setCodeToCheck] = useState('');
+  const [appliedPromo, setAppliedPromo] = useState(null);
+  const [promoError, setPromoError] = useState('');
+  const [promoSuccess, setPromoSuccess] = useState('');
+
   // Loading & Error
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -36,6 +43,22 @@ export default function ServicesPage() {
 
   // Poll for live status of service orders
   const liveOrder = useQuery(api.services.getOrderStatusByTx, orderId ? { tx_hash: orderId } : 'skip');
+  const promoData = useQuery(api.promo_codes.getByCode, codeToCheck ? { code: codeToCheck } : 'skip');
+
+  useEffect(() => {
+    if (codeToCheck) {
+      if (promoData === undefined) return;
+      if (promoData === null || !promoData.isActive) {
+        setPromoError('Invalid or inactive promo code.');
+        setPromoSuccess('');
+        setAppliedPromo(null);
+      } else {
+        setPromoError('');
+        setPromoSuccess('Promo code applied!');
+        setAppliedPromo(promoData);
+      }
+    }
+  }, [promoData, codeToCheck]);
   
   useEffect(() => {
     if (step === 'payment' && orderId && liveOrder) {
@@ -83,6 +106,11 @@ export default function ServicesPage() {
     setEmail('');
     setMessage('');
     setBudget('');
+    setPromoInput('');
+    setCodeToCheck('');
+    setAppliedPromo(null);
+    setPromoError('');
+    setPromoSuccess('');
     setModalOpen(true);
   };
 
@@ -123,21 +151,28 @@ export default function ServicesPage() {
             service_type: tierDetails.name,
             message,
             price_usd: tierDetails.price,
-            coin
+            coin,
+            promoCode: appliedPromo ? appliedPromo.code : null,
           }),
         });
 
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Failed to create payment');
 
-        setOrderId(data.orderId);
-        setCryptoAmount(data.payAmount);
-        setDepositAddress(data.payAddress);
-        setPayCurrency(data.payCurrency);
-        setPaymentId(data.paymentId);
-        setUsdPrice(data.usdPrice);
-        setQrCodeUrl(`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${data.payCurrency}:${data.payAddress}?amount=${data.payAmount}`);
-        setStep('payment');
+        if (data.isFree) {
+          setOrderId(data.orderId);
+          setCryptoAmount(0);
+          setStep('success');
+        } else {
+          setOrderId(data.orderId);
+          setCryptoAmount(data.payAmount);
+          setDepositAddress(data.payAddress);
+          setPayCurrency(data.payCurrency);
+          setPaymentId(data.paymentId);
+          setUsdPrice(data.usdPrice);
+          setQrCodeUrl(`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${data.payCurrency}:${data.payAddress}?amount=${data.payAmount}`);
+          setStep('payment');
+        }
       }
     } catch (err) {
       console.error(err);
@@ -248,6 +283,11 @@ export default function ServicesPage() {
                       {getTierDetails(selectedTier).name} 
                       {selectedTier !== 3 && <span style={{ color: 'var(--text-main)', fontWeight: 600, marginLeft: '0.5rem' }}>(${getTierDetails(selectedTier).price})</span>}
                     </p>
+                    {appliedPromo && selectedTier !== 3 && (
+                      <div style={{ marginTop: '0.5rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(16, 189, 129, 0.1)', color: 'var(--accent-emerald)', padding: '0.3rem 0.8rem', borderRadius: '12px', fontSize: '0.85rem', fontWeight: 600 }}>
+                        {appliedPromo.discountType === 'percentage' ? `${appliedPromo.discountValue}% OFF` : `$${appliedPromo.discountValue} OFF`} PROMO APPLIED
+                      </div>
+                    )}
                   </div>
 
                   {error && (
@@ -303,11 +343,47 @@ export default function ServicesPage() {
                         </div>
                       </div>
                     )}
+
+                    {/* Promo Code Input */}
+                    {selectedTier !== 3 && (
+                      <div>
+                        <label className="input-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span>Promo Code (Optional)</span>
+                        </label>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <input 
+                            type="text" 
+                            placeholder="SUMMER50"
+                            value={promoInput}
+                            onChange={(e) => {
+                              setPromoInput(e.target.value.toUpperCase());
+                              if (!e.target.value) {
+                                setAppliedPromo(null);
+                                setCodeToCheck('');
+                                setPromoSuccess('');
+                                setPromoError('');
+                              }
+                            }}
+                            className="modal-input"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setCodeToCheck(promoInput)}
+                            disabled={!promoInput || promoInput === codeToCheck}
+                            style={{ padding: '0 1.2rem', background: 'var(--border-color)', border: 'none', borderRadius: '12px', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 600, fontSize: '0.9rem' }}
+                          >
+                            Apply
+                          </button>
+                        </div>
+                        {promoError && <p style={{ color: '#f87171', fontSize: '0.8rem', marginTop: '0.5rem', margin: '0.5rem 0 0 0' }}>{promoError}</p>}
+                        {promoSuccess && <p style={{ color: 'var(--accent-emerald)', fontSize: '0.8rem', marginTop: '0.5rem', margin: '0.5rem 0 0 0' }}>{promoSuccess}</p>}
+                      </div>
+                    )}
                   </div>
 
                   <button type="submit" disabled={loading} className="btn btn-primary btn-block">
                     {loading && <Loader2 className="animate-spin" size={18} style={{ marginRight: '0.5rem' }} />}
-                    {loading ? 'Processing...' : selectedTier === 3 ? 'Submit Inquiry' : `Pay $${getTierDetails(selectedTier).price} with Crypto`}
+                    {loading ? 'Processing...' : selectedTier === 3 ? 'Submit Inquiry' : (appliedPromo && (appliedPromo.discountType === 'percentage' ? (getTierDetails(selectedTier).price * (1 - appliedPromo.discountValue / 100)) : Math.max(0, getTierDetails(selectedTier).price - appliedPromo.discountValue)) <= 0) ? 'Claim Free Service' : `Pay $${appliedPromo ? (appliedPromo.discountType === 'percentage' ? (getTierDetails(selectedTier).price * (1 - appliedPromo.discountValue / 100)).toFixed(2) : Math.max(0, getTierDetails(selectedTier).price - appliedPromo.discountValue).toFixed(2)) : getTierDetails(selectedTier).price} with Crypto`}
                   </button>
                 </form>
               )}

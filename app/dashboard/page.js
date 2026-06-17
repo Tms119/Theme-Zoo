@@ -16,6 +16,7 @@ export default function Dashboard() {
   
   const userEmail = user?.primaryEmailAddress?.emailAddress;
   const orders = useQuery(api.orders.listByEmail, userEmail ? { email: userEmail } : "skip");
+  const customServices = useQuery(api.services.listOrdersByEmail, userEmail ? { email: userEmail } : "skip");
   const wishlistedProducts = useQuery(api.wishlist.listByUser, userEmail ? { user_email: userEmail } : "skip");
   const [downloading, setDownloading] = useState(null);
 
@@ -77,13 +78,13 @@ export default function Dashboard() {
                 <PackageOpen size={20} /> Your Templates
               </h2>
 
-              {orders === undefined ? (
+              {orders === undefined || customServices === undefined ? (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
                   {[...Array(3)].map((_, i) => (
                     <div key={i} className="skeleton" style={{ height: '200px', borderRadius: '16px' }}></div>
                   ))}
                 </div>
-              ) : orders.length === 0 ? (
+              ) : orders.length === 0 && customServices.length === 0 ? (
                 <div style={{ background: 'var(--bg-card)', padding: '3rem', borderRadius: '24px', border: '1px solid var(--border-color)', textAlign: 'center' }}>
                   <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>You haven't purchased any templates yet.</p>
                   <Link href="/templates" className="btn btn-primary">Browse Templates</Link>
@@ -123,6 +124,31 @@ export default function Dashboard() {
                         >
                           <FileText size={16} /> Invoice
                         </Link>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {/* Custom Services Rendering */}
+                  {customServices && customServices.length > 0 && customServices.map((service) => (
+                    <div key={service._id} style={{ background: 'var(--bg-card)', borderRadius: '16px', border: '1px solid rgba(139, 92, 246, 0.3)', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', position: 'relative', overflow: 'hidden' }}>
+                      <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', background: '#c084fc' }}></div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div>
+                          <h3 style={{ fontWeight: 700, fontSize: '1.1rem', marginBottom: '0.25rem', color: '#c084fc' }}>Custom Service: {service.service_type === 'tier1' ? 'Theme Installation' : service.service_type === 'tier2' ? 'Pro Customization' : 'Custom Build'}</h3>
+                          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Requested: {new Date(service._creationTime).toLocaleDateString()}</p>
+                        </div>
+                        <span style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem', background: service.status === 'paid' ? 'rgba(16,185,129,0.1)' : 'rgba(245, 158, 11, 0.1)', color: service.status === 'paid' ? 'var(--accent-emerald)' : 'var(--accent-amber)', borderRadius: '100px', fontWeight: 700, textTransform: 'uppercase' }}>
+                          {service.status}
+                        </span>
+                      </div>
+                      
+                      <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                        Tx ID: {service.tx_hash ? `${service.tx_hash.substr(0, 10)}...` : 'N/A'}<br/>
+                        Budget: {service.budget || `$${service.price_usd}`}
+                      </div>
+
+                      <div style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid var(--border-color)', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                        {service.status === 'paid' ? 'Payment received. An admin will contact you shortly to begin the project.' : service.status === 'pending' ? 'Waiting for blockchain confirmation...' : 'Inquiry submitted. We will contact you soon.'}
                       </div>
                     </div>
                   ))}
