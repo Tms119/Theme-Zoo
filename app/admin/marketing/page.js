@@ -99,78 +99,102 @@ export default function MarketingAdminPage() {
   };
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Marketing & Promotions</h1>
-        <p className="text-gray-400">Manage your global announcement banners and automated volume campaigns.</p>
+    <div className="animate-fade-in" style={{ padding: '2rem' }}>
+      <div style={{ marginBottom: '2rem' }}>
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '0.5rem' }}>Marketing & Promotions</h1>
+        <p style={{ color: 'var(--text-secondary)' }}>Manage your global announcement banners and automated volume campaigns.</p>
       </div>
 
-      <div className="flex gap-4 border-b border-gray-800 mb-8 pb-4">
+      <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem', marginBottom: '2rem' }}>
         <button 
           onClick={() => setActiveTab('banner')}
-          className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-all ${activeTab === 'banner' ? 'bg-purple-600/20 text-purple-400 font-semibold' : 'text-gray-400 hover:bg-white/5'}`}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '0.5rem',
+            padding: '0.6rem 1.25rem', borderRadius: '12px',
+            border: 'none', cursor: 'pointer', fontWeight: 600, transition: 'all 0.2s',
+            background: activeTab === 'banner' ? 'rgba(139, 92, 246, 0.2)' : 'transparent',
+            color: activeTab === 'banner' ? '#c084fc' : 'var(--text-secondary)'
+          }}
         >
           <Megaphone size={18} /> Global Banner
         </button>
         <button 
           onClick={() => setActiveTab('campaigns')}
-          className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-all ${activeTab === 'campaigns' ? 'bg-emerald-600/20 text-emerald-400 font-semibold' : 'text-gray-400 hover:bg-white/5'}`}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '0.5rem',
+            padding: '0.6rem 1.25rem', borderRadius: '12px',
+            border: 'none', cursor: 'pointer', fontWeight: 600, transition: 'all 0.2s',
+            background: activeTab === 'campaigns' ? 'rgba(16, 185, 129, 0.2)' : 'transparent',
+            color: activeTab === 'campaigns' ? 'var(--accent-emerald)' : 'var(--text-secondary)'
+          }}
         >
           <Tag size={18} /> Volume Campaigns
         </button>
       </div>
 
       {activeTab === 'banner' && (
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 max-w-2xl">
-          <h2 className="text-xl font-bold mb-6 flex items-center gap-2"><Megaphone size={20} className="text-purple-400" /> Announcement Banner Configuration</h2>
+        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '20px', padding: '2rem', maxWidth: '800px' }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-main)' }}>
+            <Megaphone size={20} style={{ color: '#c084fc' }} /> Announcement Banner Configuration
+          </h2>
           
-          <div className="space-y-6">
-            <div className="flex items-center justify-between p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.25rem', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
               <div>
-                <h3 className="font-semibold text-white">Enable Banner</h3>
-                <p className="text-sm text-gray-400">Show the announcement banner globally across the site.</p>
+                <h3 style={{ fontWeight: 600, color: 'var(--text-main)', marginBottom: '0.25rem' }}>Enable Banner</h3>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Show the announcement banner globally across the site.</p>
               </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" className="sr-only peer" checked={bannerActive} onChange={(e) => setBannerActive(e.target.checked)} />
-                <div className="w-11 h-6 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+              <label style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', cursor: 'pointer' }}>
+                <input type="checkbox" style={{ display: 'none' }} checked={bannerActive} onChange={(e) => setBannerActive(e.target.checked)} />
+                <div style={{ 
+                  width: '44px', height: '24px', background: bannerActive ? '#c084fc' : 'var(--border-color)', 
+                  borderRadius: '100px', position: 'relative', transition: 'background 0.3s' 
+                }}>
+                  <div style={{
+                    position: 'absolute', top: '2px', left: bannerActive ? '22px' : '2px',
+                    width: '20px', height: '20px', background: '#fff', borderRadius: '50%',
+                    transition: 'left 0.3s'
+                  }}></div>
+                </div>
               </label>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Banner Message (HTML allowed)</label>
+              <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', fontWeight: 500 }}>Banner Message (HTML allowed)</label>
               <input 
                 type="text" 
                 value={bannerText} 
                 onChange={(e) => setBannerText(e.target.value)} 
                 placeholder="e.g. Flash Sale! Get 50% off all templates." 
-                className="w-full bg-gray-950 border border-gray-800 rounded-lg p-3 text-white focus:outline-none focus:border-purple-500"
+                style={{ width: '100%', padding: '0.8rem 1rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', color: 'var(--text-main)', fontSize: '0.95rem', outline: 'none' }}
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Button Text (Optional)</label>
+                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', fontWeight: 500 }}>Button Text (Optional)</label>
                 <input 
                   type="text" 
                   value={bannerLinkText} 
                   onChange={(e) => setBannerLinkText(e.target.value)} 
                   placeholder="e.g. Shop Now" 
-                  className="w-full bg-gray-950 border border-gray-800 rounded-lg p-3 text-white focus:outline-none focus:border-purple-500"
+                  style={{ width: '100%', padding: '0.8rem 1rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', color: 'var(--text-main)', fontSize: '0.95rem', outline: 'none' }}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Button URL (Optional)</label>
+                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', fontWeight: 500 }}>Button URL (Optional)</label>
                 <input 
                   type="text" 
                   value={bannerLinkUrl} 
                   onChange={(e) => setBannerLinkUrl(e.target.value)} 
                   placeholder="e.g. /templates" 
-                  className="w-full bg-gray-950 border border-gray-800 rounded-lg p-3 text-white focus:outline-none focus:border-purple-500"
+                  style={{ width: '100%', padding: '0.8rem 1rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', color: 'var(--text-main)', fontSize: '0.95rem', outline: 'none' }}
                 />
               </div>
             </div>
 
-            <button onClick={saveBanner} className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold transition-all">
+            <button onClick={saveBanner} className="btn" style={{ background: '#c084fc', color: '#fff', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginTop: '1rem' }}>
               <Save size={18} /> Save Banner Settings
             </button>
           </div>
@@ -178,90 +202,100 @@ export default function MarketingAdminPage() {
       )}
 
       {activeTab === 'campaigns' && (
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-bold flex items-center gap-2"><Tag size={20} className="text-emerald-400" /> Automated Volume Campaigns</h2>
-            <button onClick={() => setShowNewCampaign(!showNewCampaign)} className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-semibold transition-all">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-main)' }}>
+              <Tag size={20} style={{ color: 'var(--accent-emerald)' }} /> Automated Volume Campaigns
+            </h2>
+            <button onClick={() => setShowNewCampaign(!showNewCampaign)} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Plus size={18} /> New Campaign
             </button>
           </div>
 
           {showNewCampaign && (
-            <div className="bg-gray-900 border border-emerald-900/50 rounded-xl p-6 mb-8 relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
-              <h3 className="text-lg font-bold mb-4">Create New Campaign</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div className="col-span-2">
-                  <label className="block text-sm font-medium text-gray-400 mb-2">Campaign Name</label>
-                  <input type="text" value={newCampaign.name} onChange={(e) => setNewCampaign({...newCampaign, name: e.target.value})} placeholder="e.g. Buy 2 Get 10% Off" className="w-full bg-gray-950 border border-gray-800 rounded-lg p-3 text-white focus:outline-none focus:border-emerald-500" />
+            <div style={{ background: 'var(--bg-card)', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '20px', padding: '2rem', position: 'relative', overflow: 'hidden', marginBottom: '2rem' }}>
+              <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', background: 'var(--accent-emerald)' }}></div>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1.5rem' }}>Create New Campaign</h3>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', fontWeight: 500 }}>Campaign Name</label>
+                  <input type="text" value={newCampaign.name} onChange={(e) => setNewCampaign({...newCampaign, name: e.target.value})} placeholder="e.g. Buy 2 Get 10% Off" style={{ width: '100%', padding: '0.8rem 1rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', color: 'var(--text-main)', fontSize: '0.95rem', outline: 'none' }} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">Minimum Items (Buy X)</label>
-                  <input type="number" min="2" value={newCampaign.minItems} onChange={(e) => setNewCampaign({...newCampaign, minItems: parseInt(e.target.value)})} className="w-full bg-gray-950 border border-gray-800 rounded-lg p-3 text-white focus:outline-none focus:border-emerald-500" />
+                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', fontWeight: 500 }}>Minimum Items (Buy X)</label>
+                  <input type="number" min="2" value={newCampaign.minItems} onChange={(e) => setNewCampaign({...newCampaign, minItems: parseInt(e.target.value)})} style={{ width: '100%', padding: '0.8rem 1rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', color: 'var(--text-main)', fontSize: '0.95rem', outline: 'none' }} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">Discount Type</label>
-                  <select value={newCampaign.discountType} onChange={(e) => setNewCampaign({...newCampaign, discountType: e.target.value})} className="w-full bg-gray-950 border border-gray-800 rounded-lg p-3 text-white focus:outline-none focus:border-emerald-500">
-                    <option value="percentage">Percentage (%)</option>
-                    <option value="fixed">Fixed Amount ($)</option>
+                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', fontWeight: 500 }}>Discount Type</label>
+                  <select value={newCampaign.discountType} onChange={(e) => setNewCampaign({...newCampaign, discountType: e.target.value})} style={{ width: '100%', padding: '0.8rem 1rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', color: 'var(--text-main)', fontSize: '0.95rem', outline: 'none' }}>
+                    <option value="percentage" style={{ background: '#111' }}>Percentage (%)</option>
+                    <option value="fixed" style={{ background: '#111' }}>Fixed Amount ($)</option>
                   </select>
                 </div>
-                <div className="col-span-2">
-                  <label className="block text-sm font-medium text-gray-400 mb-2">Discount Value</label>
-                  <input type="number" min="1" value={newCampaign.discountValue} onChange={(e) => setNewCampaign({...newCampaign, discountValue: parseInt(e.target.value)})} className="w-full bg-gray-950 border border-gray-800 rounded-lg p-3 text-white focus:outline-none focus:border-emerald-500" />
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', fontWeight: 500 }}>Discount Value</label>
+                  <input type="number" min="1" value={newCampaign.discountValue} onChange={(e) => setNewCampaign({...newCampaign, discountValue: parseInt(e.target.value)})} style={{ width: '100%', padding: '0.8rem 1rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', color: 'var(--text-main)', fontSize: '0.95rem', outline: 'none' }} />
                 </div>
-                <div className="col-span-2 flex items-end">
-                  <label className="flex items-center gap-2 cursor-pointer p-3 bg-gray-800/50 rounded-lg border border-gray-700 w-full">
-                    <input type="checkbox" checked={newCampaign.isActive} onChange={(e) => setNewCampaign({...newCampaign, isActive: e.target.checked})} className="w-4 h-4 text-emerald-500 rounded border-gray-700 focus:ring-emerald-500 focus:ring-2 bg-gray-900" />
-                    <span className="text-white font-medium">Activate immediately (disables other campaigns)</span>
+                
+                <div style={{ gridColumn: '1 / -1', marginTop: '0.5rem' }}>
+                  <label style={{ display: 'flex', items: 'center', gap: '0.75rem', cursor: 'pointer', padding: '1rem', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                    <input type="checkbox" checked={newCampaign.isActive} onChange={(e) => setNewCampaign({...newCampaign, isActive: e.target.checked})} style={{ width: '18px', height: '18px', accentColor: 'var(--accent-emerald)' }} />
+                    <span style={{ color: 'var(--text-main)', fontWeight: 500, fontSize: '0.9rem' }}>Activate immediately (disables other campaigns)</span>
                   </label>
                 </div>
               </div>
-              <div className="flex justify-end gap-3">
-                <button onClick={() => setShowNewCampaign(false)} className="px-4 py-2 text-gray-400 hover:text-white transition-colors">Cancel</button>
-                <button onClick={handleCreateCampaign} className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-semibold transition-all">Save Campaign</button>
+              
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+                <button onClick={() => setShowNewCampaign(false)} className="btn btn-secondary">Cancel</button>
+                <button onClick={handleCreateCampaign} className="btn btn-primary">Save Campaign</button>
               </div>
             </div>
           )}
 
-          <div className="grid gap-4">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {campaigns?.map((campaign) => (
-              <div key={campaign._id} className={`flex items-center justify-between p-5 rounded-xl border ${campaign.isActive ? 'bg-emerald-900/10 border-emerald-900/50' : 'bg-gray-900 border-gray-800'}`}>
-                <div className="flex items-center gap-4">
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${campaign.isActive ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-800 text-gray-500'}`}>
+              <div key={campaign._id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.5rem', borderRadius: '16px', border: '1px solid', borderColor: campaign.isActive ? 'rgba(16, 185, 129, 0.4)' : 'var(--border-color)', background: campaign.isActive ? 'rgba(16, 185, 129, 0.05)' : 'var(--bg-card)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                  <div style={{ width: '48px', height: '48px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: campaign.isActive ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255,255,255,0.05)', color: campaign.isActive ? 'var(--accent-emerald)' : 'var(--text-secondary)' }}>
                     <Tag size={20} />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
                       {campaign.name}
-                      {campaign.isActive && <span className="bg-emerald-500/20 text-emerald-400 text-xs px-2 py-0.5 rounded flex items-center gap-1"><CheckCircle2 size={12} /> ACTIVE</span>}
+                      {campaign.isActive && <span style={{ background: 'rgba(16, 185, 129, 0.2)', color: 'var(--accent-emerald)', fontSize: '0.7rem', padding: '0.2rem 0.5rem', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '0.25rem' }}><CheckCircle2 size={12} /> ACTIVE</span>}
                     </h3>
-                    <p className="text-gray-400 text-sm mt-1">
-                      Buy <strong className="text-white">{campaign.minItems} or more items</strong> and get <strong className="text-white">{campaign.discountType === 'percentage' ? `${campaign.discountValue}%` : `$${campaign.discountValue}`} off</strong> the total cart value.
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                      Buy <strong style={{ color: 'var(--text-main)' }}>{campaign.minItems} or more items</strong> and get <strong style={{ color: 'var(--text-main)' }}>{campaign.discountType === 'percentage' ? `${campaign.discountValue}%` : `$${campaign.discountValue}`} off</strong> the total cart value.
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
+                
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                   <button 
                     onClick={() => handleToggleCampaign(campaign._id, campaign.isActive)}
-                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${campaign.isActive ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white'}`}
+                    className={campaign.isActive ? "btn btn-secondary" : "btn btn-primary"}
+                    style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
                   >
                     {campaign.isActive ? 'Deactivate' : 'Activate'}
                   </button>
                   <button 
                     onClick={() => handleDeleteCampaign(campaign._id)}
-                    className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all"
+                    style={{ padding: '0.5rem', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', borderRadius: '8px', transition: 'all 0.2s' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = '#ef4444'; e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'none'; }}
                   >
                     <Trash2 size={18} />
                   </button>
                 </div>
               </div>
             ))}
+            
             {campaigns?.length === 0 && !showNewCampaign && (
-              <div className="text-center py-12 bg-gray-900 rounded-xl border border-gray-800 border-dashed">
-                <Tag size={32} className="mx-auto text-gray-600 mb-3" />
-                <h3 className="text-lg font-semibold text-gray-300 mb-1">No campaigns created yet</h3>
-                <p className="text-gray-500 text-sm">Create a volume discount campaign to boost sales.</p>
+              <div style={{ textAlign: 'center', padding: '3rem', background: 'var(--bg-card)', borderRadius: '16px', border: '1px dashed var(--border-color)' }}>
+                <Tag size={32} style={{ color: 'var(--text-muted)', margin: '0 auto 1rem' }} />
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-main)', marginBottom: '0.25rem' }}>No campaigns created yet</h3>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Create a volume discount campaign to boost sales.</p>
               </div>
             )}
           </div>
