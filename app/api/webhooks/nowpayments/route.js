@@ -37,18 +37,37 @@ export async function POST(req) {
 
     // Update Convex order if payment is confirmed
     // 'finished' means the crypto has been fully received and confirmed on the blockchain
-    if (payment_status === 'finished' || payment_status === 'confirmed') {
-      await convex.mutation(api.orders.updateStatus, {
-        id: order_id,
-        status: 'paid',
-        tx_hash: payment_id.toString(),
-        delivered_at: Date.now(),
-      });
-    } else if (payment_status === 'failed' || payment_status === 'expired') {
-      await convex.mutation(api.orders.updateStatus, {
-        id: order_id,
-        status: payment_status, // 'failed' or 'expired'
-      });
+    const isSuccess = payment_status === 'finished' || payment_status === 'confirmed';
+    const isFailed = payment_status === 'failed' || payment_status === 'expired';
+
+    if (order_id.startsWith('cart_')) {
+      if (isSuccess) {
+        await convex.mutation(api.orders.updateByTxHash, {
+          tx_hash: order_id,
+          status: 'paid',
+          new_tx_hash: payment_id.toString(),
+          delivered_at: Date.now(),
+        });
+      } else if (isFailed) {
+        await convex.mutation(api.orders.updateByTxHash, {
+          tx_hash: order_id,
+          status: payment_status,
+        });
+      }
+    } else {
+      if (isSuccess) {
+        await convex.mutation(api.orders.updateStatus, {
+          id: order_id,
+          status: 'paid',
+          tx_hash: payment_id.toString(),
+          delivered_at: Date.now(),
+        });
+      } else if (isFailed) {
+        await convex.mutation(api.orders.updateStatus, {
+          id: order_id,
+          status: payment_status,
+        });
+      }
     }
 
     return NextResponse.json({ received: true });

@@ -72,6 +72,41 @@ export const updateStatus = mutation({
   },
 });
 
+// ── Update multiple orders by tx_hash ────────────────────────────
+export const updateByTxHash = mutation({
+  args: {
+    tx_hash:      v.string(), // The cart_id
+    status:       v.string(),
+    new_tx_hash:  v.optional(v.string()), // The actual payment_id from NOWPayments
+    delivered_at: v.optional(v.number()),
+  },
+  handler: async (ctx, { tx_hash, status, new_tx_hash, delivered_at }) => {
+    const orders = await ctx.db
+      .query("orders")
+      .filter((q) => q.eq(q.field("tx_hash"), tx_hash))
+      .collect();
+
+    for (const order of orders) {
+      await ctx.db.patch(order._id, {
+        status,
+        ...(new_tx_hash !== undefined && { tx_hash: new_tx_hash }),
+        ...(delivered_at !== undefined && { delivered_at }),
+      });
+    }
+  },
+});
+
+// ── Get orders by tx_hash (for real-time cart tracking) ──────────
+export const listByTxHash = query({
+  args: { tx_hash: v.string() },
+  handler: async (ctx, { tx_hash }) => {
+    return await ctx.db
+      .query("orders")
+      .filter((q) => q.eq(q.field("tx_hash"), tx_hash))
+      .collect();
+  },
+});
+
 // ── Get Download URL for Purchased Product ───────────────────────
 export const getDownloadUrl = query({
   args: { order_id: v.id("orders"), buyer_id: v.string() },
