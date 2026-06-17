@@ -76,7 +76,7 @@ export default function Navbar() {
               <Link href="/#how-it-works" className="nav-link">How It Works</Link>
             </li>
             <li>
-              <Link href="/#custom-order" className="nav-link">Custom Services</Link>
+              <Link href="/services" className="nav-link">Custom Services</Link>
             </li>
           </ul>
           
@@ -184,7 +184,7 @@ export default function Navbar() {
             </li>
             <li>
               <Link 
-                href="/#custom-order" 
+                href="/services" 
                 onClick={() => setMenuOpen(false)} 
                 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-main)', textDecoration: 'none', transition: 'color 0.2s ease' }}
               >

@@ -61,6 +61,17 @@ export const listOrders = query({
   },
 });
 
+export const getOrderStatusByTx = query({
+  args: { tx_hash: v.string() },
+  handler: async (ctx, args) => {
+    const order = await ctx.db
+      .query("custom_orders")
+      .filter((q) => q.eq(q.field("tx_hash"), args.tx_hash))
+      .first();
+    return order ? { status: order.status } : null;
+  },
+});
+
 export const updateOrderStatus = mutation({
   args: {
     id: v.id("custom_orders"),

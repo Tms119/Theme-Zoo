@@ -223,10 +223,10 @@ export default function CheckoutCartPage() {
         <div className="bg-glow-2"></div>
       </div>
       
-      <main style={{ minHeight: '85vh', paddingTop: 'calc(var(--header-height) + 3rem)', display: 'flex', alignItems: 'center' }}>
-        <div className="container" style={{ display: 'flex', justifyContent: 'center' }}>
+      <main style={{ minHeight: '85vh', paddingTop: 'calc(var(--header-height) + 3rem)', paddingBottom: '3rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
+        <div className="container" style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
           
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '28px', padding: '2.5rem', width: '100%', maxWidth: '520px', backdropFilter: 'blur(12px)' }}>
+          <div className="checkout-card" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '28px', width: '100%', maxWidth: '520px', backdropFilter: 'blur(12px)', margin: '0 auto' }}>
             
             {/* Step 1: Input Form */}
             {step === 'input' && (
@@ -288,7 +288,7 @@ export default function CheckoutCartPage() {
                     <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.75rem', fontWeight: 500 }}>
                       Select Crypto Currency
                     </label>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                    <div className="currency-grid">
                       {[
                         { id: 'usdttrc20', name: 'USDT', desc: 'TRC20 Network' },
                         { id: 'usdtbsc', name: 'USDT', desc: 'BEP20 / BNB Chain' },
@@ -510,6 +510,22 @@ export default function CheckoutCartPage() {
         }
         .hover-text-white:hover {
           color: white !important;
+        }
+        .checkout-card {
+          padding: 2.5rem;
+        }
+        .currency-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 0.75rem;
+        }
+        @media (max-width: 640px) {
+          .checkout-card {
+            padding: 1.5rem;
+          }
+          .currency-grid {
+            grid-template-columns: 1fr;
+          }
         }
       `}</style>
     </>
