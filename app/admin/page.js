@@ -1,6 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, usePaginatedQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import Link from 'next/link';
 import { PlusCircle, FileText, CheckCircle2, TrendingUp, DollarSign, ExternalLink, Eye, EyeOff, LifeBuoy, Mail, Copy } from 'lucide-react';
@@ -9,7 +9,14 @@ import RevenueChart from '@/components/admin/RevenueChart';
 
 export default function AdminDashboard() {
   const products = useQuery(api.products.listAll);
-  const orders = useQuery(api.orders.listAll);
+  
+  const {
+    results: orders,
+    status: ordersStatus,
+    loadMore: loadMoreOrders,
+  } = usePaginatedQuery(api.orders.listPaginated, {}, { initialNumItems: 20 });
+  
+  const orderStats = useQuery(api.orders.getStats);
   const supportTickets = useQuery(api.support.listAll);
   
   const toggleActive = useMutation(api.products.toggleActive);
@@ -42,7 +49,7 @@ export default function AdminDashboard() {
     return storageId;
   };
 
-  if (products === undefined || orders === undefined || supportTickets === undefined) {
+  if (products === undefined || ordersStatus === "LoadingFirstPage" || supportTickets === undefined || orderStats === undefined) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', padding: '5rem' }}>
         <p style={{ color: 'var(--text-secondary)' }}>Loading Dashboard Data...</p>
@@ -51,7 +58,8 @@ export default function AdminDashboard() {
   }
 
   // Calculate total revenue dynamically
-  const totalRevenue = orders ? orders.reduce((acc, order) => acc + (order.price_usd || 0), 0) : 0;
+  const totalRevenue = orderStats ? orderStats.totalRevenue : 0;
+  const totalOrders = orderStats ? orderStats.totalOrders : 0;
 
   const filteredTickets = supportTickets ? supportTickets.filter(t => supportFilter === 'all' || t.status === supportFilter) : [];
 
@@ -73,7 +81,7 @@ export default function AdminDashboard() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
         {[
           { label: 'Total Revenue', value: `$${totalRevenue.toFixed(2)} USD`, desc: 'Total gross volume', icon: <DollarSign size={20} color="var(--accent-emerald)" />, glow: 'rgba(16, 189, 129, 0.04)' },
-          { label: 'Total Sales', value: `${orders.length} Completed`, desc: '100% automatic delivery', icon: <CheckCircle2 size={20} color="var(--primary)" />, glow: 'rgba(124, 58, 237, 0.04)' },
+          { label: 'Total Sales', value: `${totalOrders} Completed`, desc: '100% automatic delivery', icon: <CheckCircle2 size={20} color="var(--primary)" />, glow: 'rgba(124, 58, 237, 0.04)' },
           { label: 'Active Items', value: `${products.filter(p => p.is_active).length} Listed`, desc: 'WordPress & HTML themes', icon: <FileText size={20} color="var(--accent-cyan)" />, glow: 'rgba(6, 182, 212, 0.04)' },
         ].map((card, i) => (
           <div key={i} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', boxShadow: `0 4px 30px ${card.glow}` }}>
@@ -265,6 +273,23 @@ export default function AdminDashboard() {
                 )}
               </tbody>
             </table>
+            
+            {ordersStatus === "CanLoadMore" && (
+              <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
+                <button 
+                  onClick={() => loadMoreOrders(20)}
+                  className="btn btn-secondary"
+                  style={{ padding: '0.6rem 1.5rem', borderRadius: '100px' }}
+                >
+                  Load More Orders
+                </button>
+              </div>
+            )}
+            {ordersStatus === "LoadingMore" && (
+              <div style={{ textAlign: 'center', marginTop: '1.5rem', color: 'var(--text-secondary)' }}>
+                Loading...
+              </div>
+            )}
           </div>
         </div>
       </div>

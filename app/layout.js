@@ -7,6 +7,7 @@ import ConvexClientProvider from "./ConvexClientProvider";
 import CartDrawer from "@/components/ui/CartDrawer";
 import DashboardShell from "@/components/ui/DashboardShell";
 import GlobalBanner from "@/components/marketing/GlobalBanner";
+import SocialProof from "@/components/ui/SocialProof";
 
 const chakraPetch = Chakra_Petch({
   weight: ['300', '400', '500', '600', '700'],
@@ -27,6 +28,27 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: "ThemeZoo — Premium Web Templates",
   description: "Premium WordPress and website templates. Pay with crypto, download instantly.",
+  openGraph: {
+    title: "ThemeZoo — Premium Web Templates",
+    description: "Premium WordPress and website templates. Pay with crypto, download instantly.",
+    url: "https://themezoo.dev",
+    siteName: "ThemeZoo",
+    images: [
+      {
+        url: "https://themezoo.dev/og-image.jpg", // Using a placeholder that will be picked up when added
+        width: 1200,
+        height: 630,
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ThemeZoo — Premium Web Templates",
+    description: "Premium WordPress and website templates. Pay with crypto, download instantly.",
+    images: ["https://themezoo.dev/og-image.jpg"],
+  },
 };
 
 export default function RootLayout({ children }) {
@@ -49,9 +71,10 @@ export default function RootLayout({ children }) {
                 borderRadius: '12px'
               }
             }}/>
-            <CartDrawer />
             
             <DashboardShell>
+              <CartDrawer />
+              <SocialProof />
               {children}
             </DashboardShell>
 
