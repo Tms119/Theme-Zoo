@@ -48,6 +48,12 @@ export async function POST(req) {
         // Fetch orders using the ORIGINAL tx_hash (order_id) BEFORE we mutate them
         const existingOrders = await convex.query(api.orders.listByTxHash, { tx_hash: order_id });
 
+        // Idempotency Check: Prevent processing the same payment twice
+        if (existingOrders.length > 0 && existingOrders[0].status === 'paid') {
+          console.log(`Webhook: Cart order ${order_id} is already paid. Ignoring duplicate IPN.`);
+          return NextResponse.json({ received: true, note: 'Already processed' });
+        }
+
         await convex.mutation(api.orders.updateByTxHash, {
           tx_hash: order_id,
           status: 'paid',
@@ -87,14 +93,20 @@ export async function POST(req) {
     } else if (order_id.startsWith('srv_')) {
       // It's a service order
       if (isSuccess) {
+        // Fetch the service order to check idempotency BEFORE mutation
+        const serviceOrder = await convex.query(api.services.getOrderByTx, { tx_hash: order_id });
+        
+        if (serviceOrder && serviceOrder.status === 'paid') {
+          console.log(`Webhook: Service order ${order_id} is already paid. Ignoring duplicate IPN.`);
+          return NextResponse.json({ received: true, note: 'Already processed' });
+        }
+
         // We need to update the custom_orders table where tx_hash == order_id
         await convex.mutation(api.services.updateOrderPaymentStatus, {
           tx_hash: order_id,
           status: 'paid',
         });
         
-        // Fetch the service order to get details for the email
-        const serviceOrder = await convex.query(api.services.getOrderByTx, { tx_hash: order_id });
         if (serviceOrder) {
           try {
             await sendServiceConfirmationEmail(serviceOrder, baseUrl);
@@ -106,8 +118,13 @@ export async function POST(req) {
       }
     } else {
       if (isSuccess) {
-        // Fetch order BEFORE mutation
+        // Fetch order BEFORE mutation to check idempotency
         const order = await convex.query(api.orders.getById, { id: order_id });
+
+        if (order && order.status === 'paid') {
+          console.log(`Webhook: Order ${order_id} is already paid. Ignoring duplicate IPN.`);
+          return NextResponse.json({ received: true, note: 'Already processed' });
+        }
 
         await convex.mutation(api.orders.updateStatus, {
           id: order_id,
