@@ -2,7 +2,7 @@
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import ImageGallery from '@/components/product/ImageGallery';
-import { ArrowLeft, Check, Sparkles, FileCode, Cpu, ShieldCheck, Tag, ShoppingCart } from 'lucide-react';
+import { ArrowLeft, Check, Sparkles, FileCode, Cpu, ShieldCheck, Tag, ShoppingCart, FileText } from 'lucide-react';
 import useCart from '@/store/useCart';
 import toast from 'react-hot-toast';
 
@@ -163,6 +163,17 @@ export default function TemplateDetail() {
                 </div>
 
                 {/* CTA */}
+                {product.pdf_url && (
+                  <Link
+                    href={product.pdf_url}
+                    target="_blank"
+                    className="btn btn-secondary"
+                    style={{ width: '100%', padding: '1rem', borderRadius: '14px', fontSize: '1rem', justifyContent: 'center', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', border: '1px solid var(--border-color)', background: 'rgba(56, 189, 248, 0.05)', color: 'var(--accent-cyan)' }}
+                  >
+                    <FileText size={16} /> View Documentation
+                  </Link>
+                )}
+
                 {product.demo_url && (
                   <Link
                     href={product.demo_url}

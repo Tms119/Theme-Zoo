@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, Save, AlertCircle, UploadCloud, FileArchive, Image as ImageIcon, X, Trash2, Eye } from 'lucide-react';
+import { ArrowLeft, Save, AlertCircle, UploadCloud, FileArchive, Image as ImageIcon, X, Trash2, Eye, FileText } from 'lucide-react';
 import Link from 'next/link';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
@@ -46,6 +46,8 @@ export default function AddProductPage() {
   const [existingImages, setExistingImages] = useState([]); // Strings of URLs
   const [zipFile, setZipFile] = useState(null);
   const [existingZipUrl, setExistingZipUrl] = useState('');
+  const [pdfFile, setPdfFile] = useState(null);
+  const [existingPdfUrl, setExistingPdfUrl] = useState('');
 
   // Live Preview Object
   const livePreviewData = {
@@ -69,6 +71,7 @@ export default function AddProductPage() {
       setFeatures(existingProduct.features?.join('\n') || '');
       setExistingImages(existingProduct.images || []);
       setExistingZipUrl(existingProduct.file_url || '');
+      setExistingPdfUrl(existingProduct.pdf_url || '');
     }
   }, [existingProduct]);
 
@@ -100,7 +103,22 @@ export default function AddProductPage() {
     
     setError('');
     setZipFile(file);
-  }
+  };
+
+  const handlePdfChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Check PDF size (20MB limit)
+    const MAX_PDF_SIZE = 20 * 1024 * 1024;
+    if (file.size > MAX_PDF_SIZE) {
+      setError(`The PDF file exceeds the 20MB limit. Please compress it.`);
+      return;
+    }
+    
+    setError('');
+    setPdfFile(file);
+  };
 
   const removeNewImage = (index) => {
     setImages(prev => prev.filter((_, i) => i !== index));
@@ -152,6 +170,16 @@ export default function AddProductPage() {
         finalFileUrl = await getFileUrl({ storageId: finalFileId });
       }
 
+      // 3. Upload PDF file if present
+      let finalPdfId = existingProduct?.pdf_id;
+      let finalPdfUrl = existingPdfUrl;
+      
+      if (pdfFile) {
+        setUploadProgress('Uploading documentation PDF...');
+        finalPdfId = await uploadFileToConvex(pdfFile);
+        finalPdfUrl = await getFileUrl({ storageId: finalPdfId });
+      }
+
       setUploadProgress('Saving product details...');
 
       const payload = {
@@ -168,6 +196,8 @@ export default function AddProductPage() {
         demo_url: demoUrl,
         file_id: finalFileId,
         file_url: finalFileUrl,
+        pdf_id: finalPdfId,
+        pdf_url: finalPdfUrl,
       };
 
       if (isEditMode) {
@@ -304,6 +334,38 @@ export default function AddProductPage() {
                     <UploadCloud size={24} color="var(--text-muted)" style={{ marginBottom: '0.5rem' }} />
                     <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Upload new ZIP package</span>
                     <input type="file" accept=".zip,.rar,.tar.gz" onChange={handleZipChange} style={{ display: 'none' }} />
+                  </label>
+                )}
+              </div>
+
+              <div style={{ height: '1px', background: 'var(--border-color)' }} />
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.75rem', fontWeight: 500 }}>Documentation PDF (Optional, Max 20MB)</label>
+                
+                {existingPdfUrl && !pdfFile && (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1rem', background: 'rgba(56, 189, 248, 0.05)', border: '1px solid rgba(56, 189, 248, 0.2)', borderRadius: '8px', marginBottom: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent-cyan)', fontSize: '0.85rem' }}>
+                      <FileText size={16} /> Existing PDF attached
+                    </div>
+                    <button type="button" onClick={() => setExistingPdfUrl('')} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8rem' }}><Trash2 size={14}/></button>
+                  </div>
+                )}
+
+                {pdfFile && (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1rem', background: 'rgba(124, 58, 237, 0.1)', border: '1px solid rgba(124, 58, 237, 0.2)', borderRadius: '8px', marginBottom: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary)', fontSize: '0.85rem' }}>
+                      <FileText size={16} /> {pdfFile.name} ({(pdfFile.size / 1024 / 1024).toFixed(2)} MB)
+                    </div>
+                    <button type="button" onClick={() => setPdfFile(null)} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8rem' }}><X size={14}/></button>
+                  </div>
+                )}
+
+                {!pdfFile && (
+                  <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1.5rem 1rem', background: 'rgba(255,255,255,0.02)', border: '1px dashed var(--border-color)', borderRadius: '12px', cursor: 'pointer' }}>
+                    <UploadCloud size={24} color="var(--text-muted)" style={{ marginBottom: '0.5rem' }} />
+                    <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Upload PDF documentation</span>
+                    <input type="file" accept=".pdf" onChange={handlePdfChange} style={{ display: 'none' }} />
                   </label>
                 )}
               </div>

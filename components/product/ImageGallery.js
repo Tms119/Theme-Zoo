@@ -1,11 +1,12 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Maximize2, X } from 'lucide-react';
 
 export default function ImageGallery({ images = [], alt = '' }) {
   const [active, setActive] = useState(0);
   const [fading, setFading] = useState(false);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
   const switchTo = useCallback((idx) => {
     if (idx === active) return;
@@ -27,7 +28,19 @@ export default function ImageGallery({ images = [], alt = '' }) {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [prev, next]);
+  }, [prev, next, isLightboxOpen]);
+
+  // Lock body scroll when lightbox is open
+  useEffect(() => {
+    if (isLightboxOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isLightboxOpen]);
 
   if (!images.length) return null;
 
@@ -54,8 +67,27 @@ export default function ImageGallery({ images = [], alt = '' }) {
             objectFit: 'cover',
             opacity: fading ? 0 : 1,
             transition: 'opacity 0.2s ease',
+            cursor: 'zoom-in',
           }}
+          onClick={() => setIsLightboxOpen(true)}
         />
+
+        {/* Maximize Button */}
+        <button
+          onClick={() => setIsLightboxOpen(true)}
+          style={{
+            position: 'absolute', top: '12px', right: '12px',
+            width: '36px', height: '36px', borderRadius: '50%',
+            background: 'rgba(7,7,14,0.75)', border: '1px solid var(--border-color)',
+            color: 'var(--text-main)', display: 'flex', alignItems: 'center',
+            justifyContent: 'center', cursor: 'pointer', backdropFilter: 'blur(8px)',
+            transition: 'all 0.2s ease', zIndex: 5,
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(139,92,246,0.3)'; e.currentTarget.style.borderColor = 'var(--primary)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(7,7,14,0.75)'; e.currentTarget.style.borderColor = 'var(--border-color)'; }}
+        >
+          <Maximize2 size={16} />
+        </button>
 
         {/* Prev / Next arrows — only show if multiple images */}
         {images.length > 1 && (
@@ -142,6 +174,84 @@ export default function ImageGallery({ images = [], alt = '' }) {
               />
             </button>
           ))}
+        </div>
+      )}
+
+      {/* Lightbox Modal */}
+      {isLightboxOpen && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(3, 3, 7, 0.95)', backdropFilter: 'blur(12px)',
+          zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center'
+        }}>
+          {/* Close Button */}
+          <button 
+            onClick={() => setIsLightboxOpen(false)}
+            style={{
+              position: 'absolute', top: '20px', right: '20px',
+              width: '48px', height: '48px', borderRadius: '50%',
+              background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+              color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', zIndex: 10000, transition: 'background 0.2s'
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+          >
+            <X size={24} />
+          </button>
+
+          {/* Prev/Next for Lightbox */}
+          {images.length > 1 && (
+            <>
+              <button
+                onClick={prev}
+                style={{
+                  position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)',
+                  width: '56px', height: '56px', borderRadius: '50%',
+                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                  color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', zIndex: 10000, transition: 'background 0.2s'
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+              >
+                <ChevronLeft size={32} />
+              </button>
+              <button
+                onClick={next}
+                style={{
+                  position: 'absolute', right: '20px', top: '50%', transform: 'translateY(-50%)',
+                  width: '56px', height: '56px', borderRadius: '50%',
+                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                  color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', zIndex: 10000, transition: 'background 0.2s'
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+              >
+                <ChevronRight size={32} />
+              </button>
+            </>
+          )}
+
+          {/* Fullscreen Image */}
+          <div style={{ position: 'relative', width: '90vw', height: '90vh' }}>
+            <Image
+              src={images[active]}
+              alt={`${alt} — fullscreen ${active + 1}`}
+              fill
+              sizes="100vw"
+              style={{ objectFit: 'contain' }}
+            />
+          </div>
+          
+          <div style={{
+            position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)',
+            background: 'rgba(0,0,0,0.5)', padding: '0.5rem 1rem', borderRadius: '100px',
+            color: '#fff', fontSize: '0.9rem', fontWeight: 600
+          }}>
+            {active + 1} of {images.length}
+          </div>
         </div>
       )}
     </div>

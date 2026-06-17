@@ -4,7 +4,7 @@ import { useQuery, useConvex } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { useAuth, useUser } from '@clerk/nextjs';
 import Link from 'next/link';
-import { Download, PackageOpen } from 'lucide-react';
+import { Download, PackageOpen, FileText } from 'lucide-react';
 
 export default function Dashboard() {
   const { isLoaded, isSignedIn } = useAuth();
@@ -83,16 +83,23 @@ export default function Dashboard() {
                     Tx ID: {order.tx_hash ? `${order.tx_hash.substr(0, 10)}...` : 'N/A'}
                   </div>
 
-                  <div style={{ marginTop: 'auto', paddingTop: '1rem' }}>
+                  <div style={{ marginTop: 'auto', paddingTop: '1rem', display: 'flex', gap: '0.5rem' }}>
                     <button 
                       onClick={() => handleDownload(order._id)}
                       disabled={downloading === order._id}
                       className="btn btn-primary" 
-                      style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '0.5rem', padding: '0.75rem', borderRadius: '8px' }}
+                      style={{ flex: 1, display: 'flex', justifyContent: 'center', gap: '0.5rem', padding: '0.75rem', borderRadius: '8px', fontSize: '0.9rem' }}
                     >
                       <Download size={16} /> 
-                      {downloading === order._id ? 'Generating Link...' : 'Download ZIP'}
+                      {downloading === order._id ? 'Wait...' : 'Download'}
                     </button>
+                    <Link
+                      href={`/invoice/${order._id}`}
+                      className="btn btn-secondary"
+                      style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', padding: '0.75rem', borderRadius: '8px', fontSize: '0.9rem', border: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.05)' }}
+                    >
+                      <FileText size={16} /> Invoice
+                    </Link>
                   </div>
                 </div>
               ))}

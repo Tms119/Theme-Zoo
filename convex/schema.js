@@ -19,6 +19,8 @@ export default defineSchema({
     demo_url:    v.optional(v.string()),
     file_id:     v.optional(v.id("_storage")), // Convex Storage ID for zip files
     file_url:    v.optional(v.string()),       // External download link fallback
+    pdf_id:      v.optional(v.id("_storage")), // PDF Documentation
+    pdf_url:     v.optional(v.string()),       // PDF Download/View URL
     sort_order:  v.optional(v.number()),
   })
     .index("by_slug",     ["slug"])
@@ -51,6 +53,15 @@ export default defineSchema({
     budget:       v.optional(v.string()),
     message:      v.string(),
     status:       v.string(),   // "new" | "replied" | "archived"
+  })
+    .index("by_status", ["status"]),
+
+  // ── Support Tickets ─────────────────────────────────────────────
+  support_tickets: defineTable({
+    name:     v.string(),
+    email:    v.string(),
+    problem:  v.string(),
+    status:   v.string(), // "open" | "resolved"
   })
     .index("by_status", ["status"]),
 

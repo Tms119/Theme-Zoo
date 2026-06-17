@@ -12,6 +12,7 @@ import type * as categories from "../categories.js";
 import type * as contacts from "../contacts.js";
 import type * as orders from "../orders.js";
 import type * as products from "../products.js";
+import type * as support from "../support.js";
 
 import type {
   ApiFromModules,
@@ -24,6 +25,7 @@ declare const fullApi: ApiFromModules<{
   contacts: typeof contacts;
   orders: typeof orders;
   products: typeof products;
+  support: typeof support;
 }>;
 
 /**
