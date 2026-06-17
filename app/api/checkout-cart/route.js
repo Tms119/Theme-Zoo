@@ -60,7 +60,8 @@ export async function POST(req) {
 
     const cartId = `cart_${Math.random().toString(36).substr(2, 9)}_${Date.now()}`;
 
-    // 3. Create Orders (Distribute discount proportionally so each item shows correct price)
+    // 3. Create Orders and collect in-memory copies for email
+    const createdOrders = [];
     for (const product of validProducts) {
       let finalItemPrice = product.price_usd;
       
@@ -78,7 +79,7 @@ export async function POST(req) {
 
       const isDiscounted = pc || (!pc && activeCampaign && items.length >= activeCampaign.minItems);
 
-      await convex.mutation(api.orders.create, {
+      const orderData = {
         product_id: product._id,
         product_name: product.name,
         price_usd: finalItemPrice,
@@ -89,10 +90,13 @@ export async function POST(req) {
         buyer_id: buyerId || '',
         status: 'pending',
         tx_hash: cartId,
-      });
+      };
+
+      const orderId = await convex.mutation(api.orders.create, orderData);
+      createdOrders.push({ ...orderData, _id: orderId });
     }
 
-    // 3. 100% Free Bypass Logic
+    // 4. 100% Free Bypass Logic
     if (totalUsdPrice <= 0) {
       // Mark orders as paid immediately
       await convex.mutation(api.orders.updateByTxHash, {
@@ -102,11 +106,22 @@ export async function POST(req) {
         delivered_at: Date.now(),
       });
       
-      const orders = await convex.query(api.orders.listByTxHash, { tx_hash: `promo_${cartId}` });
+      // Build email data from in-memory orders (no database re-query needed)
+      const emailOrders = createdOrders.map(o => ({
+        ...o,
+        status: 'paid',
+        tx_hash: `promo_${cartId}`,
+      }));
       
-      console.log(`DEBUG CHECKOUT: Found ${orders.length} orders for tx_hash promo_${cartId}`);
+      console.log(`CHECKOUT: Sending invoice email for ${emailOrders.length} free items to ${buyerEmail}`);
       
-      const emailResponse = await sendInvoiceEmail(orders, baseUrl);
+      let emailResponse = null;
+      try {
+        emailResponse = await sendInvoiceEmail(emailOrders, baseUrl);
+        console.log('CHECKOUT: Email sent successfully:', JSON.stringify(emailResponse));
+      } catch (emailErr) {
+        console.error('CHECKOUT: Email send FAILED:', emailErr);
+      }
       
       return NextResponse.json({
         cartId,
@@ -116,8 +131,6 @@ export async function POST(req) {
         payCurrency: coin,
         usdPrice: 0,
         isFree: true,
-        debug_orders: orders.length,
-        resend_response: emailResponse
       }, { status: 200 });
     }
 
