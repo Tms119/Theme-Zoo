@@ -45,6 +45,9 @@ export async function POST(req) {
 
     if (order_id.startsWith('cart_')) {
       if (isSuccess) {
+        // Fetch orders using the ORIGINAL tx_hash (order_id) BEFORE we mutate them
+        const existingOrders = await convex.query(api.orders.listByTxHash, { tx_hash: order_id });
+
         await convex.mutation(api.orders.updateByTxHash, {
           tx_hash: order_id,
           status: 'paid',
@@ -52,10 +55,21 @@ export async function POST(req) {
           delivered_at: Date.now(),
         });
         
-        // Fetch all orders for this cart to send email
-        const orders = await convex.query(api.orders.listByTxHash, { tx_hash: payment_id.toString() });
-        // Since listByTxHash searches by the updated tx_hash (the payment_id), we pass payment_id
-        await sendInvoiceEmail(orders, baseUrl);
+        // Build email data from memory to avoid Convex read-after-write latency
+        const emailOrders = existingOrders.map(o => ({
+          ...o,
+          status: 'paid',
+          tx_hash: payment_id.toString(),
+        }));
+        
+        if (emailOrders.length > 0) {
+          try {
+            await sendInvoiceEmail(emailOrders, baseUrl);
+            console.log(`Webhook: Sent invoice email for ${emailOrders.length} paid items.`);
+          } catch (e) {
+            console.error('Webhook: Email failed:', e);
+          }
+        }
         
       } else if (isFailed) {
         await convex.mutation(api.orders.updateByTxHash, {
@@ -77,6 +91,9 @@ export async function POST(req) {
       }
     } else {
       if (isSuccess) {
+        // Fetch order BEFORE mutation
+        const order = await convex.query(api.orders.getById, { id: order_id });
+
         await convex.mutation(api.orders.updateStatus, {
           id: order_id,
           status: 'paid',
@@ -84,10 +101,18 @@ export async function POST(req) {
           delivered_at: Date.now(),
         });
         
-        // Fetch single order
-        const order = await convex.query(api.orders.getById, { id: order_id });
         if (order) {
-          await sendInvoiceEmail([order], baseUrl);
+          const emailOrder = {
+            ...order,
+            status: 'paid',
+            tx_hash: payment_id.toString(),
+          };
+          try {
+            await sendInvoiceEmail([emailOrder], baseUrl);
+            console.log(`Webhook: Sent invoice email for single paid item.`);
+          } catch (e) {
+            console.error('Webhook: Email failed:', e);
+          }
         }
       } else if (isFailed) {
         await convex.mutation(api.orders.updateStatus, {
