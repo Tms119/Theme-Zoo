@@ -335,7 +335,7 @@ export default function CheckoutCartPage() {
                             setPromoError('');
                           }
                         }}
-                        style={{ flex: 1, padding: '0.8rem 1rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', color: 'var(--text-main)', fontSize: '1rem', outline: 'none' }}
+                        style={{ flex: 1, minWidth: 0, padding: '0.8rem 1rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', color: 'var(--text-main)', fontSize: '1rem', outline: 'none' }}
                       />
                       <button
                         type="button"

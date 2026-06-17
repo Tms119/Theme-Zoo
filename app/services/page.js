@@ -595,6 +595,7 @@ export default function ServicesPage() {
         }
         .modal-input {
           width: 100%;
+          min-width: 0;
           padding: 0.8rem 1rem;
           background: rgba(255,255,255,0.02);
           border: 1px solid var(--border-color);
