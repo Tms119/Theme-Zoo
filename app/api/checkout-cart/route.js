@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
 import { ConvexHttpClient } from 'convex/browser';
 import { api } from '@/convex/_generated/api';
+import { sendInvoiceEmail } from '../webhooks/nowpayments/route';
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL);
 
 export async function POST(req) {
   try {
-    const { items, buyerEmail, buyerName, buyerId, coin } = await req.json();
+    const { items, buyerEmail, buyerName, buyerId, coin, promoCode } = await req.json();
 
     if (!items || !items.length || !buyerEmail || !coin) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -39,11 +40,44 @@ export async function POST(req) {
       });
     }
 
-    if (totalUsdPrice === 0) {
-      return NextResponse.json({ error: 'Cart total is 0' }, { status: 400 });
+    // 2. Promo Code Calculation
+    if (promoCode) {
+      const pc = await convex.query(api.promo_codes.getByCode, { code: promoCode });
+      if (pc && pc.isActive) {
+        if (pc.discountType === 'percentage') {
+          totalUsdPrice = totalUsdPrice * (1 - pc.discountValue / 100);
+        } else if (pc.discountType === 'fixed') {
+          totalUsdPrice = Math.max(0, totalUsdPrice - pc.discountValue);
+        }
+        await convex.mutation(api.promo_codes.incrementUse, { codeId: pc._id });
+      }
     }
 
-    // 2. Call NOWPayments API to generate crypto invoice for the total cart amount
+    // 3. 100% Free Bypass Logic
+    if (totalUsdPrice <= 0) {
+      // Mark orders as paid immediately
+      await convex.mutation(api.orders.updateByTxHash, {
+        tx_hash: cartId,
+        status: 'paid',
+        new_tx_hash: `promo_${cartId}`,
+        delivered_at: Date.now(),
+      });
+      
+      const orders = await convex.query(api.orders.listByTxHash, { tx_hash: `promo_${cartId}` });
+      await sendInvoiceEmail(orders, baseUrl);
+      
+      return NextResponse.json({
+        cartId,
+        isFree: true,
+        paymentId: `promo_${cartId}`,
+        payAddress: '',
+        payAmount: 0,
+        payCurrency: coin,
+        usdPrice: 0,
+      });
+    }
+
+    // 4. Call NOWPayments API to generate crypto invoice for the total cart amount
     const payCurrency = coin.toLowerCase();
     
     const nowPaymentsRes = await fetch('https://api.nowpayments.io/v1/payment', {

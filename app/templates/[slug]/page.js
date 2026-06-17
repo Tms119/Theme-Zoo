@@ -2,9 +2,11 @@
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import ImageGallery from '@/components/product/ImageGallery';
-import { ArrowLeft, Check, Sparkles, FileCode, Cpu, ShieldCheck, Tag, ShoppingCart, FileText } from 'lucide-react';
+import { ArrowLeft, Check, Sparkles, FileCode, Cpu, ShieldCheck, Tag, ShoppingCart, FileText, Layers } from 'lucide-react';
 import useCart from '@/store/useCart';
 import toast from 'react-hot-toast';
+import ReactMarkdown from 'react-markdown';
+import ProductCard from '@/components/product/ProductCard';
 
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -20,6 +22,11 @@ export default function TemplateDetail() {
   const params = useParams();
   const slug = params?.slug || '';
   const product = useQuery(api.products.getBySlug, { slug });
+  
+  // Fetch related products from same category (max 3)
+  const allInCategory = useQuery(api.products.listAll);
+  const relatedProducts = allInCategory?.filter(p => p.category === product?.category && p._id !== product?._id).slice(0, 3) || [];
+
   const { addItem, items, openCart } = useCart();
   
   const inCart = product && items.some(item => item._id === product._id);
@@ -84,9 +91,9 @@ export default function TemplateDetail() {
                 <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.6rem', fontWeight: 800, marginBottom: '0.85rem', letterSpacing: '-0.5px' }}>
                   Overview
                 </h2>
-                <p style={{ color: 'var(--text-secondary)', lineHeight: '1.7', fontSize: '1rem', marginBottom: '2rem' }}>
-                  {product.desc}
-                </p>
+                <div style={{ color: 'var(--text-secondary)', lineHeight: '1.7', fontSize: '1rem', marginBottom: '2rem' }} className="markdown-body">
+                  <ReactMarkdown>{product.desc}</ReactMarkdown>
+                </div>
 
                 <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', fontWeight: 700, marginBottom: '1rem' }}>
                   Core Features
@@ -209,6 +216,24 @@ export default function TemplateDetail() {
             </div>
 
           </div>
+
+          {/* ── Related Products ────────────── */}
+          {relatedProducts.length > 0 && (
+            <div style={{ marginTop: '5rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '4rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '2rem' }}>
+                <Layers size={24} color="var(--primary)" />
+                <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.8rem', fontWeight: 800 }}>
+                  You might also like
+                </h2>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '2rem' }}>
+                {relatedProducts.map(relProd => (
+                  <ProductCard key={relProd._id} product={relProd} />
+                ))}
+              </div>
+            </div>
+          )}
+
         </div>
       </main>
     </>

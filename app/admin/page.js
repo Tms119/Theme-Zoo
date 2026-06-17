@@ -5,6 +5,7 @@ import { api } from "@/convex/_generated/api";
 import Link from 'next/link';
 import { PlusCircle, FileText, CheckCircle2, TrendingUp, DollarSign, ExternalLink, Eye, EyeOff, LifeBuoy, Mail, Copy } from 'lucide-react';
 import toast from 'react-hot-toast';
+import RevenueChart from '@/components/admin/RevenueChart';
 
 export default function AdminDashboard() {
   const products = useQuery(api.products.listAll);

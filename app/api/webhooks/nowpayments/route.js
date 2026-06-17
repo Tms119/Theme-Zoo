@@ -8,7 +8,7 @@ const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL);
 const IPN_SECRET = process.env.NOWPAYMENTS_IPN_SECRET;
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-async function sendInvoiceEmail(ordersArray, baseUrl) {
+export async function sendInvoiceEmail(ordersArray, baseUrl) {
   if (!ordersArray || ordersArray.length === 0) return;
   const buyerEmail = ordersArray[0].buyer_email;
   const buyerName = ordersArray[0].buyer_name || 'Customer';

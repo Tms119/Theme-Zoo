@@ -1,13 +1,22 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ShieldAlert, LayoutDashboard, FilePlus, LogOut, ArrowLeft, KeySquare, Archive, Tags } from 'lucide-react';
+import { ShieldAlert, LayoutDashboard, FilePlus, LogOut, ArrowLeft, KeySquare, Archive, Tags, Package, Tag, LifeBuoy, Briefcase } from 'lucide-react';
 
 import { useUser, SignInButton } from '@clerk/nextjs';
 
 export default function AdminLayout({ children }) {
   const { isLoaded, isSignedIn, user } = useUser();
   const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+
+  const navLinks = [
+    { href: '/admin', label: 'Dashboard', icon: <LayoutDashboard size={16} /> },
+    { href: '/admin/products', label: 'Products', icon: <Package size={16} /> },
+    { href: '/admin/categories', label: 'Categories', icon: <Tags size={16} /> },
+    { href: '/admin/promo', label: 'Promo Codes', icon: <Tag size={16} /> },
+    { href: '/admin/support', label: 'Support Tickets', icon: <LifeBuoy size={16} /> },
+    { href: '/admin/services', label: 'Custom Services', icon: <Briefcase size={16} /> },
+  ];
 
   if (!isLoaded) {
     return (
@@ -75,15 +84,11 @@ export default function AdminLayout({ children }) {
             </Link>
             
             <nav className="admin-nav">
-              <Link href="/admin" className="admin-nav-link">
-                <LayoutDashboard size={16} /> <span>Dashboard</span>
-              </Link>
-              <Link href="/admin/products" className="admin-nav-link">
-                <FilePlus size={16} /> <span>Add Template</span>
-              </Link>
-              <Link href="/admin/categories" className="admin-nav-link">
-                <Tags size={16} /> <span>Categories</span>
-              </Link>
+              {navLinks.map((link) => (
+                <Link key={link.href} href={link.href} className="admin-nav-link">
+                  {link.icon} <span>{link.label}</span>
+                </Link>
+              ))}
             </nav>
           </div>
 

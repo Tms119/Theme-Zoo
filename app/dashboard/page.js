@@ -2,15 +2,21 @@
 import { useState } from 'react';
 import { useQuery, useConvex } from 'convex/react';
 import { api } from '@/convex/_generated/api';
-import { useAuth, useUser } from '@clerk/nextjs';
+import { useAuth, useUser, useClerk } from '@clerk/nextjs';
 import Link from 'next/link';
-import { Download, PackageOpen, FileText } from 'lucide-react';
+import { Download, PackageOpen, FileText, Heart, Receipt } from 'lucide-react';
+import ProductCard from '@/components/product/ProductCard';
 
 export default function Dashboard() {
   const { isLoaded, isSignedIn } = useAuth();
   const { user } = useUser();
+  const { signOut } = useClerk();
   const convex = useConvex();
-  const orders = useQuery(api.orders.listByUser, user ? { buyer_id: user.id } : "skip");
+  const [activeTab, setActiveTab] = useState('purchases');
+  
+  const userEmail = user?.primaryEmailAddress?.emailAddress;
+  const orders = useQuery(api.orders.listByEmail, userEmail ? { email: userEmail } : "skip");
+  const wishlistedProducts = useQuery(api.wishlist.listByUser, userEmail ? { user_email: userEmail } : "skip");
   const [downloading, setDownloading] = useState(null);
 
   const handleDownload = async (orderId) => {
@@ -18,7 +24,7 @@ export default function Dashboard() {
       setDownloading(orderId);
       const url = await convex.query(api.orders.getDownloadUrl, { 
         order_id: orderId, 
-        buyer_id: user.id 
+        email: userEmail 
       });
       
       if (url) {
@@ -47,62 +53,105 @@ export default function Dashboard() {
         <div className="container">
           <div style={{ marginBottom: '2rem' }}>
             <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', fontWeight: 800 }}>Welcome, {user?.firstName || 'User'}!</h1>
-            <p style={{ color: 'var(--text-secondary)' }}>Manage your purchased templates and downloads.</p>
+            <p style={{ color: 'var(--text-secondary)' }}>Manage your account, purchases, and saved items.</p>
           </div>
 
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <PackageOpen size={20} /> Your Templates
-          </h2>
+          <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem' }}>
+            <button 
+              onClick={() => setActiveTab('purchases')}
+              className={`dashboard-tab ${activeTab === 'purchases' ? 'active' : ''}`}
+            >
+              <PackageOpen size={18} /> Purchases
+            </button>
+            <button 
+              onClick={() => setActiveTab('wishlist')}
+              className={`dashboard-tab ${activeTab === 'wishlist' ? 'active' : ''}`}
+            >
+              <Heart size={18} /> Wishlist
+            </button>
+          </div>
 
-          {orders === undefined ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="skeleton" style={{ height: '200px', borderRadius: '16px' }}></div>
-              ))}
-            </div>
-          ) : orders.length === 0 ? (
-            <div style={{ background: 'var(--bg-card)', padding: '3rem', borderRadius: '24px', border: '1px solid var(--border-color)', textAlign: 'center' }}>
-              <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>You haven't purchased any templates yet.</p>
-              <Link href="/templates" className="btn btn-primary">Browse Templates</Link>
-            </div>
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
-              {orders.map((order) => (
-                <div key={order._id} style={{ background: 'var(--bg-card)', borderRadius: '16px', border: '1px solid var(--border-color)', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div>
-                      <h3 style={{ fontWeight: 700, fontSize: '1.1rem', marginBottom: '0.25rem' }}>{order.product_name}</h3>
-                      <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Purchased: {new Date(order._creationTime).toLocaleDateString()}</p>
-                    </div>
-                    <span style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem', background: 'rgba(16,185,129,0.1)', color: 'var(--accent-emerald)', borderRadius: '100px', fontWeight: 700, textTransform: 'uppercase' }}>
-                      {order.status}
-                    </span>
-                  </div>
-                  
-                  <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-                    Tx ID: {order.tx_hash ? `${order.tx_hash.substr(0, 10)}...` : 'N/A'}
-                  </div>
+          {activeTab === 'purchases' && (
+            <div className="animate-fade-in">
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <PackageOpen size={20} /> Your Templates
+              </h2>
 
-                  <div style={{ marginTop: 'auto', paddingTop: '1rem', display: 'flex', gap: '0.5rem' }}>
-                    <button 
-                      onClick={() => handleDownload(order._id)}
-                      disabled={downloading === order._id}
-                      className="btn btn-primary" 
-                      style={{ flex: 1, display: 'flex', justifyContent: 'center', gap: '0.5rem', padding: '0.75rem', borderRadius: '8px', fontSize: '0.9rem' }}
-                    >
-                      <Download size={16} /> 
-                      {downloading === order._id ? 'Wait...' : 'Download'}
-                    </button>
-                    <Link
-                      href={`/invoice/${order._id}`}
-                      className="btn btn-secondary"
-                      style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', padding: '0.75rem', borderRadius: '8px', fontSize: '0.9rem', border: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.05)' }}
-                    >
-                      <FileText size={16} /> Invoice
-                    </Link>
-                  </div>
+              {orders === undefined ? (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="skeleton" style={{ height: '200px', borderRadius: '16px' }}></div>
+                  ))}
                 </div>
-              ))}
+              ) : orders.length === 0 ? (
+                <div style={{ background: 'var(--bg-card)', padding: '3rem', borderRadius: '24px', border: '1px solid var(--border-color)', textAlign: 'center' }}>
+                  <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>You haven't purchased any templates yet.</p>
+                  <Link href="/templates" className="btn btn-primary">Browse Templates</Link>
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
+                  {orders.map((order) => (
+                    <div key={order._id} style={{ background: 'var(--bg-card)', borderRadius: '16px', border: '1px solid var(--border-color)', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div>
+                          <h3 style={{ fontWeight: 700, fontSize: '1.1rem', marginBottom: '0.25rem' }}>{order.product_name}</h3>
+                          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Purchased: {new Date(order._creationTime).toLocaleDateString()}</p>
+                        </div>
+                        <span style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem', background: 'rgba(16,185,129,0.1)', color: 'var(--accent-emerald)', borderRadius: '100px', fontWeight: 700, textTransform: 'uppercase' }}>
+                          {order.status}
+                        </span>
+                      </div>
+                      
+                      <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                        Tx ID: {order.tx_hash ? `${order.tx_hash.substr(0, 10)}...` : 'N/A'}
+                      </div>
+
+                      <div style={{ marginTop: 'auto', paddingTop: '1rem', display: 'flex', gap: '0.5rem' }}>
+                        <button 
+                          onClick={() => handleDownload(order._id)}
+                          disabled={downloading === order._id}
+                          className="btn btn-primary" 
+                          style={{ flex: 1, display: 'flex', justifyContent: 'center', gap: '0.5rem', padding: '0.75rem', borderRadius: '8px', fontSize: '0.9rem' }}
+                        >
+                          <Download size={16} /> 
+                          {downloading === order._id ? 'Wait...' : 'Download'}
+                        </button>
+                        <Link
+                          href={`/invoice/${order._id}`}
+                          className="btn btn-secondary"
+                          style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', padding: '0.75rem', borderRadius: '8px', fontSize: '0.9rem', border: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.05)' }}
+                        >
+                          <FileText size={16} /> Invoice
+                        </Link>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'wishlist' && (
+            <div className="animate-fade-in">
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '1.5rem' }}>
+                Saved Templates
+              </h2>
+              
+              {!wishlistedProducts || wishlistedProducts.length === 0 ? (
+                <div style={{ padding: '3rem', textAlign: 'center', background: 'rgba(255,255,255,0.02)', border: '1px dashed var(--border-color)', borderRadius: '16px' }}>
+                  <Heart size={48} color="var(--border-color)" style={{ margin: '0 auto 1rem auto' }} />
+                  <p style={{ color: 'var(--text-secondary)' }}>You haven't saved any templates yet.</p>
+                  <Link href="/templates" className="btn btn-primary" style={{ marginTop: '1rem', display: 'inline-block' }}>
+                    Browse Templates
+                  </Link>
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '2rem' }}>
+                  {wishlistedProducts.map(product => (
+                    <ProductCard key={product._id} product={product} />
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

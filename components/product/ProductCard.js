@@ -2,6 +2,11 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useRef } from 'react';
+import { Heart } from 'lucide-react';
+import { useUser } from '@clerk/nextjs';
+import { useMutation, useQuery } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+import toast from 'react-hot-toast';
 
 const WordPressLogo = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
@@ -17,10 +22,14 @@ const NextjsLogo = () => (
 
 export default function ProductCard({ product }) {
   const { slug, name, category, price_usd, images, is_featured } = product;
-
+  const { user } = useUser();
   const cardRef = useRef(null);
   const [coords, setCoords] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
+
+  const userEmail = user?.primaryEmailAddress?.emailAddress;
+  const isWishlisted = useQuery(api.wishlist.check, userEmail ? { user_email: userEmail, product_id: product._id } : 'skip');
+  const toggleWishlist = useMutation(api.wishlist.toggle);
 
   const handleMouseMove = (e) => {
     if (!cardRef.current) return;
@@ -29,6 +38,21 @@ export default function ProductCard({ product }) {
       x: e.clientX - rect.left,
       y: e.clientY - rect.top
     });
+  };
+
+  const handleWishlistToggle = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!userEmail) {
+      toast.error('Please sign in to save templates to your wishlist.');
+      return;
+    }
+    try {
+      const added = await toggleWishlist({ user_email: userEmail, product_id: product._id });
+      toast.success(added ? 'Added to wishlist!' : 'Removed from wishlist.');
+    } catch (err) {
+      toast.error('Failed to update wishlist.');
+    }
   };
 
   const isWordPress = category?.toLowerCase() === 'wordpress';
@@ -57,7 +81,6 @@ export default function ProductCard({ product }) {
         position: 'relative'
       }}
     >
-      {/* Spotlight cursor glow overlay */}
       <div 
         style={{
           position: 'absolute',
@@ -73,10 +96,26 @@ export default function ProductCard({ product }) {
         }}
       />
       
-      {/* Content wrapper */}
       <div style={{ position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', height: '100%', width: '100%' }}>
-        {/* Image Container with Badges */}
         <div className="card-image-wrapper">
+          {/* Wishlist Button */}
+          <button
+            onClick={handleWishlistToggle}
+            style={{
+              position: 'absolute', top: '12px', right: '12px', zIndex: 10,
+              width: '36px', height: '36px', borderRadius: '50%',
+              background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', transition: 'all 0.2s',
+              color: isWishlisted ? '#ef4444' : '#fff'
+            }}
+            title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
+            className="wishlist-btn"
+          >
+            <Heart size={18} fill={isWishlisted ? '#ef4444' : 'transparent'} stroke={isWishlisted ? '#ef4444' : 'currentColor'} />
+          </button>
+
           {isFeatured && (
             <span className="card-badge-featured">
               Featured

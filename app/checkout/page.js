@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ShieldCheck, Mail, Check, AlertCircle, Copy, Loader2 } from 'lucide-react';
+import { ShieldCheck, Mail, Check, AlertCircle, Copy, Loader2, Tag } from 'lucide-react';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import useCart from '@/store/useCart';
@@ -30,6 +30,13 @@ export default function CheckoutCartPage() {
   const [name, setName] = useState('');
   const [coin, setCoin] = useState('usdttrc20');
   
+  // Promo Code
+  const [promoInput, setPromoInput] = useState('');
+  const [codeToCheck, setCodeToCheck] = useState('');
+  const [appliedPromo, setAppliedPromo] = useState(null);
+  const [promoError, setPromoError] = useState('');
+  const [promoSuccess, setPromoSuccess] = useState('');
+  
   // Loading & error
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -45,8 +52,28 @@ export default function CheckoutCartPage() {
   const [timer, setTimer] = useState(1800); // 30 mins
   
   // Real-time order tracking via Convex
-  // We fetch the orders linked to this cartId to see if they're paid
+  // Real-time order tracking via Convex
   const liveOrders = useQuery(api.orders.listByTxHash, cartId ? { tx_hash: cartId } : 'skip');
+  
+  const promoData = useQuery(api.promo_codes.getByCode, codeToCheck ? { code: codeToCheck } : 'skip');
+
+  useEffect(() => {
+    if (codeToCheck) {
+      if (promoData === undefined) {
+        // loading
+        return;
+      }
+      if (promoData === null || !promoData.isActive) {
+        setPromoError('Invalid or inactive promo code.');
+        setPromoSuccess('');
+        setAppliedPromo(null);
+      } else {
+        setPromoError('');
+        setPromoSuccess('Promo code applied!');
+        setAppliedPromo(promoData);
+      }
+    }
+  }, [promoData, codeToCheck]);
 
   // Set default email/name if logged in
   useEffect(() => {
@@ -122,6 +149,7 @@ export default function CheckoutCartPage() {
           buyerName: name,
           buyerId: user?.id,
           coin: coin,
+          promoCode: appliedPromo ? appliedPromo.code : null,
         }),
       });
 
@@ -132,14 +160,21 @@ export default function CheckoutCartPage() {
       }
 
       setCartId(data.cartId);
-      setCryptoAmount(data.payAmount);
-      setDepositAddress(data.payAddress);
-      setPayCurrency(data.payCurrency);
-      setPaymentId(data.paymentId);
-      setUsdPrice(data.usdPrice);
-      setQrCodeUrl(`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${data.payCurrency}:${data.payAddress}?amount=${data.payAmount}`);
-      
-      setStep('payment');
+
+      // If it was a 100% discount, the API will immediately return paymentId = 'promo_...' and payAmount = 0
+      if (data.isFree) {
+        clearCart();
+        setCryptoAmount(0);
+        setStep('success');
+      } else {
+        setCryptoAmount(data.payAmount);
+        setDepositAddress(data.payAddress);
+        setPayCurrency(data.payCurrency);
+        setPaymentId(data.paymentId);
+        setUsdPrice(data.usdPrice);
+        setQrCodeUrl(`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${data.payCurrency}:${data.payAddress}?amount=${data.payAmount}`);
+        setStep('payment');
+      }
     } catch (err) {
       console.error(err);
       setError(err.message || 'An unexpected error occurred. Please try again later.');
@@ -149,6 +184,17 @@ export default function CheckoutCartPage() {
   };
 
   const totalCartUsd = items.reduce((sum, item) => sum + (item.price_usd || 0), 0);
+  
+  // Calculate discounted total
+  let finalTotalUsd = totalCartUsd;
+  if (appliedPromo) {
+    if (appliedPromo.discountType === 'percentage') {
+      finalTotalUsd = totalCartUsd * (1 - appliedPromo.discountValue / 100);
+    } else if (appliedPromo.discountType === 'fixed') {
+      finalTotalUsd = Math.max(0, totalCartUsd - appliedPromo.discountValue);
+    }
+  }
+  const isFree = finalTotalUsd <= 0;
 
   if (!isLoaded) {
     return (
@@ -180,6 +226,13 @@ export default function CheckoutCartPage() {
                   <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
                     Purchasing <span style={{ color: 'var(--text-main)', fontWeight: 600 }}>{items.length} items</span> for a total of <span style={{ color: 'var(--text-main)', fontWeight: 600 }}>${totalCartUsd.toFixed(2)}</span>
                   </p>
+                  {appliedPromo && (
+                    <div style={{ marginTop: '0.5rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(16, 189, 129, 0.1)', color: 'var(--accent-emerald)', padding: '0.3rem 0.8rem', borderRadius: '12px', fontSize: '0.85rem', fontWeight: 600 }}>
+                      <Tag size={14} /> 
+                      {appliedPromo.discountType === 'percentage' ? `${appliedPromo.discountValue}% OFF` : `$${appliedPromo.discountValue} OFF`} APPLIED
+                      <span style={{ marginLeft: '0.5rem', color: 'var(--text-main)' }}>Final Total: ${finalTotalUsd.toFixed(2)}</span>
+                    </div>
+                  )}
                 </div>
 
                 {error && (
@@ -250,6 +303,41 @@ export default function CheckoutCartPage() {
                       ))}
                     </div>
                   </div>
+
+                  {/* Promo Code Input */}
+                  <div>
+                    <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', fontWeight: 500 }}>
+                      <span>Promo Code (Optional)</span>
+                    </label>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <input 
+                        type="text" 
+                        placeholder="SUMMER50"
+                        value={promoInput}
+                        onChange={(e) => {
+                          setPromoInput(e.target.value.toUpperCase());
+                          if (!e.target.value) {
+                            setAppliedPromo(null);
+                            setCodeToCheck('');
+                            setPromoSuccess('');
+                            setPromoError('');
+                          }
+                        }}
+                        style={{ flex: 1, padding: '0.8rem 1rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', color: 'var(--text-main)', fontSize: '1rem', outline: 'none' }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setCodeToCheck(promoInput)}
+                        disabled={!promoInput || promoInput === codeToCheck}
+                        style={{ padding: '0 1.2rem', background: 'var(--border-color)', border: 'none', borderRadius: '12px', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 600, fontSize: '0.9rem' }}
+                      >
+                        Apply
+                      </button>
+                    </div>
+                    {promoError && <p style={{ color: '#f87171', fontSize: '0.8rem', marginTop: '0.5rem', margin: '0.5rem 0 0 0' }}>{promoError}</p>}
+                    {promoSuccess && <p style={{ color: 'var(--accent-emerald)', fontSize: '0.8rem', marginTop: '0.5rem', margin: '0.5rem 0 0 0' }}>{promoSuccess}</p>}
+                  </div>
+
                 </div>
 
                 <button 
@@ -259,7 +347,7 @@ export default function CheckoutCartPage() {
                   style={{ width: '100%', padding: '1rem', borderRadius: '14px', fontSize: '1rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}
                 >
                   {loading && <Loader2 className="animate-spin" size={18} />}
-                  {loading ? 'Generating Invoice...' : `Pay $${totalCartUsd.toFixed(2)} with Crypto`}
+                  {loading ? 'Processing...' : isFree ? 'Claim Free Templates' : `Pay $${finalTotalUsd.toFixed(2)} with Crypto`}
                 </button>
               </form>
             )}
@@ -359,10 +447,10 @@ export default function CheckoutCartPage() {
                 </div>
                 
                 <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', fontWeight: 800, marginBottom: '0.5rem', color: 'var(--text-main)' }}>
-                  Payment Confirmed!
+                  {cryptoAmount === 0 ? 'Order Confirmed!' : 'Payment Confirmed!'}
                 </h1>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', marginBottom: '2.5rem', lineHeight: '1.6' }}>
-                  Your payment of {cryptoAmount} {payCurrency?.toUpperCase()} has been successfully verified. We have sent the download instructions to <span style={{ color: 'var(--text-main)', fontWeight: 600 }}>{email}</span>.
+                  Your order has been successfully processed. We have sent the download instructions to <span style={{ color: 'var(--text-main)', fontWeight: 600 }}>{email}</span>.
                 </p>
 
                 <button 

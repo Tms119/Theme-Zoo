@@ -3,7 +3,7 @@ import Ticker from '@/components/marketing/Ticker';
 import ProductGrid from '@/components/product/ProductGrid';
 import ValueProp from '@/components/marketing/ValueProp';
 import BentoFeatures from '@/components/marketing/BentoFeatures';
-import CustomOrder from '@/components/marketing/CustomOrder';
+import Services from '@/components/marketing/Services';
 import ScrollReveal from '@/components/ui/ScrollReveal';
 import Footer from '@/components/ui/Footer';
 
@@ -31,7 +31,7 @@ export default function Home() {
         <BentoFeatures />
 
         {/* Custom Website Order + Contact */}
-        <CustomOrder />
+        <Services />
       </main>
       
       <Footer />

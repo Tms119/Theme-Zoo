@@ -61,8 +61,48 @@ export default defineSchema({
     name:     v.string(),
     email:    v.string(),
     problem:  v.string(),
-    status:   v.string(), // "open" | "resolved"
+    status:   v.string(), // "open", "replied", "closed"
+  }).index("by_status", ["status"]),
+
+  // Promo Codes Table
+  promo_codes: defineTable({
+    code: v.string(), // e.g., "FREE100", "SUMMER50"
+    discountType: v.string(), // "percentage" or "fixed"
+    discountValue: v.number(), // e.g., 100 for 100%, or 50 for $50
+    isActive: v.boolean(),
+    uses: v.number(), // track how many times it was used
+  }).index("by_code", ["code"]),
+
+  // Wishlists Table
+  wishlists: defineTable({
+    user_email: v.string(),
+    product_id: v.id("products"),
+  }).index("by_user", ["user_email"]),
+
+  // Services Config Table (Singular config for Custom Services Section)
+  services_config: defineTable({
+    tier1_name: v.string(),
+    tier1_price: v.number(),
+    tier1_desc: v.string(),
+    tier2_name: v.string(),
+    tier2_price: v.number(),
+    tier2_desc: v.string(),
+    tier3_name: v.string(),
+    tier3_desc: v.string(),
+    design_title: v.string(),
+    design_desc: v.string(),
+  }),
+
+  // Custom Orders (Form Submissions)
+  custom_orders: defineTable({
+    name: v.string(),
+    email: v.string(),
+    service_type: v.string(), // "Tier 1", "Tier 2", "Tier 3", "Design"
+    budget: v.string(),
+    message: v.string(),
+    status: v.string(), // "open", "contacted", "closed"
   })
+    .index("by_email", ["email"])
     .index("by_status", ["status"]),
 
   // ── Categories ──────────────────────────────────────────────────
