@@ -7,7 +7,7 @@ const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL || 'https
 
 // ─── Config ─────────────────────────────────────────────────────
 const OWNER_EMAIL   = process.env.CONTACT_EMAIL ?? 'hello@themezoo.dev';
-const FROM_ADDRESS  = process.env.FROM_EMAIL    ?? 'Themes Zoo <hello@themezoo.dev>';
+const FROM_ADDRESS  = process.env.FROM_EMAIL    ?? 'Themes Zoo <hello@themeszoo.com>';
 const SITE_NAME     = 'Themes Zoo';
 
 export async function POST(request) {
