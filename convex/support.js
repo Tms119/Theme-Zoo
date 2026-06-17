@@ -26,6 +26,19 @@ export const listAll = query({
   },
 });
 
+// Get tickets by email
+export const getByEmail = query({
+  args: { email: v.string() },
+  handler: async (ctx, args) => {
+    if (!args.email) return [];
+    return await ctx.db
+      .query("support_tickets")
+      .filter((q) => q.eq(q.field("email"), args.email))
+      .order("desc")
+      .collect();
+  },
+});
+
 // Update support ticket status
 export const updateStatus = mutation({
   args: {

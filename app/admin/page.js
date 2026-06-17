@@ -3,7 +3,8 @@ import React, { useState } from 'react';
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import Link from 'next/link';
-import { PlusCircle, FileText, CheckCircle2, TrendingUp, DollarSign, ExternalLink, Eye, EyeOff, LifeBuoy } from 'lucide-react';
+import { PlusCircle, FileText, CheckCircle2, TrendingUp, DollarSign, ExternalLink, Eye, EyeOff, LifeBuoy, Mail, Copy } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function AdminDashboard() {
   const products = useQuery(api.products.listAll);
@@ -304,7 +305,26 @@ export default function AdminDashboard() {
                   </td>
                   <td style={{ padding: '1rem 0.5rem' }}>
                     <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>{t.name}</div>
-                    <a href={`mailto:${t.email}`} style={{ color: 'var(--accent-cyan)', fontSize: '0.8rem' }}>{t.email}</a>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem' }}>
+                      <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{t.email}</span>
+                      <button 
+                        onClick={() => {
+                          navigator.clipboard.writeText(t.email);
+                          toast.success('Email copied!');
+                        }}
+                        style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.2rem' }}
+                        title="Copy Email"
+                      >
+                        <Copy size={14} />
+                      </button>
+                      <a 
+                        href={`mailto:${t.email}?subject=Re: Your Support Ticket - ThemeZoo`} 
+                        style={{ color: 'var(--accent-cyan)', display: 'inline-flex', alignItems: 'center', padding: '0.2rem' }}
+                        title="Reply via Email"
+                      >
+                        <Mail size={14} />
+                      </a>
+                    </div>
                   </td>
                   <td style={{ padding: '1rem 0.5rem', color: 'var(--text-muted)', whiteSpace: 'normal', maxWidth: '300px' }}>{t.problem}</td>
                   <td style={{ padding: '1rem 0.5rem' }}>
