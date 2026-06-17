@@ -1999,6 +1999,19 @@ body {
   line-height: 1.6;
 }
 
+@media screen and (max-width: 768px) {
+  /* Prevent iOS Safari from zooming in on input focus */
+  .contact-form-input,
+  .contact-form-select,
+  .contact-form-textarea,
+  input[type="text"],
+  input[type="email"],
+  input[type="number"],
+  input[type="password"] {
+    font-size: 16px !important;
+  }
+}
+
 .contact-form-input:focus,
 .contact-form-select:focus,
 .contact-form-textarea:focus {

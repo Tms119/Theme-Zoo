@@ -4,60 +4,82 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle2, X } from 'lucide-react';
 import Image from 'next/image';
 
+import { useQuery } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+
 const FIRST_NAMES = [
   "Alex", "Jordan", "Taylor", "Morgan", "Casey", "Riley", "Cameron", "Jamie", "Skyler", "Drew",
-  "Sam", "Avery", "Parker", "Logan", "Hunter", "Charlie", "Quinn", "Rowan", "Dakota", "Blake"
+  "Sam", "Avery", "Parker", "Logan", "Hunter", "Charlie", "Quinn", "Rowan", "Dakota", "Blake",
+  "Micah", "Reese", "Peyton", "Kendall", "Finley", "Emerson", "Sage", "River", "Phoenix", "Dallas",
+  "Remington", "Sawyer", "Hayden", "Rowan", "Elliott", "Sutton", "Kai", "Eden", "Rory", "Milan",
+  "Marcus", "David", "Sarah", "Jessica", "James", "Michael", "Emma", "Olivia", "Sophia", "Isabella",
+  "William", "Liam", "Mason", "Jacob", "Ethan", "Noah", "Ava", "Mia", "Chloe", "Emily"
 ];
 
 const LOCATIONS = [
   "New York", "London", "Berlin", "Toronto", "Sydney", "Paris", "Austin", "San Francisco", "Dubai", "Singapore",
-  "Miami", "Chicago", "Amsterdam", "Tokyo", "Seoul", "Melbourne", "Los Angeles", "Stockholm", "Vancouver", "Barcelona"
-];
-
-const PRODUCTS = [
-  { name: "SaaS Dashboard Premium", image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=150&q=80" },
-  { name: "Agency Portfolio Template", image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=150&q=80" },
-  { name: "E-commerce Pro Kit", image: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=150&q=80" },
-  { name: "Crypto Exchange UI", image: "https://images.unsplash.com/photo-1621416894569-0f39ed31d247?auto=format&fit=crop&w=150&q=80" },
-  { name: "Medical Clinic Theme", image: "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=150&q=80" }
+  "Miami", "Chicago", "Amsterdam", "Tokyo", "Seoul", "Melbourne", "Los Angeles", "Stockholm", "Vancouver", "Barcelona",
+  "Madrid", "Rome", "Milan", "Munich", "Frankfurt", "Zurich", "Geneva", "Vienna", "Brussels", "Copenhagen",
+  "Oslo", "Helsinki", "Dublin", "Edinburgh", "Manchester", "Birmingham", "Liverpool", "Glasgow", "Bristol", "Leeds",
+  "Boston", "Seattle", "Denver", "Portland", "Atlanta", "Dallas", "Houston", "Phoenix", "Las Vegas", "San Diego"
 ];
 
 const TIME_AGO = [
-  "just now", "2 minutes ago", "5 minutes ago", "12 minutes ago", "about an hour ago"
+  "just now", "1 minute ago", "2 minutes ago", "5 minutes ago", "12 minutes ago", "18 minutes ago", "34 minutes ago", "about an hour ago"
 ];
 
 export default function SocialProof() {
   const [isVisible, setIsVisible] = useState(false);
   const [currentNotification, setCurrentNotification] = useState(null);
 
+  const activeProducts = useQuery(api.products.listActive) || [];
+
   useEffect(() => {
-    // Wait a few seconds before starting the cycle
-    const initialDelay = setTimeout(() => {
-      triggerNextNotification();
-    }, 5000);
+    if (activeProducts.length === 0) return;
+    
+    let isMounted = true;
+    let timeoutId;
 
-    return () => clearTimeout(initialDelay);
-  }, []);
+    const triggerNext = () => {
+      if (!isMounted) return;
 
-  const triggerNextNotification = () => {
-    // Generate random notification data
-    const name = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)];
-    const location = LOCATIONS[Math.floor(Math.random() * LOCATIONS.length)];
-    const product = PRODUCTS[Math.floor(Math.random() * PRODUCTS.length)];
-    const time = TIME_AGO[Math.floor(Math.random() * TIME_AGO.length)];
-
-    setCurrentNotification({ name, location, product, time });
-    setIsVisible(true);
-
-    // Hide after 5 seconds
-    setTimeout(() => {
-      setIsVisible(false);
+      // Generate random notification data
+      const name = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)];
+      const location = LOCATIONS[Math.floor(Math.random() * LOCATIONS.length)];
+      const productObj = activeProducts[Math.floor(Math.random() * activeProducts.length)];
       
-      // Schedule next one between 5 to 10 seconds after hiding
-      const nextDelay = Math.floor(Math.random() * 5000) + 5000;
-      setTimeout(triggerNextNotification, nextDelay);
-    }, 5000);
-  };
+      const product = {
+        name: productObj.name,
+        // Use product image or fallback
+        image: (productObj.images && productObj.images.length > 0) 
+          ? productObj.images[0] 
+          : "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=150&q=80"
+      };
+      
+      const time = TIME_AGO[Math.floor(Math.random() * TIME_AGO.length)];
+
+      setCurrentNotification({ name, location, product, time });
+      setIsVisible(true);
+
+      // Hide after 5 seconds
+      timeoutId = setTimeout(() => {
+        if (!isMounted) return;
+        setIsVisible(false);
+        
+        // Schedule next one between 5 to 10 seconds after hiding
+        const nextDelay = Math.floor(Math.random() * 5000) + 5000;
+        timeoutId = setTimeout(triggerNext, nextDelay);
+      }, 5000);
+    };
+
+    // Wait a few seconds before starting the cycle
+    timeoutId = setTimeout(triggerNext, 5000);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+    };
+  }, [activeProducts]);
 
   return (
     <AnimatePresence>
@@ -70,7 +92,7 @@ export default function SocialProof() {
           style={{
             position: 'fixed',
             bottom: '24px',
-            left: '24px',
+            right: '24px',
             zIndex: 9999,
             background: 'var(--bg-card)',
             border: '1px solid var(--border-color)',
