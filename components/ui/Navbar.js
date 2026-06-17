@@ -78,9 +78,6 @@ export default function Navbar() {
             <li>
               <Link href="/#custom-order" className="nav-link">Custom Order</Link>
             </li>
-            <li>
-              <Link href="/support" className="nav-link">Support</Link>
-            </li>
           </ul>
           
           <div className="nav-desktop-actions" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -192,15 +189,6 @@ export default function Navbar() {
                 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-main)', textDecoration: 'none', transition: 'color 0.2s ease' }}
               >
                 Custom Order
-              </Link>
-            </li>
-            <li>
-              <Link 
-                href="/support" 
-                onClick={() => setMenuOpen(false)} 
-                style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--primary)', textDecoration: 'none', transition: 'color 0.2s ease' }}
-              >
-                Support
               </Link>
             </li>
           </ul>
