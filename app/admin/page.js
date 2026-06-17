@@ -27,6 +27,7 @@ export default function AdminDashboard() {
   // Mobile expansion state
   const [expandedProduct, setExpandedProduct] = useState(null);
   const [expandedOrder, setExpandedOrder] = useState(null);
+  const [supportFilter, setSupportFilter] = useState('all'); // 'all', 'open', 'replied', 'closed'
 
   const uploadBlobToConvex = async (blob) => {
     const postUrl = await generateUploadUrl();
@@ -49,6 +50,8 @@ export default function AdminDashboard() {
 
   // Calculate total revenue dynamically
   const totalRevenue = orders ? orders.reduce((acc, order) => acc + (order.price_usd || 0), 0) : 0;
+
+  const filteredTickets = supportTickets ? supportTickets.filter(t => supportFilter === 'all' || t.status === supportFilter) : [];
 
   return (
     <div>
@@ -266,57 +269,72 @@ export default function AdminDashboard() {
 
       {/* Support Tickets */}
       <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.75rem', marginTop: '2rem' }}>
-        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontWeight: 800, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <LifeBuoy size={20} color="var(--primary)" /> Support Tickets
-        </h2>
+        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', gap: '1rem' }}>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <LifeBuoy size={20} color="var(--primary)" /> Support Tickets
+          </h2>
+          <select 
+            value={supportFilter} 
+            onChange={(e) => setSupportFilter(e.target.value)}
+            style={{ padding: '0.6rem 1rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', color: '#fff', outline: 'none', cursor: 'pointer', fontSize: '0.9rem' }}
+          >
+            <option value="all">All Tickets</option>
+            <option value="open">Open</option>
+            <option value="replied">Replied</option>
+            <option value="closed">Closed</option>
+          </select>
+        </div>
         
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem', whiteSpace: 'nowrap' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                <th style={{ padding: '0.75rem 0.5rem', color: 'var(--text-muted)', fontWeight: 500 }}>Customer Name</th>
-                <th style={{ padding: '0.75rem 0.5rem', color: 'var(--text-muted)', fontWeight: 500 }}>Email</th>
+                <th style={{ padding: '0.75rem 0.5rem', color: 'var(--text-muted)', fontWeight: 500 }}>Date</th>
+                <th style={{ padding: '0.75rem 0.5rem', color: 'var(--text-muted)', fontWeight: 500 }}>Customer</th>
                 <th style={{ padding: '0.75rem 0.5rem', color: 'var(--text-muted)', fontWeight: 500 }}>Problem</th>
                 <th style={{ padding: '0.75rem 0.5rem', color: 'var(--text-muted)', fontWeight: 500 }}>Status</th>
                 <th style={{ padding: '0.75rem 0.5rem', color: 'var(--text-muted)', fontWeight: 500, textAlign: 'right' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {supportTickets.map((t) => (
+              {filteredTickets.map((t) => (
                 <tr key={t._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                  <td style={{ padding: '1rem 0.5rem', fontWeight: 600, color: 'var(--text-main)' }}>{t.name}</td>
                   <td style={{ padding: '1rem 0.5rem', color: 'var(--text-secondary)' }}>
-                    <a href={`mailto:${t.email}`} style={{ color: 'var(--accent-cyan)' }}>{t.email}</a>
+                    {new Date(t._creationTime).toLocaleDateString()}
+                  </td>
+                  <td style={{ padding: '1rem 0.5rem' }}>
+                    <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>{t.name}</div>
+                    <a href={`mailto:${t.email}`} style={{ color: 'var(--accent-cyan)', fontSize: '0.8rem' }}>{t.email}</a>
                   </td>
                   <td style={{ padding: '1rem 0.5rem', color: 'var(--text-muted)', whiteSpace: 'normal', maxWidth: '300px' }}>{t.problem}</td>
                   <td style={{ padding: '1rem 0.5rem' }}>
-                    <span style={{ fontSize: '0.75rem', background: t.status === 'open' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 189, 129, 0.1)', border: `1px solid ${t.status === 'open' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 189, 129, 0.2)'}`, color: t.status === 'open' ? '#ef4444' : 'var(--accent-emerald)', padding: '0.15rem 0.5rem', borderRadius: '6px', fontWeight: 600, textTransform: 'uppercase' }}>
+                    <span style={{ 
+                      fontSize: '0.75rem', 
+                      background: t.status === 'open' ? 'rgba(239, 68, 68, 0.1)' : t.status === 'replied' ? 'rgba(56, 189, 248, 0.1)' : 'rgba(16, 189, 129, 0.1)', 
+                      border: `1px solid ${t.status === 'open' ? 'rgba(239, 68, 68, 0.2)' : t.status === 'replied' ? 'rgba(56, 189, 248, 0.2)' : 'rgba(16, 189, 129, 0.2)'}`, 
+                      color: t.status === 'open' ? '#ef4444' : t.status === 'replied' ? 'var(--accent-cyan)' : 'var(--accent-emerald)', 
+                      padding: '0.15rem 0.5rem', borderRadius: '6px', fontWeight: 600, textTransform: 'uppercase' 
+                    }}>
                       {t.status}
                     </span>
                   </td>
                   <td style={{ padding: '1rem 0.5rem', textAlign: 'right' }}>
-                    {t.status === 'open' ? (
-                      <button 
-                        onClick={() => updateSupportStatus({ id: t._id, status: 'resolved' })}
-                        style={{ background: 'rgba(16, 189, 129, 0.1)', border: '1px solid rgba(16, 189, 129, 0.2)', color: 'var(--accent-emerald)', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 600 }}
-                      >
-                        Mark Resolved
-                      </button>
-                    ) : (
-                      <button 
-                        onClick={() => updateSupportStatus({ id: t._id, status: 'open' })}
-                        style={{ background: 'none', border: '1px solid var(--border-color)', color: 'var(--text-secondary)', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.8rem', cursor: 'pointer' }}
-                      >
-                        Reopen
-                      </button>
-                    )}
+                    <select
+                      value={t.status}
+                      onChange={(e) => updateSupportStatus({ id: t._id, status: e.target.value })}
+                      style={{ padding: '0.4rem 0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', borderRadius: '8px', color: '#fff', fontSize: '0.8rem', outline: 'none', cursor: 'pointer' }}
+                    >
+                      <option value="open">Mark Open</option>
+                      <option value="replied">Mark Replied</option>
+                      <option value="closed">Mark Closed</option>
+                    </select>
                   </td>
                 </tr>
               ))}
-              {supportTickets.length === 0 && (
+              {filteredTickets.length === 0 && (
                 <tr>
                   <td colSpan={5} style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-                    No support tickets found.
+                    No support tickets found for this filter.
                   </td>
                 </tr>
               )}
