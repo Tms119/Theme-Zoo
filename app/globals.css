@@ -525,7 +525,7 @@ body {
 /* Hero Section */
 .hero {
   min-height: 70vh;
-  padding-top: calc(var(--header-height) + 4rem);
+  padding-top: calc(var(--header-height) + 0.5rem);
   padding-bottom: 4rem;
   display: flex;
   flex-direction: column;
