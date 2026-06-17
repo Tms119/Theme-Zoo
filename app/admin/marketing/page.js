@@ -108,13 +108,13 @@ export default function MarketingAdminPage() {
       <div className="flex gap-4 border-b border-gray-800 mb-8 pb-4">
         <button 
           onClick={() => setActiveTab('banner')}
-          className={\`px-4 py-2 rounded-lg flex items-center gap-2 transition-all \${activeTab === 'banner' ? 'bg-purple-600/20 text-purple-400 font-semibold' : 'text-gray-400 hover:bg-white/5'}\`}
+          className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-all ${activeTab === 'banner' ? 'bg-purple-600/20 text-purple-400 font-semibold' : 'text-gray-400 hover:bg-white/5'}`}
         >
           <Megaphone size={18} /> Global Banner
         </button>
         <button 
           onClick={() => setActiveTab('campaigns')}
-          className={\`px-4 py-2 rounded-lg flex items-center gap-2 transition-all \${activeTab === 'campaigns' ? 'bg-emerald-600/20 text-emerald-400 font-semibold' : 'text-gray-400 hover:bg-white/5'}\`}
+          className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-all ${activeTab === 'campaigns' ? 'bg-emerald-600/20 text-emerald-400 font-semibold' : 'text-gray-400 hover:bg-white/5'}`}
         >
           <Tag size={18} /> Volume Campaigns
         </button>
@@ -226,9 +226,9 @@ export default function MarketingAdminPage() {
 
           <div className="grid gap-4">
             {campaigns?.map((campaign) => (
-              <div key={campaign._id} className={\`flex items-center justify-between p-5 rounded-xl border \${campaign.isActive ? 'bg-emerald-900/10 border-emerald-900/50' : 'bg-gray-900 border-gray-800'}\`}>
+              <div key={campaign._id} className={`flex items-center justify-between p-5 rounded-xl border ${campaign.isActive ? 'bg-emerald-900/10 border-emerald-900/50' : 'bg-gray-900 border-gray-800'}`}>
                 <div className="flex items-center gap-4">
-                  <div className={\`w-12 h-12 rounded-full flex items-center justify-center \${campaign.isActive ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-800 text-gray-500'}\`}>
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${campaign.isActive ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-800 text-gray-500'}`}>
                     <Tag size={20} />
                   </div>
                   <div>
@@ -237,14 +237,14 @@ export default function MarketingAdminPage() {
                       {campaign.isActive && <span className="bg-emerald-500/20 text-emerald-400 text-xs px-2 py-0.5 rounded flex items-center gap-1"><CheckCircle2 size={12} /> ACTIVE</span>}
                     </h3>
                     <p className="text-gray-400 text-sm mt-1">
-                      Buy <strong className="text-white">{campaign.minItems} or more items</strong> and get <strong className="text-white">{campaign.discountType === 'percentage' ? \`\${campaign.discountValue}%\` : \`$\${campaign.discountValue}\`} off</strong> the total cart value.
+                      Buy <strong className="text-white">{campaign.minItems} or more items</strong> and get <strong className="text-white">{campaign.discountType === 'percentage' ? `${campaign.discountValue}%` : `$${campaign.discountValue}`} off</strong> the total cart value.
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <button 
                     onClick={() => handleToggleCampaign(campaign._id, campaign.isActive)}
-                    className={\`px-4 py-2 rounded-lg text-sm font-semibold transition-all \${campaign.isActive ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white'}\`}
+                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${campaign.isActive ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white'}`}
                   >
                     {campaign.isActive ? 'Deactivate' : 'Activate'}
                   </button>
