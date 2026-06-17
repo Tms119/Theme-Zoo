@@ -79,6 +79,7 @@ body {
 }
 .dashboard-main {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   margin-left: 280px; /* Width of Sidebar */
@@ -88,6 +89,7 @@ body {
 }
 .dashboard-content {
   flex: 1;
+  min-width: 0;
   padding: 2rem;
 }
 
@@ -299,6 +301,9 @@ body {
   .dashboard-main {
     margin-left: 0;
     padding-bottom: 2rem; /* removed bottom nav space */
+  }
+  .dashboard-content {
+    padding: 1.5rem 0;
   }
   .sidebar {
     transform: translateX(-100%);
