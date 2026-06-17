@@ -28,6 +28,19 @@ export async function POST(request) {
       return Response.json({ error: 'Invalid email address.' }, { status: 400 });
     }
 
+    // ── Rate Limit ──────────────────────────────────────────────
+    const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
+    const rateLimit = await convex.mutation(api.rateLimit.checkLimit, { 
+      ip, 
+      endpoint: 'contact', 
+      limit: 5, 
+      windowMs: 3600000 // 1 hour
+    });
+    
+    if (!rateLimit.success) {
+      return Response.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
+    }
+
     // ── 1. Store in Convex DB ───────────────────────────────────
     try {
       await convex.mutation(api.contacts.create, {

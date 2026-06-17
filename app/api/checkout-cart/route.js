@@ -13,6 +13,19 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    // Rate Limit Check
+    const ip = req.headers.get('x-forwarded-for') || '127.0.0.1';
+    const rateLimit = await convex.mutation(api.rateLimit.checkLimit, { 
+      ip, 
+      endpoint: 'checkout', 
+      limit: 10, 
+      windowMs: 3600000 
+    });
+    
+    if (!rateLimit.success) {
+      return NextResponse.json({ error: 'Too many checkout attempts. Please try again later.' }, { status: 429 });
+    }
+
     // Determine the base URL dynamically for the webhook
     const host = req.headers.get('host') || 'localhost:3000';
     const protocol = host.includes('localhost') ? 'http' : 'https';

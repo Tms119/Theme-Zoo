@@ -2,15 +2,18 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
-import { Save, Megaphone, Tag, Plus, Trash2, CheckCircle2 } from 'lucide-react';
+import { Save, Megaphone, Tag, Plus, Trash2, CheckCircle2, MailWarning } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function MarketingAdminPage() {
   const [activeTab, setActiveTab] = useState('banner');
 
   // --- Banner State ---
+  // --- Global State ---
+  const setGlobalSetting = useMutation(api.marketing.setGlobalSetting);
+
+  // --- Banner State ---
   const bannerSetting = useQuery(api.marketing.getGlobalSetting, { key: "announcement_banner" });
-  const setBannerSetting = useMutation(api.marketing.setGlobalSetting);
   
   const [bannerActive, setBannerActive] = useState(false);
   const [bannerText, setBannerText] = useState('');
@@ -28,7 +31,7 @@ export default function MarketingAdminPage() {
 
   const saveBanner = async () => {
     try {
-      await setBannerSetting({
+      await setGlobalSetting({
         key: "announcement_banner",
         value: {
           isActive: bannerActive,
@@ -40,6 +43,32 @@ export default function MarketingAdminPage() {
       toast.success('Banner settings saved');
     } catch (e) {
       toast.error('Failed to save banner settings');
+    }
+  };
+
+  // --- Cart Recovery State ---
+  const recoveryEnabledSetting = useQuery(api.marketing.getGlobalSetting, { key: "abandoned_cart_enabled" });
+  const recoveryCouponSetting = useQuery(api.marketing.getGlobalSetting, { key: "abandoned_cart_coupon" });
+  
+  const [recoveryActive, setRecoveryActive] = useState(false);
+  const [recoveryCoupon, setRecoveryCoupon] = useState('');
+
+  useEffect(() => {
+    if (recoveryEnabledSetting) {
+      setRecoveryActive(recoveryEnabledSetting.value === true);
+    }
+    if (recoveryCouponSetting) {
+      setRecoveryCoupon(recoveryCouponSetting.value || '');
+    }
+  }, [recoveryEnabledSetting, recoveryCouponSetting]);
+
+  const saveRecoverySettings = async () => {
+    try {
+      await setGlobalSetting({ key: "abandoned_cart_enabled", value: recoveryActive });
+      await setGlobalSetting({ key: "abandoned_cart_coupon", value: recoveryCoupon });
+      toast.success('Cart recovery settings saved');
+    } catch (e) {
+      toast.error('Failed to save recovery settings');
     }
   };
 
@@ -130,6 +159,18 @@ export default function MarketingAdminPage() {
         >
           <Tag size={18} /> Volume Campaigns
         </button>
+        <button 
+          onClick={() => setActiveTab('recovery')}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '0.5rem',
+            padding: '0.6rem 1.25rem', borderRadius: '12px',
+            border: 'none', cursor: 'pointer', fontWeight: 600, transition: 'all 0.2s',
+            background: activeTab === 'recovery' ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
+            color: activeTab === 'recovery' ? '#ef4444' : 'var(--text-secondary)'
+          }}
+        >
+          <MailWarning size={18} /> Cart Recovery
+        </button>
       </div>
 
       {activeTab === 'banner' && (
@@ -196,6 +237,53 @@ export default function MarketingAdminPage() {
 
             <button onClick={saveBanner} className="btn" style={{ background: '#c084fc', color: '#fff', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginTop: '1rem' }}>
               <Save size={18} /> Save Banner Settings
+            </button>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'recovery' && (
+        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '20px', padding: '2rem', maxWidth: '800px' }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-main)' }}>
+            <MailWarning size={20} style={{ color: '#ef4444' }} /> Abandoned Cart Recovery Automation
+          </h2>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.25rem', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+              <div>
+                <h3 style={{ fontWeight: 600, color: 'var(--text-main)', marginBottom: '0.25rem' }}>Enable Automated Emails</h3>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Send an automated email to users who leave items in their cart for 2 hours.</p>
+              </div>
+              <label style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', cursor: 'pointer' }}>
+                <input type="checkbox" style={{ display: 'none' }} checked={recoveryActive} onChange={(e) => setRecoveryActive(e.target.checked)} />
+                <div style={{ 
+                  width: '44px', height: '24px', background: recoveryActive ? '#ef4444' : 'var(--border-color)', 
+                  borderRadius: '100px', position: 'relative', transition: 'background 0.3s' 
+                }}>
+                  <div style={{
+                    position: 'absolute', top: '2px', left: recoveryActive ? '22px' : '2px',
+                    width: '20px', height: '20px', background: '#fff', borderRadius: '50%',
+                    transition: 'left 0.3s'
+                  }}></div>
+                </div>
+              </label>
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', fontWeight: 500 }}>Discount Coupon Code to Send</label>
+              <input 
+                type="text" 
+                value={recoveryCoupon} 
+                onChange={(e) => setRecoveryCoupon(e.target.value.toUpperCase())} 
+                placeholder="e.g. BONUS10" 
+                style={{ width: '100%', padding: '0.8rem 1rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', color: 'var(--text-main)', fontSize: '0.95rem', outline: 'none' }}
+              />
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>This exact code will be highlighted in the automated email.</p>
+            </div>
+
+            <button onClick={saveRecoverySettings} className="btn" style={{ background: '#ef4444', color: '#fff', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginTop: '1rem' }}>
+              <Save size={18} /> Save Recovery Settings
             </button>
           </div>
         </div>

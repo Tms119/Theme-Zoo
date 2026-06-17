@@ -40,11 +40,19 @@ export default defineSchema({
     status:       v.string(),              // "pending" | "paid" | "delivered" | "refunded"
     delivered_at: v.optional(v.number()), // timestamp
     notes:        v.optional(v.string()),
+    recovery_sent:v.optional(v.boolean()), // has abandoned cart email been sent
   })
     .index("by_status",       ["status"])
     .index("by_buyer_email",  ["buyer_email"])
     .index("by_buyer_id",     ["buyer_id"])
     .index("by_product",      ["product_id"]),
+
+  rate_limits: defineTable({
+    ip: v.string(),
+    endpoint: v.string(),
+    count: v.number(),
+    resetAt: v.number(),
+  }).index("by_ip_endpoint", ["ip", "endpoint"]),
 
   // ── Contact / Custom Orders ─────────────────────────────────────
   contact_requests: defineTable({
