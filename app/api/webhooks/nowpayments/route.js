@@ -4,7 +4,7 @@ import { ConvexHttpClient } from 'convex/browser';
 import { api } from '@/convex/_generated/api';
 import { sendInvoiceEmail } from '@/lib/email';
 
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL);
+const convex = new ConvexHttpClient((process.env.NEXT_PUBLIC_CONVEX_URL || '').replace('.site', '.cloud'));
 const IPN_SECRET = process.env.NOWPAYMENTS_IPN_SECRET;
 
 export async function POST(req) {
