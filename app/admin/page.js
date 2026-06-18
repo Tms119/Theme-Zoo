@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, usePaginatedQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import Link from 'next/link';
-import { PlusCircle, FileText, CheckCircle2, TrendingUp, DollarSign, ExternalLink, Eye, EyeOff, LifeBuoy, Mail, Copy, Users } from 'lucide-react';
+import { PlusCircle, FileText, CheckCircle2, TrendingUp, DollarSign, ExternalLink, Eye, EyeOff, LifeBuoy, Mail, Copy, Users, GripVertical } from 'lucide-react';
 import toast from 'react-hot-toast';
 import RevenueChart from '@/components/admin/RevenueChart';
 
@@ -22,6 +22,49 @@ export default function AdminDashboard() {
   const toggleActive = useMutation(api.products.toggleActive);
   const removeProduct = useMutation(api.products.remove);
   const updateSupportStatus = useMutation(api.support.updateStatus);
+  const updateSortOrders = useMutation(api.products.updateSortOrders);
+
+  const [localProducts, setLocalProducts] = useState(null);
+  React.useEffect(() => {
+    if (products) {
+      setLocalProducts([...products]);
+    }
+  }, [products]);
+
+  const handleDragStart = (e, index) => {
+    e.dataTransfer.setData('text/plain', index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = async (e, dropIndex) => {
+    e.preventDefault();
+    const dragIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
+    if (dragIndex === dropIndex || isNaN(dragIndex)) return;
+
+    const newArray = [...localProducts];
+    const [draggedItem] = newArray.splice(dragIndex, 1);
+    newArray.splice(dropIndex, 0, draggedItem);
+
+    setLocalProducts(newArray);
+
+    const updates = newArray.map((p, i) => ({
+      id: p._id,
+      sort_order: i + 1
+    }));
+
+    try {
+      await updateSortOrders({ updates });
+      toast.success('Display order saved!');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to save order.');
+    }
+  };
 
   const handleDeleteProduct = (id) => {
     if (confirm("Are you sure you want to permanently delete this product?")) {
@@ -65,7 +108,7 @@ export default function AdminDashboard() {
     return storageId;
   };
 
-  if (products === undefined || ordersStatus === "LoadingFirstPage" || supportTickets === undefined || orderStats === undefined) {
+  if (products === undefined || localProducts === null || ordersStatus === "LoadingFirstPage" || supportTickets === undefined || orderStats === undefined) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', padding: '5rem' }}>
         <p style={{ color: 'var(--text-secondary)' }}>Loading Dashboard Data...</p>
@@ -123,6 +166,7 @@ export default function AdminDashboard() {
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem', whiteSpace: 'nowrap' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                  <th style={{ width: '40px' }}></th>
                   <th style={{ padding: '0.75rem 0.5rem', color: 'var(--text-muted)', fontWeight: 500 }}>Name</th>
                   <th className="hide-mobile" style={{ padding: '0.75rem 0.5rem', color: 'var(--text-muted)', fontWeight: 500 }}>Category</th>
                   <th className="hide-mobile" style={{ padding: '0.75rem 0.5rem', color: 'var(--text-muted)', fontWeight: 500 }}>Price</th>
@@ -131,9 +175,25 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {products.map((p) => (
+                {localProducts.map((p, index) => (
                   <React.Fragment key={p._id}>
-                    <tr style={{ borderBottom: expandedProduct === p._id ? 'none' : '1px solid rgba(255,255,255,0.03)' }}>
+                    <tr 
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, index)}
+                      onDragOver={handleDragOver}
+                      onDrop={(e) => handleDrop(e, index)}
+                      style={{ 
+                        borderBottom: expandedProduct === p._id ? 'none' : '1px solid rgba(255,255,255,0.03)',
+                        transition: 'background 0.2s',
+                        background: 'transparent'
+                      }}
+                      onDragEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)' }}
+                      onDragLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
+                      onDropCapture={(e) => { e.currentTarget.style.background = 'transparent' }}
+                    >
+                      <td style={{ padding: '1rem 0.5rem', color: 'var(--text-muted)', cursor: 'grab' }} title="Drag to reorder">
+                        <GripVertical size={16} />
+                      </td>
                       <td style={{ padding: '1rem 0.5rem', fontWeight: 600, color: 'var(--text-main)', whiteSpace: 'normal' }}>
                         {p.name}
                         {!p.is_active && <span style={{ marginLeft: '0.5rem', color: '#ef4444', fontSize: '0.7rem' }}>(Hidden)</span>}
@@ -188,7 +248,7 @@ export default function AdminDashboard() {
                     {/* Mobile Expanded Row */}
                     {expandedProduct === p._id && (
                       <tr className="show-mobile-row" style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', background: 'rgba(255,255,255,0.01)' }}>
-                        <td colSpan={2} style={{ padding: '0 0.5rem 1rem 0.5rem' }}>
+                        <td colSpan={3} style={{ padding: '0 0.5rem 1rem 0.5rem' }}>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '1rem', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', border: '1px dashed var(--border-color)' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
                               <span style={{ color: 'var(--text-secondary)' }}>Category:</span>

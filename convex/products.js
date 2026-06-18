@@ -6,11 +6,11 @@ import { requireAdmin } from "./auth";
 export const listActive = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db
+    const products = await ctx.db
       .query("products")
       .withIndex("by_active", (q) => q.eq("is_active", true))
-      .order("asc")
       .collect();
+    return products.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
   },
 });
 
@@ -19,7 +19,8 @@ export const listAll = query({
   args: {},
   handler: async (ctx) => {
     await requireAdmin(ctx);
-    return await ctx.db.query("products").order("asc").collect();
+    const products = await ctx.db.query("products").collect();
+    return products.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
   },
 });
 
@@ -219,5 +220,21 @@ export const getFileUrl = mutation({
   args: { storageId: v.id("_storage") },
   handler: async (ctx, { storageId }) => {
     return await ctx.storage.getUrl(storageId);
+  },
+});
+
+// ── Update multiple sort orders at once ────────────────────────
+export const updateSortOrders = mutation({
+  args: {
+    updates: v.array(v.object({
+      id: v.id("products"),
+      sort_order: v.number(),
+    })),
+  },
+  handler: async (ctx, { updates }) => {
+    await requireAdmin(ctx);
+    for (const update of updates) {
+      await ctx.db.patch(update.id, { sort_order: update.sort_order });
+    }
   },
 });
