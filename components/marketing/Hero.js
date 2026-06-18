@@ -211,7 +211,7 @@ export default function Hero() {
             style={{ ...primaryBtn.style, display: 'inline-flex', alignItems: 'center' }}
             className="btn btn-primary"
           >
-            View Websites <ArrowRight size={16} style={{ marginLeft: '4px' }} />
+            View Templates <ArrowRight size={16} style={{ marginLeft: '4px' }} />
           </Link>
         </div>
       </div>
