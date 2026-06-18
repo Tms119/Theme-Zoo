@@ -32,7 +32,7 @@ export const metadata = {
     default: "Themes Zoo | Premium Website Templates & Themes",
     template: "%s | Themes Zoo",
   },
-  description: "Themes Zoo offers premium website templates, HTML themes, and WordPress designs. Buy premium website templates with instant crypto payment and lifetime ownership.",
+  description: "Buy premium website templates, HTML themes, and WordPress designs. Instant crypto payment and lifetime ownership at Themes Zoo.",
   keywords: ["premium website template", "themes zoo", "premium website templates", "buy website templates", "premium html templates", "wordpress themes", "crypto web templates"],
   authors: [{ name: "Themes Zoo", url: "https://www.themeszoo.com" }],
   creator: "Themes Zoo",
