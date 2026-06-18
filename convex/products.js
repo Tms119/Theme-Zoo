@@ -30,7 +30,7 @@ export const getBySlug = query({
   handler: async (ctx, { slug }) => {
     return await ctx.db
       .query("products")
-      .withIndex("by_slug", (q) => q.eq("slug", slug))
+      .filter((q) => q.eq(q.field("slug"), slug))
       .first();
   },
 });
