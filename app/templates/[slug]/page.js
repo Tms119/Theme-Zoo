@@ -10,7 +10,7 @@ const convex = new ConvexHttpClient(
 
 // Generate dynamic SEO metadata
 export async function generateMetadata({ params }) {
-  const { slug } = params;
+  const { slug } = await params;
   
   try {
     const product = await convex.query("products:getBySlug", { slug });
@@ -39,25 +39,19 @@ export async function generateMetadata({ params }) {
 }
 
 export default async function ProductPage({ params }) {
-  const { slug } = params;
+  const { slug } = await params;
   
   let product = null;
   let relatedProducts = [];
-  let errorMessage = null;
-  
-  let step = "init";
   try {
-    step = "getBySlug";
     product = await convex.query("products:getBySlug", { slug });
     
     if (product) {
-      step = "listActive";
       const allActive = await convex.query("products:listActive");
       relatedProducts = allActive?.filter(p => p.category === product.category && p._id !== product._id).slice(0, 3) || [];
     }
   } catch (error) {
     console.error("Failed to fetch product server-side", error);
-    errorMessage = `[Step: ${step}] [Slug: ${slug}] [URL: ${(process.env.NEXT_PUBLIC_CONVEX_URL || "").replace(".site", ".cloud")}] ` + (error.message || String(error));
   }
 
   // Generate Product JSON-LD structured data
@@ -95,7 +89,7 @@ export default async function ProductPage({ params }) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       )}
-      <ProductClient product={product} relatedProducts={relatedProducts} errorMessage={errorMessage} />
+      <ProductClient product={product} relatedProducts={relatedProducts} />
     </>
   );
 }

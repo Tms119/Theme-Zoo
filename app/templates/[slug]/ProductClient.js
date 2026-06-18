@@ -14,7 +14,7 @@ const WPLogo = () => (
   </svg>
 );
 
-export default function ProductClient({ product, relatedProducts, errorMessage }) {
+export default function ProductClient({ product, relatedProducts }) {
   const { addItem, items, openCart } = useCart();
   
   const inCart = product && items.some(item => item._id === product._id);
@@ -36,11 +36,6 @@ export default function ProductClient({ product, relatedProducts, errorMessage }
         <main style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '1rem', paddingTop: 'var(--header-height)' }}>
           <p style={{ fontSize: '4rem' }}>🔍</p>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Product not found</h1>
-          {errorMessage && (
-            <div style={{ padding: '1rem', background: 'rgba(255,0,0,0.1)', color: '#ff4444', borderRadius: '8px', maxWidth: '600px', wordBreak: 'break-all' }}>
-              <strong>Debug Error:</strong> {errorMessage}
-            </div>
-          )}
           <Link href="/templates" className="btn btn-primary">Browse All Templates</Link>
         </main>
       </>
