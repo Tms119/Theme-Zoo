@@ -17,13 +17,9 @@ export default function AdminDashboard() {
   } = usePaginatedQuery(api.orders.listPaginated, {}, { initialNumItems: 20 });
   
   const orderStats = useQuery(api.orders.getStats);
-  const supportTickets = useQuery(api.support.listAll);
-  const customOrders = useQuery(api.services.listOrders);
   
   const toggleActive = useMutation(api.products.toggleActive);
   const removeProduct = useMutation(api.products.remove);
-  const updateSupportStatus = useMutation(api.support.updateStatus);
-  const updateCustomOrderStatus = useMutation(api.services.updateOrderStatus);
   const updateSortOrders = useMutation(api.products.updateSortOrders);
 
   const [localProducts, setLocalProducts] = useState(null);
@@ -81,7 +77,6 @@ export default function AdminDashboard() {
   // Mobile expansion state
   const [expandedProduct, setExpandedProduct] = useState(null);
   const [expandedOrder, setExpandedOrder] = useState(null);
-  const [supportFilter, setSupportFilter] = useState('all'); // 'all', 'open', 'replied', 'closed'
   const [activeTab, setActiveTab] = useState('overview');
 
   const [extMetrics, setExtMetrics] = useState({ totalUsers: 0 });
@@ -111,7 +106,7 @@ export default function AdminDashboard() {
     return storageId;
   };
 
-  if (products === undefined || localProducts === null || ordersStatus === "LoadingFirstPage" || supportTickets === undefined || orderStats === undefined || customOrders === undefined) {
+  if (products === undefined || localProducts === null || ordersStatus === "LoadingFirstPage" || orderStats === undefined) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', padding: '5rem' }}>
         <p style={{ color: 'var(--text-secondary)' }}>Loading Dashboard Data...</p>
@@ -122,8 +117,6 @@ export default function AdminDashboard() {
   // Calculate total revenue dynamically
   const totalRevenue = orderStats ? orderStats.totalRevenue : 0;
   const totalOrders = orderStats ? orderStats.totalOrders : 0;
-
-  const filteredTickets = supportTickets ? supportTickets.filter(t => supportFilter === 'all' || t.status === supportFilter) : [];
 
   return (
     <div>
@@ -141,19 +134,10 @@ export default function AdminDashboard() {
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2.5rem', borderBottom: '1px solid rgba(255,255,255,0.06)', overflowX: 'auto', paddingBottom: '0.5rem', WebkitOverflowScrolling: 'touch' }}>
-        {['overview', 'templates', 'sales', 'custom orders', 'support tickets'].map((tab) => {
+        {['overview', 'templates', 'sales'].map((tab) => {
           const tabKey = tab.replace(' ', '_');
           const isActive = activeTab === tabKey;
           
-          let badgeCount = null;
-          if (tabKey === 'custom_orders' && customOrders) {
-            const pending = customOrders.filter(co => co.status === 'pending').length;
-            if (pending > 0) badgeCount = pending;
-          } else if (tabKey === 'support_tickets' && supportTickets) {
-            const open = supportTickets.filter(t => t.status === 'open').length;
-            if (open > 0) badgeCount = open;
-          }
-
           return (
             <button
               key={tabKey}
@@ -176,14 +160,6 @@ export default function AdminDashboard() {
               }}
             >
               {tab}
-              {badgeCount !== null && (
-                <span style={{ 
-                  background: 'var(--primary)', color: '#fff', fontSize: '0.7rem', fontWeight: 800, 
-                  padding: '0.1rem 0.4rem', borderRadius: '100px' 
-                }}>
-                  {badgeCount}
-                </span>
-              )}
             </button>
           )
         })}
@@ -462,184 +438,6 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Custom Orders Tab */}
-      {activeTab === 'custom_orders' && (
-        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.75rem', marginBottom: '2rem' }}>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontWeight: 800, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Briefcase size={20} color="var(--primary)" /> Custom Orders
-        </h2>
-        
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem', whiteSpace: 'nowrap' }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                <th style={{ padding: '0.75rem 0.5rem', color: 'var(--text-muted)', fontWeight: 500 }}>Date</th>
-                <th style={{ padding: '0.75rem 0.5rem', color: 'var(--text-muted)', fontWeight: 500 }}>Customer</th>
-                <th style={{ padding: '0.75rem 0.5rem', color: 'var(--text-muted)', fontWeight: 500 }}>Service / Budget</th>
-                <th style={{ padding: '0.75rem 0.5rem', color: 'var(--text-muted)', fontWeight: 500 }}>Status</th>
-                <th style={{ padding: '0.75rem 0.5rem', color: 'var(--text-muted)', fontWeight: 500, textAlign: 'right' }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {customOrders && customOrders.map((co) => (
-                <tr key={co._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                  <td style={{ padding: '1rem 0.5rem', color: 'var(--text-secondary)' }}>
-                    {new Date(co._creationTime).toLocaleDateString()}
-                  </td>
-                  <td style={{ padding: '1rem 0.5rem' }}>
-                    <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>{co.name}</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem' }}>
-                      <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{co.email}</span>
-                      <button 
-                        onClick={() => {
-                          navigator.clipboard.writeText(co.email);
-                          toast.success('Email copied!');
-                        }}
-                        style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.2rem' }}
-                        title="Copy Email"
-                      >
-                        <Copy size={14} />
-                      </button>
-                    </div>
-                  </td>
-                  <td style={{ padding: '1rem 0.5rem' }}>
-                    <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>{co.service_type}</div>
-                    <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{co.budget}</div>
-                  </td>
-                  <td style={{ padding: '1rem 0.5rem' }}>
-                    <span style={{ 
-                      fontSize: '0.75rem', 
-                      background: co.status === 'pending' ? 'rgba(239, 68, 68, 0.1)' : co.status === 'open' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(16, 189, 129, 0.1)', 
-                      border: `1px solid ${co.status === 'pending' ? 'rgba(239, 68, 68, 0.2)' : co.status === 'open' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(16, 189, 129, 0.2)'}`, 
-                      color: co.status === 'pending' ? '#ef4444' : co.status === 'open' ? 'var(--accent-amber)' : 'var(--accent-emerald)', 
-                      padding: '0.15rem 0.5rem', borderRadius: '6px', fontWeight: 600, textTransform: 'uppercase' 
-                    }}>
-                      {co.status}
-                    </span>
-                  </td>
-                  <td style={{ padding: '1rem 0.5rem', textAlign: 'right' }}>
-                    <select
-                      value={co.status}
-                      onChange={(e) => updateCustomOrderStatus({ id: co._id, status: e.target.value })}
-                      style={{ padding: '0.4rem 0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', borderRadius: '8px', color: '#fff', fontSize: '0.8rem', outline: 'none', cursor: 'pointer' }}
-                    >
-                      <option value="pending">Pending</option>
-                      <option value="paid">Paid</option>
-                      <option value="open">Open</option>
-                      <option value="contacted">Contacted</option>
-                      <option value="closed">Closed</option>
-                    </select>
-                  </td>
-                </tr>
-              ))}
-              {customOrders && customOrders.length === 0 && (
-                <tr>
-                  <td colSpan={5} style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-                    No custom orders yet.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-      )}
-
-      {/* Support Tickets Tab */}
-      {activeTab === 'support_tickets' && (
-        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.75rem', marginBottom: '2rem' }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', gap: '1rem' }}>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <LifeBuoy size={20} color="var(--primary)" /> Support Tickets
-          </h2>
-          <select 
-            value={supportFilter} 
-            onChange={(e) => setSupportFilter(e.target.value)}
-            style={{ padding: '0.6rem 1rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', color: '#fff', outline: 'none', cursor: 'pointer', fontSize: '0.9rem' }}
-          >
-            <option value="all">All Tickets</option>
-            <option value="open">Open</option>
-            <option value="replied">Replied</option>
-            <option value="closed">Closed</option>
-          </select>
-        </div>
-        
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem', whiteSpace: 'nowrap' }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                <th style={{ padding: '0.75rem 0.5rem', color: 'var(--text-muted)', fontWeight: 500 }}>Date</th>
-                <th style={{ padding: '0.75rem 0.5rem', color: 'var(--text-muted)', fontWeight: 500 }}>Customer</th>
-                <th style={{ padding: '0.75rem 0.5rem', color: 'var(--text-muted)', fontWeight: 500 }}>Problem</th>
-                <th style={{ padding: '0.75rem 0.5rem', color: 'var(--text-muted)', fontWeight: 500 }}>Status</th>
-                <th style={{ padding: '0.75rem 0.5rem', color: 'var(--text-muted)', fontWeight: 500, textAlign: 'right' }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredTickets.map((t) => (
-                <tr key={t._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                  <td style={{ padding: '1rem 0.5rem', color: 'var(--text-secondary)' }}>
-                    {new Date(t._creationTime).toLocaleDateString()}
-                  </td>
-                  <td style={{ padding: '1rem 0.5rem' }}>
-                    <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>{t.name}</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem' }}>
-                      <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{t.email}</span>
-                      <button 
-                        onClick={() => {
-                          navigator.clipboard.writeText(t.email);
-                          toast.success('Email copied!');
-                        }}
-                        style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.2rem' }}
-                        title="Copy Email"
-                      >
-                        <Copy size={14} />
-                      </button>
-                      <a 
-                        href={`mailto:${t.email}?subject=Re: Your Support Ticket - ThemeZoo`} 
-                        style={{ color: 'var(--accent-cyan)', display: 'inline-flex', alignItems: 'center', padding: '0.2rem' }}
-                        title="Reply via Email"
-                      >
-                        <Mail size={14} />
-                      </a>
-                    </div>
-                  </td>
-                  <td style={{ padding: '1rem 0.5rem', color: 'var(--text-muted)', whiteSpace: 'normal', maxWidth: '300px' }}>{t.problem}</td>
-                  <td style={{ padding: '1rem 0.5rem' }}>
-                    <span style={{ 
-                      fontSize: '0.75rem', 
-                      background: t.status === 'open' ? 'rgba(239, 68, 68, 0.1)' : t.status === 'replied' ? 'rgba(56, 189, 248, 0.1)' : 'rgba(16, 189, 129, 0.1)', 
-                      border: `1px solid ${t.status === 'open' ? 'rgba(239, 68, 68, 0.2)' : t.status === 'replied' ? 'rgba(56, 189, 248, 0.2)' : 'rgba(16, 189, 129, 0.2)'}`, 
-                      color: t.status === 'open' ? '#ef4444' : t.status === 'replied' ? 'var(--accent-cyan)' : 'var(--accent-emerald)', 
-                      padding: '0.15rem 0.5rem', borderRadius: '6px', fontWeight: 600, textTransform: 'uppercase' 
-                    }}>
-                      {t.status}
-                    </span>
-                  </td>
-                  <td style={{ padding: '1rem 0.5rem', textAlign: 'right' }}>
-                    <select
-                      value={t.status}
-                      onChange={(e) => updateSupportStatus({ id: t._id, status: e.target.value })}
-                      style={{ padding: '0.4rem 0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', borderRadius: '8px', color: '#fff', fontSize: '0.8rem', outline: 'none', cursor: 'pointer' }}
-                    >
-                      <option value="open">Mark Open</option>
-                      <option value="replied">Mark Replied</option>
-                      <option value="closed">Mark Closed</option>
-                    </select>
-                  </td>
-                </tr>
-              ))}
-              {filteredTickets.length === 0 && (
-                <tr>
-                  <td colSpan={5} style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-                    No support tickets found for this filter.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
       )}
 
       <style jsx global>{`
