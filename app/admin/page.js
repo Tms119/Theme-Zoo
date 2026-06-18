@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, usePaginatedQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import Link from 'next/link';
-import { PlusCircle, FileText, CheckCircle2, TrendingUp, DollarSign, ExternalLink, Eye, EyeOff, LifeBuoy, Mail, Copy, Users, GripVertical } from 'lucide-react';
+import { PlusCircle, FileText, CheckCircle2, TrendingUp, DollarSign, ExternalLink, Eye, EyeOff, LifeBuoy, Mail, Copy, Users, GripVertical, Briefcase } from 'lucide-react';
 import toast from 'react-hot-toast';
 import RevenueChart from '@/components/admin/RevenueChart';
 
@@ -18,10 +18,12 @@ export default function AdminDashboard() {
   
   const orderStats = useQuery(api.orders.getStats);
   const supportTickets = useQuery(api.support.listAll);
+  const customOrders = useQuery(api.services.listOrders);
   
   const toggleActive = useMutation(api.products.toggleActive);
   const removeProduct = useMutation(api.products.remove);
   const updateSupportStatus = useMutation(api.support.updateStatus);
+  const updateCustomOrderStatus = useMutation(api.services.updateOrderStatus);
   const updateSortOrders = useMutation(api.products.updateSortOrders);
 
   const [localProducts, setLocalProducts] = useState(null);
@@ -108,7 +110,7 @@ export default function AdminDashboard() {
     return storageId;
   };
 
-  if (products === undefined || localProducts === null || ordersStatus === "LoadingFirstPage" || supportTickets === undefined || orderStats === undefined) {
+  if (products === undefined || localProducts === null || ordersStatus === "LoadingFirstPage" || supportTickets === undefined || orderStats === undefined || customOrders === undefined) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', padding: '5rem' }}>
         <p style={{ color: 'var(--text-secondary)' }}>Loading Dashboard Data...</p>
@@ -368,6 +370,87 @@ export default function AdminDashboard() {
               </div>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Recent Custom Orders */}
+      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.75rem', marginTop: '2rem' }}>
+        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontWeight: 800, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <Briefcase size={20} color="var(--primary)" /> Custom Orders
+        </h2>
+        
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem', whiteSpace: 'nowrap' }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <th style={{ padding: '0.75rem 0.5rem', color: 'var(--text-muted)', fontWeight: 500 }}>Date</th>
+                <th style={{ padding: '0.75rem 0.5rem', color: 'var(--text-muted)', fontWeight: 500 }}>Customer</th>
+                <th style={{ padding: '0.75rem 0.5rem', color: 'var(--text-muted)', fontWeight: 500 }}>Service / Budget</th>
+                <th style={{ padding: '0.75rem 0.5rem', color: 'var(--text-muted)', fontWeight: 500 }}>Status</th>
+                <th style={{ padding: '0.75rem 0.5rem', color: 'var(--text-muted)', fontWeight: 500, textAlign: 'right' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {customOrders && customOrders.map((co) => (
+                <tr key={co._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                  <td style={{ padding: '1rem 0.5rem', color: 'var(--text-secondary)' }}>
+                    {new Date(co._creationTime).toLocaleDateString()}
+                  </td>
+                  <td style={{ padding: '1rem 0.5rem' }}>
+                    <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>{co.name}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem' }}>
+                      <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{co.email}</span>
+                      <button 
+                        onClick={() => {
+                          navigator.clipboard.writeText(co.email);
+                          toast.success('Email copied!');
+                        }}
+                        style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.2rem' }}
+                        title="Copy Email"
+                      >
+                        <Copy size={14} />
+                      </button>
+                    </div>
+                  </td>
+                  <td style={{ padding: '1rem 0.5rem' }}>
+                    <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>{co.service_type}</div>
+                    <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{co.budget}</div>
+                  </td>
+                  <td style={{ padding: '1rem 0.5rem' }}>
+                    <span style={{ 
+                      fontSize: '0.75rem', 
+                      background: co.status === 'pending' ? 'rgba(239, 68, 68, 0.1)' : co.status === 'open' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(16, 189, 129, 0.1)', 
+                      border: `1px solid ${co.status === 'pending' ? 'rgba(239, 68, 68, 0.2)' : co.status === 'open' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(16, 189, 129, 0.2)'}`, 
+                      color: co.status === 'pending' ? '#ef4444' : co.status === 'open' ? 'var(--accent-amber)' : 'var(--accent-emerald)', 
+                      padding: '0.15rem 0.5rem', borderRadius: '6px', fontWeight: 600, textTransform: 'uppercase' 
+                    }}>
+                      {co.status}
+                    </span>
+                  </td>
+                  <td style={{ padding: '1rem 0.5rem', textAlign: 'right' }}>
+                    <select
+                      value={co.status}
+                      onChange={(e) => updateCustomOrderStatus({ id: co._id, status: e.target.value })}
+                      style={{ padding: '0.4rem 0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', borderRadius: '8px', color: '#fff', fontSize: '0.8rem', outline: 'none', cursor: 'pointer' }}
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="paid">Paid</option>
+                      <option value="open">Open</option>
+                      <option value="contacted">Contacted</option>
+                      <option value="closed">Closed</option>
+                    </select>
+                  </td>
+                </tr>
+              ))}
+              {customOrders && customOrders.length === 0 && (
+                <tr>
+                  <td colSpan={5} style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                    No custom orders yet.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 
