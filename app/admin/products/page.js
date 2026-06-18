@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import ProductCard from '@/components/product/ProductCard';
+import Cropper from 'react-easy-crop';
 import { getCroppedImg } from '@/lib/cropUtils';
 
 export default function AddProductPage() {
