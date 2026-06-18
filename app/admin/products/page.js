@@ -49,6 +49,49 @@ export default function AddProductPage() {
   const [pdfFile, setPdfFile] = useState(null);
   const [existingPdfUrl, setExistingPdfUrl] = useState('');
 
+  // Drag and Drop States
+  const [dragActiveImg, setDragActiveImg] = useState(false);
+  const [dragActiveZip, setDragActiveZip] = useState(false);
+  const [dragActivePdf, setDragActivePdf] = useState(false);
+
+  // Drag Handlers
+  const handleDrag = (e, setDragState) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragState(true);
+    } else if (e.type === "dragleave") {
+      setDragState(false);
+    }
+  };
+
+  const handleDropImages = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActiveImg(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleImageChange({ target: { files: e.dataTransfer.files } });
+    }
+  };
+
+  const handleDropZip = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActiveZip(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleZipChange({ target: { files: e.dataTransfer.files } });
+    }
+  };
+
+  const handleDropPdf = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActivePdf(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handlePdfChange({ target: { files: e.dataTransfer.files } });
+    }
+  };
+
   // Live Preview Object
   const livePreviewData = {
     _id: "preview-id",
@@ -306,9 +349,14 @@ export default function AddProductPage() {
                   ))}
                 </div>
 
-                <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem 1rem', background: 'rgba(255,255,255,0.02)', border: '1px dashed var(--border-color)', borderRadius: '12px', cursor: 'pointer', transition: 'all 0.2s' }}>
-                  <ImageIcon size={24} color="var(--text-muted)" style={{ marginBottom: '0.5rem' }} />
-                  <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Click to add images</span>
+                <label 
+                  onDragEnter={(e) => handleDrag(e, setDragActiveImg)}
+                  onDragLeave={(e) => handleDrag(e, setDragActiveImg)}
+                  onDragOver={(e) => handleDrag(e, setDragActiveImg)}
+                  onDrop={handleDropImages}
+                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem 1rem', background: dragActiveImg ? 'rgba(124, 58, 237, 0.05)' : 'rgba(255,255,255,0.02)', border: '1px dashed', borderColor: dragActiveImg ? 'var(--primary)' : 'var(--border-color)', borderRadius: '12px', cursor: 'pointer', transition: 'all 0.2s' }}>
+                  <ImageIcon size={24} color={dragActiveImg ? "var(--primary)" : "var(--text-muted)"} style={{ marginBottom: '0.5rem' }} />
+                  <span style={{ fontSize: '0.9rem', color: dragActiveImg ? "var(--primary)" : "var(--text-secondary)" }}>Drag and drop images here, or click to browse</span>
                   <input type="file" multiple accept="image/*" onChange={handleImageChange} style={{ display: 'none' }} />
                 </label>
               </div>
@@ -337,9 +385,14 @@ export default function AddProductPage() {
                 )}
 
                 {!zipFile && (
-                  <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem 1rem', background: 'rgba(255,255,255,0.02)', border: '1px dashed var(--border-color)', borderRadius: '12px', cursor: 'pointer' }}>
-                    <UploadCloud size={24} color="var(--text-muted)" style={{ marginBottom: '0.5rem' }} />
-                    <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Upload new ZIP package</span>
+                  <label 
+                    onDragEnter={(e) => handleDrag(e, setDragActiveZip)}
+                    onDragLeave={(e) => handleDrag(e, setDragActiveZip)}
+                    onDragOver={(e) => handleDrag(e, setDragActiveZip)}
+                    onDrop={handleDropZip}
+                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem 1rem', background: dragActiveZip ? 'rgba(124, 58, 237, 0.05)' : 'rgba(255,255,255,0.02)', border: '1px dashed', borderColor: dragActiveZip ? 'var(--primary)' : 'var(--border-color)', borderRadius: '12px', cursor: 'pointer', transition: 'all 0.2s' }}>
+                    <UploadCloud size={24} color={dragActiveZip ? "var(--primary)" : "var(--text-muted)"} style={{ marginBottom: '0.5rem' }} />
+                    <span style={{ fontSize: '0.9rem', color: dragActiveZip ? "var(--primary)" : "var(--text-secondary)" }}>Drag and drop ZIP package here, or click</span>
                     <input type="file" accept=".zip,.rar,.tar.gz" onChange={handleZipChange} style={{ display: 'none' }} />
                   </label>
                 )}
@@ -369,9 +422,14 @@ export default function AddProductPage() {
                 )}
 
                 {!pdfFile && (
-                  <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1.5rem 1rem', background: 'rgba(255,255,255,0.02)', border: '1px dashed var(--border-color)', borderRadius: '12px', cursor: 'pointer' }}>
-                    <UploadCloud size={24} color="var(--text-muted)" style={{ marginBottom: '0.5rem' }} />
-                    <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Upload PDF documentation</span>
+                  <label 
+                    onDragEnter={(e) => handleDrag(e, setDragActivePdf)}
+                    onDragLeave={(e) => handleDrag(e, setDragActivePdf)}
+                    onDragOver={(e) => handleDrag(e, setDragActivePdf)}
+                    onDrop={handleDropPdf}
+                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1.5rem 1rem', background: dragActivePdf ? 'rgba(124, 58, 237, 0.05)' : 'rgba(255,255,255,0.02)', border: '1px dashed', borderColor: dragActivePdf ? 'var(--primary)' : 'var(--border-color)', borderRadius: '12px', cursor: 'pointer', transition: 'all 0.2s' }}>
+                    <UploadCloud size={24} color={dragActivePdf ? "var(--primary)" : "var(--text-muted)"} style={{ marginBottom: '0.5rem' }} />
+                    <span style={{ fontSize: '0.9rem', color: dragActivePdf ? "var(--primary)" : "var(--text-secondary)" }}>Drag and drop PDF documentation here, or click</span>
                     <input type="file" accept=".pdf" onChange={handlePdfChange} style={{ display: 'none' }} />
                   </label>
                 )}

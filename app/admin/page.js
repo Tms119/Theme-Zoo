@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, usePaginatedQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import Link from 'next/link';
-import { PlusCircle, FileText, CheckCircle2, TrendingUp, DollarSign, ExternalLink, Eye, EyeOff, LifeBuoy, Mail, Copy } from 'lucide-react';
+import { PlusCircle, FileText, CheckCircle2, TrendingUp, DollarSign, ExternalLink, Eye, EyeOff, LifeBuoy, Mail, Copy, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
 import RevenueChart from '@/components/admin/RevenueChart';
 
@@ -37,6 +37,22 @@ export default function AdminDashboard() {
   const [expandedProduct, setExpandedProduct] = useState(null);
   const [expandedOrder, setExpandedOrder] = useState(null);
   const [supportFilter, setSupportFilter] = useState('all'); // 'all', 'open', 'replied', 'closed'
+
+  const [extMetrics, setExtMetrics] = useState({ totalUsers: 0 });
+  React.useEffect(() => {
+    const fetchMetrics = async () => {
+      try {
+        const res = await fetch('/api/admin/metrics');
+        if (res.ok) {
+          const data = await res.json();
+          setExtMetrics({ totalUsers: data.totalUsers || 0 });
+        }
+      } catch (e) {
+        console.error("Metrics Error:", e);
+      }
+    };
+    fetchMetrics();
+  }, []);
 
   const uploadBlobToConvex = async (blob) => {
     const postUrl = await generateUploadUrl();
@@ -82,6 +98,7 @@ export default function AdminDashboard() {
         {[
           { label: 'Total Revenue', value: `$${totalRevenue.toFixed(2)} USD`, desc: 'Total gross volume', icon: <DollarSign size={20} color="var(--accent-emerald)" />, glow: 'rgba(16, 189, 129, 0.04)' },
           { label: 'Total Sales', value: `${totalOrders} Completed`, desc: '100% automatic delivery', icon: <CheckCircle2 size={20} color="var(--primary)" />, glow: 'rgba(124, 58, 237, 0.04)' },
+          { label: 'Total Users', value: `${extMetrics.totalUsers}`, desc: 'Registered accounts via Clerk', icon: <Users size={20} color="var(--accent-amber)" />, glow: 'rgba(245, 158, 11, 0.04)' },
           { label: 'Active Items', value: `${products.filter(p => p.is_active).length} Listed`, desc: 'WordPress & HTML themes', icon: <FileText size={20} color="var(--accent-cyan)" />, glow: 'rgba(6, 182, 212, 0.04)' },
         ].map((card, i) => (
           <div key={i} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', boxShadow: `0 4px 30px ${card.glow}` }}>
