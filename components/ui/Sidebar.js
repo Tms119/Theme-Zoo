@@ -15,14 +15,15 @@ export default function Sidebar({ isOpen, setIsOpen }) {
     { name: 'Discover', href: '/', icon: <Compass size={18} /> },
     { name: 'Templates', href: '/templates', icon: <Layers size={18} /> },
     { name: 'Custom Services', href: '/#custom-order', icon: <Briefcase size={18} /> },
-    { name: 'Privacy Policy', href: '/privacy', icon: <Shield size={18} /> },
-    { name: 'Terms & Conditions', href: '/terms', icon: <FileText size={18} /> },
   ];
 
   if (isSignedIn) {
     navItems.push({ name: 'Purchases', href: '/dashboard', icon: <ShoppingBag size={18} /> });
     navItems.push({ name: 'Support', href: '/support', icon: <LifeBuoy size={18} /> });
   }
+
+  navItems.push({ name: 'Privacy Policy', href: '/privacy', icon: <Shield size={18} /> });
+  navItems.push({ name: 'Terms & Conditions', href: '/terms', icon: <FileText size={18} /> });
 
   if (isAdmin) {
     navItems.push({ name: 'Admin Panel', href: '/admin', icon: <Settings size={18} /> });
