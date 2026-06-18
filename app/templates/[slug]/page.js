@@ -43,6 +43,7 @@ export default async function ProductPage({ params }) {
   
   let product = null;
   let relatedProducts = [];
+  let errorMessage = null;
   
   try {
     product = await convex.query(api.products.getBySlug, { slug });
@@ -52,6 +53,7 @@ export default async function ProductPage({ params }) {
     }
   } catch (error) {
     console.error("Failed to fetch product server-side", error);
+    errorMessage = error.message || String(error);
   }
 
   // Generate Product JSON-LD structured data
@@ -89,7 +91,7 @@ export default async function ProductPage({ params }) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       )}
-      <ProductClient product={product} relatedProducts={relatedProducts} />
+      <ProductClient product={product} relatedProducts={relatedProducts} errorMessage={errorMessage} />
     </>
   );
 }
