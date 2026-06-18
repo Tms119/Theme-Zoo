@@ -29,8 +29,8 @@ export default function Hero() {
   // Split title words for the text reveal animation
   const titlePart1 = ["Buy", "Beautiful", "Websites"];
   const titlePart2 = ["&"];
-  const titlePart3 = ["WordPress"];
-  const titlePart4 = ["Themes."];
+  const titlePart3 = ["Premium"];
+  const titlePart4 = ["Templates."];
 
   return (
     <section className="hero" style={{ position: 'relative', overflow: 'hidden' }}>
@@ -66,7 +66,7 @@ export default function Hero() {
           <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#8b5cf6', boxShadow: '0 0 10px #8b5cf6' }} />
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <span style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', lineHeight: 1.2 }}>Category</span>
-            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)', lineHeight: 1.2 }}>WordPress Themes</span>
+            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)', lineHeight: 1.2 }}>Premium Templates</span>
           </div>
         </div>
 
@@ -191,7 +191,7 @@ export default function Hero() {
             transition: 'opacity 1s ease 0.6s, transform 1s cubic-bezier(0.16, 1, 0.3, 1) 0.6s'
           }}
         >
-          Find the best websites and WordPress templates. <span className="desktop-only">Pay easily with coin values and download your files in one click.</span>
+          Find the best websites and premium templates. <span className="desktop-only">Pay easily with coin values and download your files in one click.</span>
         </p>
         
         <div 
