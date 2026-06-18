@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { requireAdmin } from "./auth";
 
 // ─── Config Queries / Mutations ──────────────────────────────────────────────
 
@@ -25,6 +26,7 @@ export const updateConfig = mutation({
     design_desc: v.string(),
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx);
     const { id, ...data } = args;
     if (id) {
       await ctx.db.patch(id, data);
@@ -57,6 +59,7 @@ export const createOrder = mutation({
 export const listOrders = query({
   args: {},
   handler: async (ctx) => {
+    await requireAdmin(ctx);
     return await ctx.db.query("custom_orders").order("desc").collect();
   },
 });
@@ -96,9 +99,10 @@ export const getOrderByTx = query({
 export const updateOrderStatus = mutation({
   args: {
     id: v.id("custom_orders"),
-    status: v.string(), // "open", "contacted", "closed"
+    status: v.string(),
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx);
     await ctx.db.patch(args.id, { status: args.status });
   },
 });

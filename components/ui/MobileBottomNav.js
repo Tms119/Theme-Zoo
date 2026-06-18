@@ -8,8 +8,8 @@ export default function MobileBottomNav() {
   const pathname = usePathname();
   const { isSignedIn } = useAuth();
   const { user } = useUser();
-  const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
-  const isAdmin = user?.primaryEmailAddress?.emailAddress === adminEmail;
+  const adminEmails = ['mohammadsayemweb@gmail.com', 'htmlocean@gmail.com'];
+  const isAdmin = adminEmails.includes(user?.primaryEmailAddress?.emailAddress);
 
   // Base items
   const navItems = [

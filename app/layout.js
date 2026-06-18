@@ -26,18 +26,26 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "ThemeZoo — Premium Web Templates",
-  description: "Premium WordPress and website templates. Pay with crypto, download instantly.",
+  metadataBase: new URL("https://www.themeszoo.com"),
+  title: {
+    default: "Themes Zoo — Premium WordPress & Web Templates",
+    template: "%s | Themes Zoo",
+  },
+  description: "Buy premium WordPress themes and website templates. Instant crypto payment. Instant download. No subscription — own it forever.",
+  keywords: ["wordpress themes", "web templates", "html templates", "buy templates with crypto", "premium themes", "website templates"],
+  authors: [{ name: "Themes Zoo", url: "https://www.themeszoo.com" }],
+  creator: "Themes Zoo",
   openGraph: {
-    title: "ThemeZoo — Premium Web Templates",
-    description: "Premium WordPress and website templates. Pay with crypto, download instantly.",
-    url: "https://themezoo.dev",
-    siteName: "ThemeZoo",
+    title: "Themes Zoo — Premium WordPress & Web Templates",
+    description: "Buy premium WordPress themes and website templates. Instant crypto payment. Instant download. No subscription — own it forever.",
+    url: "https://www.themeszoo.com",
+    siteName: "Themes Zoo",
     images: [
       {
-        url: "https://themezoo.dev/og-image.jpg", // Using a placeholder that will be picked up when added
+        url: "/og-image.jpg",
         width: 1200,
         height: 630,
+        alt: "Themes Zoo — Premium Web Templates",
       },
     ],
     locale: "en_US",
@@ -45,9 +53,24 @@ export const metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "ThemeZoo — Premium Web Templates",
-    description: "Premium WordPress and website templates. Pay with crypto, download instantly.",
-    images: ["https://themezoo.dev/og-image.jpg"],
+    title: "Themes Zoo — Premium WordPress & Web Templates",
+    description: "Buy premium WordPress themes and website templates. Instant crypto payment. Instant download.",
+    images: ["/og-image.jpg"],
+    creator: "@themeszoo",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  icons: {
+    icon: "/favicon.ico",
   },
 };
 

@@ -40,7 +40,8 @@ export default defineSchema({
     status:       v.string(),              // "pending" | "paid" | "delivered" | "refunded"
     delivered_at: v.optional(v.number()), // timestamp
     notes:        v.optional(v.string()),
-    recovery_sent:v.optional(v.boolean()), // has abandoned cart email been sent
+    recovery_sent:v.optional(v.boolean()), // has 2h abandoned cart email been sent
+    recovery_sent_24h: v.optional(v.boolean()), // has 24h abandoned cart email been sent
   })
     .index("by_status",       ["status"])
     .index("by_buyer_email",  ["buyer_email"])

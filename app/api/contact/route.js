@@ -2,11 +2,11 @@ import { Resend } from 'resend';
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
 
-const resend = new Resend(process.env.RESEND_API_KEY || 're_dummy');
+const resend = new Resend(process.env.RESEND_API_KEY);
 const convex = new ConvexHttpClient((process.env.NEXT_PUBLIC_CONVEX_URL || '').replace('.site', '.cloud'));
 
 // ─── Config ─────────────────────────────────────────────────────
-const OWNER_EMAIL   = process.env.CONTACT_EMAIL ?? 'hello@themezoo.dev';
+const OWNER_EMAIL   = process.env.CONTACT_EMAIL ?? 'hello@themeszoo.com';
 const FROM_ADDRESS  = process.env.FROM_EMAIL    ?? 'Themes Zoo <hello@themeszoo.com>';
 const SITE_NAME     = 'Themes Zoo';
 

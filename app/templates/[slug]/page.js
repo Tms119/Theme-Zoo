@@ -22,9 +22,9 @@ export default function TemplateDetail() {
   const slug = params?.slug || '';
   const product = useQuery(api.products.getBySlug, { slug });
   
-  // Fetch related products from same category (max 3)
-  const allInCategory = useQuery(api.products.listAll);
-  const relatedProducts = allInCategory?.filter(p => p.category === product?.category && p._id !== product?._id).slice(0, 3) || [];
+  // Fetch related products from same category (max 3) — uses public listActive not admin listAll
+  const allActive = useQuery(api.products.listActive);
+  const relatedProducts = allActive?.filter(p => p.category === product?.category && p._id !== product?._id).slice(0, 3) || [];
 
   const { addItem, items, openCart } = useCart();
   

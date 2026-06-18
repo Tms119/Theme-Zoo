@@ -145,6 +145,13 @@ export default function AddProductPage() {
       setError('Please fill in Name, Short Description, and Price.');
       return;
     }
+    // Warn if no delivery file is attached
+    if (!zipFile && !existingZipUrl && !existingProduct?.file_url && !existingProduct?.file_id) {
+      const confirmed = window.confirm(
+        '⚠️ Warning: No ZIP file is attached to this product.\n\nCustomers who purchase this will not be able to download anything.\n\nAre you sure you want to publish without a delivery file?'
+      );
+      if (!confirmed) return;
+    }
     setError('');
     setLoading(true);
 

@@ -44,6 +44,7 @@ export const getById = query({
 
 // ── File Upload: Generate Upload URL ─────────────────────────────
 export const generateUploadUrl = mutation(async (ctx) => {
+  await requireAdmin(ctx);
   return await ctx.storage.generateUploadUrl();
 });
 
@@ -67,6 +68,8 @@ export const create = mutation({
     demo_url:    v.optional(v.string()),
     file_id:     v.optional(v.id("_storage")),
     file_url:    v.optional(v.string()),
+    pdf_id:      v.optional(v.id("_storage")),
+    pdf_url:     v.optional(v.string()),
     sort_order:  v.optional(v.number()),
   },
   handler: async (ctx, args) => {
@@ -94,6 +97,8 @@ export const update = mutation({
     demo_url:    v.optional(v.string()),
     file_id:     v.optional(v.id("_storage")),
     file_url:    v.optional(v.string()),
+    pdf_id:      v.optional(v.id("_storage")),
+    pdf_url:     v.optional(v.string()),
     sort_order:  v.optional(v.number()),
   },
   handler: async (ctx, { id, ...fields }) => {
@@ -122,6 +127,7 @@ export const remove = mutation({
     }
   },
 });
+
 
 // ── Seed initial products ────────────────────────────────────────
 export const seed = mutation({

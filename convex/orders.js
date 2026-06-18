@@ -1,10 +1,12 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { requireAdmin } from "./auth";
 
 // ── List all orders (admin) ──────────────────────────────────────
 export const listAll = query({
   args: {},
   handler: async (ctx) => {
+    await requireAdmin(ctx);
     return await ctx.db.query("orders").order("desc").collect();
   },
 });
@@ -22,9 +24,7 @@ export const listPaginated = query({
 export const getStats = query({
   args: {},
   handler: async (ctx) => {
-    // In a real huge production app, we'd use a background cron to calculate this
-    // or store a running tally. For now, since this is for pagination fix, 
-    // we query all orders just for the sum (which is lighter than sending to client).
+    await requireAdmin(ctx);
     const orders = await ctx.db.query("orders").collect();
     const totalRevenue = orders.reduce((acc, order) => acc + (order.price_usd || 0), 0);
     return {

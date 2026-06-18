@@ -6,6 +6,7 @@ import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import useCart from '@/store/useCart';
 import { useAuth, useUser } from '@clerk/nextjs';
+import confetti from 'canvas-confetti';
 
 export default function CheckoutCartPage() {
   const router = useRouter();
@@ -92,6 +93,12 @@ export default function CheckoutCartPage() {
       if (allPaid) {
         clearCart();
         setStep('success');
+        confetti({
+          particleCount: 150,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#10b981', '#8b5cf6', '#fcd34d']
+        });
       } else if (anyFailed) {
         setError('Payment failed or expired. Please try again.');
         setStep('input');
@@ -166,6 +173,12 @@ export default function CheckoutCartPage() {
         clearCart();
         setCryptoAmount(0);
         setStep('success');
+        confetti({
+          particleCount: 150,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#10b981', '#8b5cf6', '#fcd34d']
+        });
       } else {
         setCryptoAmount(data.payAmount);
         setDepositAddress(data.payAddress);

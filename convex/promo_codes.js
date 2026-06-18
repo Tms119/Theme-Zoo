@@ -49,6 +49,7 @@ export const incrementUse = mutation({
 export const listAll = query({
   args: {},
   handler: async (ctx) => {
+    await requireAdmin(ctx);
     return await ctx.db.query("promo_codes").order("desc").collect();
   },
 });

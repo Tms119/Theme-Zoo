@@ -2,8 +2,18 @@
 import ProductGrid from '@/components/product/ProductGrid';
 
 export const metadata = {
-  title: "Browse Web Templates - Themes Zoo",
-  description: "Explore our collection of WordPress and website templates ready for instant deployment.",
+  title: "Browse Premium Web Templates",
+  description: "Shop WordPress themes and website templates. Filter by category, pay with crypto (USDT, BTC, ETH), and download instantly. No subscription needed.",
+  openGraph: {
+    title: "Browse Premium Web Templates — Themes Zoo",
+    description: "Shop WordPress themes and website templates. Filter by category, pay with crypto, and download instantly.",
+    url: "https://www.themeszoo.com/templates",
+    type: "website",
+  },
+  twitter: {
+    title: "Browse Premium Web Templates — Themes Zoo",
+    description: "Shop WordPress themes and website templates. Pay with crypto. Download instantly.",
+  },
 };
 
 export default function TemplatesPage() {

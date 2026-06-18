@@ -48,15 +48,21 @@ export const listByUser = query({
 
 // Check if a specific product is wishlisted
 export const check = query({
-  args: { user_email: v.string(), product_id: v.id("products") },
+  args: { user_email: v.string(), product_id: v.string() },
   handler: async (ctx, args) => {
-    if (!args.user_email) return false;
-    const existing = await ctx.db
-      .query("wishlists")
-      .withIndex("by_user", (q) => q.eq("user_email", args.user_email))
-      .filter((q) => q.eq(q.field("product_id"), args.product_id))
-      .first();
-    
-    return !!existing;
+    if (!args.user_email || !args.product_id) return false;
+    try {
+      const existing = await ctx.db
+        .query("wishlists")
+        .withIndex("by_user", (q) => q.eq("user_email", args.user_email))
+        .filter((q) => q.eq(q.field("product_id"), args.product_id))
+        .first();
+      
+      return !!existing;
+    } catch {
+      // Invalid or stale product_id (e.g., from old dev database)
+      return false;
+    }
   },
 });
+

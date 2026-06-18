@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { requireAdmin } from "./auth";
 
 // Create a new support ticket
 export const create = mutation({
@@ -22,6 +23,7 @@ export const create = mutation({
 export const listAll = query({
   args: {},
   handler: async (ctx) => {
+    await requireAdmin(ctx);
     return await ctx.db.query("support_tickets").order("desc").collect();
   },
 });
@@ -46,6 +48,7 @@ export const updateStatus = mutation({
     status: v.string(), // "open" | "resolved"
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx);
     await ctx.db.patch(args.id, {
       status: args.status,
     });
