@@ -44,27 +44,10 @@ export default function DownloadPage() {
         throw new Error("Download link could not be generated.");
       }
       
-      // If the file is hosted on Convex storage, fetch it as a blob so we can force a custom filename.
-      // We skip this for external links (like Google Drive) because of CORS restrictions.
-      if (fileUrl.includes('convex.cloud')) {
-        const response = await fetch(fileUrl);
-        if (!response.ok) throw new Error("Network error while downloading the file.");
-        
-        const blob = await response.blob();
-        const blobUrl = window.URL.createObjectURL(blob);
-        
-        const link = document.createElement('a');
-        link.href = blobUrl;
-        
-        // Format the filename nicely (e.g., "astra-theme.zip")
+      if (fileUrl.includes('convex')) {
         const cleanName = product.name ? product.name.replace(/[^a-z0-9]/gi, '-').toLowerCase() : 'template';
-        link.setAttribute('download', `${cleanName}.zip`);
-        
-        document.body.appendChild(link);
-        link.click();
-        
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(blobUrl);
+        const proxyUrl = `/api/download?url=${encodeURIComponent(fileUrl)}&name=${encodeURIComponent(cleanName)}`;
+        window.location.href = proxyUrl;
       } else {
         // Trigger the download by navigating to the secure URL (external links)
         window.location.href = fileUrl;
