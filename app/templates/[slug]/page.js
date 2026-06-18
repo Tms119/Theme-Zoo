@@ -45,16 +45,19 @@ export default async function ProductPage({ params }) {
   let relatedProducts = [];
   let errorMessage = null;
   
+  let step = "init";
   try {
+    step = "getBySlug";
     product = await convex.query("products:getBySlug", { slug });
     
     if (product) {
+      step = "listActive";
       const allActive = await convex.query("products:listActive");
       relatedProducts = allActive?.filter(p => p.category === product.category && p._id !== product._id).slice(0, 3) || [];
     }
   } catch (error) {
     console.error("Failed to fetch product server-side", error);
-    errorMessage = error.message || String(error);
+    errorMessage = `[Step: ${step}] [Slug: ${slug}] [URL: ${(process.env.NEXT_PUBLIC_CONVEX_URL || "").replace(".site", ".cloud")}] ` + (error.message || String(error));
   }
 
   // Generate Product JSON-LD structured data
