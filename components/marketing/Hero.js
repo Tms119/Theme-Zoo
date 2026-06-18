@@ -27,10 +27,10 @@ export default function Hero() {
   const secondaryBtn = useMagnetic(0.25);
 
   // Split title words for the text reveal animation
-  const titlePart1 = ["Buy", "Beautiful", "Websites"];
-  const titlePart2 = ["&"];
-  const titlePart3 = ["Premium"];
-  const titlePart4 = ["Templates."];
+  const titlePart1 = ["Themes", "Zoo:"];
+  const titlePart2 = ["Premium"];
+  const titlePart3 = ["Website"];
+  const titlePart4 = ["Templates", "&", "Themes"];
 
   return (
     <section className="hero" style={{ position: 'relative', overflow: 'hidden' }}>
