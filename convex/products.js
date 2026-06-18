@@ -77,6 +77,13 @@ export const create = mutation({
   },
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
+    
+    if (args.sort_order === undefined) {
+      const allProducts = await ctx.db.query("products").collect();
+      const maxSortOrder = allProducts.reduce((max, p) => Math.max(max, p.sort_order || 0), 0);
+      args.sort_order = maxSortOrder + 1;
+    }
+
     return await ctx.db.insert("products", args);
   },
 });
