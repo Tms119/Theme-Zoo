@@ -1,11 +1,28 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, Save, AlertCircle, UploadCloud, FileArchive, Image as ImageIcon, X, Trash2, Eye, FileText } from 'lucide-react';
+import { ArrowLeft, Save, AlertCircle, UploadCloud, FileArchive, Image as ImageIcon, X, Trash2, Eye, FileText, Crop } from 'lucide-react';
 import Link from 'next/link';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import ProductCard from '@/components/product/ProductCard';
+import Cropper from 'react-easy-crop';
+import { getCroppedImg } from '@/lib/cropUtils';
+import { SortableImage } from '@/components/admin/SortableImage';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy,
+} from '@dnd-kit/sortable';
 
 export default function AddProductPage() {
   const router = useRouter();
@@ -41,20 +58,50 @@ export default function AddProductPage() {
   const [newCatSlug, setNewCatSlug] = useState('');
   const [catCreating, setCatCreating] = useState(false);
   
-  // File State
-  const [images, setImages] = useState([]); // File objects for new uploads
-  const [existingImages, setExistingImages] = useState([]); // Strings of URLs
+  // === Media State ===
+  // galleryItems: array of { id: string, type: 'existing'|'new', url: string, file?: File }
+  const [galleryItems, setGalleryItems] = useState([]); 
   const [zipFile, setZipFile] = useState(null);
   const [existingZipUrl, setExistingZipUrl] = useState('');
   const [pdfFile, setPdfFile] = useState(null);
   const [existingPdfUrl, setExistingPdfUrl] = useState('');
+  
+  // === Thumbnail State ===
+  const [existingThumbnailUrl, setExistingThumbnailUrl] = useState('');
+  const [thumbnailBlob, setThumbnailBlob] = useState(null);
+  const [thumbnailPreviewUrl, setThumbnailPreviewUrl] = useState('');
 
-  // Drag and Drop States
+  // Cropper Modal State
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [cropImageSrc, setCropImageSrc] = useState(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+
+  // Drag and Drop Zone States
   const [dragActiveImg, setDragActiveImg] = useState(false);
+  const [dragActiveThumb, setDragActiveThumb] = useState(false);
   const [dragActiveZip, setDragActiveZip] = useState(false);
   const [dragActivePdf, setDragActivePdf] = useState(false);
 
-  // Drag Handlers
+  // Sensors for dnd-kit
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    if (active.id !== over.id) {
+      setGalleryItems((items) => {
+        const oldIndex = items.findIndex(i => i.id === active.id);
+        const newIndex = items.findIndex(i => i.id === over.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  };
+
+  // Drag handlers for Dropzones
   const handleDrag = (e, setDragState) => {
     e.preventDefault();
     e.stopPropagation();
@@ -65,12 +112,21 @@ export default function AddProductPage() {
     }
   };
 
-  const handleDropImages = (e) => {
+  const handleDropGallery = (e) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActiveImg(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      handleImageChange({ target: { files: e.dataTransfer.files } });
+      handleGalleryChange({ target: { files: e.dataTransfer.files } });
+    }
+  };
+
+  const handleDropThumbnail = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActiveThumb(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleThumbnailSelect({ target: { files: e.dataTransfer.files } });
     }
   };
 
@@ -99,7 +155,7 @@ export default function AddProductPage() {
     name: name || "Product Name",
     short_desc: shortDesc || "Your short tagline will appear here...",
     price_usd: parseFloat(price) || 0.00,
-    images: images.length > 0 ? [URL.createObjectURL(images[0])] : (existingImages.length > 0 ? existingImages : ["https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop"]),
+    images: thumbnailPreviewUrl ? [thumbnailPreviewUrl] : (existingThumbnailUrl ? [existingThumbnailUrl] : (galleryItems.length > 0 ? [galleryItems[0].url] : ["https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop"])),
     category: category
   };
 
@@ -112,38 +168,80 @@ export default function AddProductPage() {
       setCategory(existingProduct.category || 'wordpress');
       setDemoUrl(existingProduct.demo_url || '');
       setFeatures(existingProduct.features?.join('\n') || '');
-      setExistingImages(existingProduct.images || []);
+      
+      const mappedGallery = (existingProduct.images || []).map((url, i) => ({
+        id: `existing-${i}`,
+        type: 'existing',
+        url: url
+      }));
+      setGalleryItems(mappedGallery);
+      setExistingThumbnailUrl(existingProduct.thumbnail_url || '');
       setExistingZipUrl(existingProduct.file_url || '');
       setExistingPdfUrl(existingProduct.pdf_url || '');
     }
   }, [existingProduct]);
 
-  const handleImageChange = (e) => {
+  // Gallery Upload
+  const handleGalleryChange = (e) => {
     const files = Array.from(e.target.files);
-    
-    // Check file sizes (5MB limit)
     const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
     const oversizedFiles = files.filter(f => f.size > MAX_IMAGE_SIZE);
     if (oversizedFiles.length > 0) {
-      setError(`One or more images exceed the 5MB limit. Please choose smaller images.`);
+      setError(`One or more images exceed the 5MB limit.`);
       return;
     }
     
     setError('');
-    setImages(prev => [...prev, ...files]);
+    const newItems = files.map(file => ({
+      id: `new-${Math.random().toString(36).substring(7)}`,
+      type: 'new',
+      url: URL.createObjectURL(file),
+      file: file
+    }));
+    setGalleryItems(prev => [...prev, ...newItems]);
+  };
+
+  // Thumbnail Crop Selection
+  const handleThumbnailSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+    if (file.size > MAX_IMAGE_SIZE) {
+      setError(`Image exceeds 5MB limit.`);
+      return;
+    }
+    
+    const url = URL.createObjectURL(file);
+    setCropImageSrc(url);
+    setCropModalOpen(true);
+    e.target.value = null; // reset input
+  };
+
+  const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  }, []);
+
+  const saveCroppedImage = async () => {
+    try {
+      const croppedBlob = await getCroppedImg(cropImageSrc, croppedAreaPixels);
+      const url = URL.createObjectURL(croppedBlob);
+      setThumbnailBlob(croppedBlob);
+      setThumbnailPreviewUrl(url);
+      setCropModalOpen(false);
+    } catch (e) {
+      console.error(e);
+      alert('Error cropping image.');
+    }
   };
 
   const handleZipChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
-    // Check ZIP size (50MB limit for browser stability)
     const MAX_ZIP_SIZE = 50 * 1024 * 1024;
     if (file.size > MAX_ZIP_SIZE) {
-      setError(`The ZIP file exceeds the 50MB limit. Consider compressing it further or splitting assets.`);
+      setError(`ZIP file exceeds 50MB limit.`);
       return;
     }
-    
     setError('');
     setZipFile(file);
   };
@@ -151,24 +249,13 @@ export default function AddProductPage() {
   const handlePdfChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
-    // Check PDF size (20MB limit)
     const MAX_PDF_SIZE = 20 * 1024 * 1024;
     if (file.size > MAX_PDF_SIZE) {
-      setError(`The PDF file exceeds the 20MB limit. Please compress it.`);
+      setError(`PDF file exceeds 20MB limit.`);
       return;
     }
-    
     setError('');
     setPdfFile(file);
-  };
-
-  const removeNewImage = (index) => {
-    setImages(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const removeExistingImage = (index) => {
-    setExistingImages(prev => prev.filter((_, i) => i !== index));
   };
 
   const uploadFileToConvex = async (file) => {
@@ -188,7 +275,6 @@ export default function AddProductPage() {
       setError('Please fill in Name, Short Description, and Price.');
       return;
     }
-    // Warn if no delivery file is attached
     if (!zipFile && !existingZipUrl && !existingProduct?.file_url && !existingProduct?.file_id) {
       const confirmed = window.confirm(
         '⚠️ Warning: No ZIP file is attached to this product.\n\nCustomers who purchase this will not be able to download anything.\n\nAre you sure you want to publish without a delivery file?'
@@ -199,31 +285,42 @@ export default function AddProductPage() {
     setLoading(true);
 
     try {
-      // 1. Upload new images
-      let finalImages = [...existingImages];
-      if (images.length > 0) {
-        setUploadProgress('Uploading images...');
-        for (const imgFile of images) {
-          const storageId = await uploadFileToConvex(imgFile);
+      // 1. Upload new gallery images while maintaining sort order
+      let finalGallery = [];
+      setUploadProgress('Uploading gallery images...');
+      for (const item of galleryItems) {
+        if (item.type === 'new') {
+          const storageId = await uploadFileToConvex(item.file);
           const publicUrl = await getFileUrl({ storageId });
-          finalImages.push(publicUrl);
+          finalGallery.push(publicUrl);
+        } else {
+          finalGallery.push(item.url);
         }
       }
 
-      // 2. Upload ZIP file if present
+      // 2. Upload Cropped Thumbnail
+      let finalThumbUrl = existingThumbnailUrl;
+      let finalThumbId = existingProduct?.thumbnail_id;
+      if (thumbnailBlob) {
+        setUploadProgress('Uploading Cover Thumbnail...');
+        // Convert Blob to File object for Convex
+        const thumbFile = new File([thumbnailBlob], "thumbnail.jpg", { type: "image/jpeg" });
+        finalThumbId = await uploadFileToConvex(thumbFile);
+        finalThumbUrl = await getFileUrl({ storageId: finalThumbId });
+      }
+
+      // 3. Upload ZIP file if present
       let finalFileId = existingProduct?.file_id;
       let finalFileUrl = existingZipUrl;
-      
       if (zipFile) {
-        setUploadProgress('Uploading source ZIP file (this may take a moment)...');
+        setUploadProgress('Uploading source ZIP file...');
         finalFileId = await uploadFileToConvex(zipFile);
         finalFileUrl = await getFileUrl({ storageId: finalFileId });
       }
 
-      // 3. Upload PDF file if present
+      // 4. Upload PDF file if present
       let finalPdfId = existingProduct?.pdf_id;
       let finalPdfUrl = existingPdfUrl;
-      
       if (pdfFile) {
         setUploadProgress('Uploading documentation PDF...');
         finalPdfId = await uploadFileToConvex(pdfFile);
@@ -239,7 +336,9 @@ export default function AddProductPage() {
         short_desc: shortDesc,
         desc,
         price_usd: parseFloat(price),
-        images: finalImages,
+        images: finalGallery,
+        thumbnail_id: finalThumbId,
+        thumbnail_url: finalThumbUrl,
         features: features.split('\n').map(f => f.trim()).filter(Boolean),
         tech: category === 'wordpress' ? 'WordPress' : 'HTML/React',
         filesize: zipFile ? `${(zipFile.size / (1024 * 1024)).toFixed(1)} MB` : (existingProduct?.filesize || '0 MB'),
@@ -275,7 +374,7 @@ export default function AddProductPage() {
         <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', fontWeight: 800 }}>
           {isEditMode ? 'Edit Template' : 'Add New Template'}
         </h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>Upload files, configure pricing models, and set template information.</p>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>Upload files, crop cover images, and set template information.</p>
       </div>
 
       {error && (
@@ -331,33 +430,65 @@ export default function AddProductPage() {
             <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 700, marginBottom: '1.25rem' }}>Media & Files</h2>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              {/* === Thumbnail Upload Zone === */}
               <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.75rem', fontWeight: 500 }}>Product Images (Max 5MB each)</label>
+                <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.75rem', fontWeight: 500 }}>
+                  <span>Grid Cover Thumbnail (Optional)</span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--primary)' }}>16:9 Aspect Ratio</span>
+                </label>
                 
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
-                  {existingImages.map((img, i) => (
-                    <div key={`ex-${i}`} style={{ position: 'relative', width: '80px', height: '60px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
-                      <img src={img} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      <button type="button" onClick={() => removeExistingImage(i)} style={{ position: 'absolute', top: 2, right: 2, background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', borderRadius: '50%', padding: '2px', cursor: 'pointer' }}><X size={12}/></button>
+                {(thumbnailPreviewUrl || existingThumbnailUrl) && (
+                  <div style={{ position: 'relative', width: '160px', height: '90px', borderRadius: '12px', overflow: 'hidden', border: '2px solid var(--primary)', marginBottom: '1rem' }}>
+                    <img src={thumbnailPreviewUrl || existingThumbnailUrl} alt="Cover Thumbnail" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <button type="button" onClick={() => { setThumbnailPreviewUrl(''); setThumbnailBlob(null); setExistingThumbnailUrl(''); }} style={{ position: 'absolute', top: 4, right: 4, background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', borderRadius: '50%', padding: '4px', cursor: 'pointer' }}><X size={14}/></button>
+                  </div>
+                )}
+
+                {!(thumbnailPreviewUrl || existingThumbnailUrl) && (
+                  <label 
+                    onDragEnter={(e) => handleDrag(e, setDragActiveThumb)}
+                    onDragLeave={(e) => handleDrag(e, setDragActiveThumb)}
+                    onDragOver={(e) => handleDrag(e, setDragActiveThumb)}
+                    onDrop={handleDropThumbnail}
+                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1.5rem 1rem', background: dragActiveThumb ? 'rgba(124, 58, 237, 0.05)' : 'rgba(124, 58, 237, 0.02)', border: '1px dashed', borderColor: dragActiveThumb ? 'var(--primary)' : 'rgba(124, 58, 237, 0.3)', borderRadius: '12px', cursor: 'pointer', transition: 'all 0.2s' }}>
+                    <Crop size={24} color={dragActiveThumb ? "var(--primary)" : "var(--primary)"} style={{ marginBottom: '0.5rem', opacity: 0.8 }} />
+                    <span style={{ fontSize: '0.85rem', color: "var(--primary)", fontWeight: 500 }}>Upload & Crop Cover Image</span>
+                    <input type="file" accept="image/*" onChange={handleThumbnailSelect} style={{ display: 'none' }} />
+                  </label>
+                )}
+              </div>
+
+              <div style={{ height: '1px', background: 'var(--border-color)' }} />
+
+              {/* === Full Gallery Upload Zone === */}
+              <div>
+                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.75rem', fontWeight: 500 }}>Full Gallery Images (Max 5MB each)</label>
+                
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                  <SortableContext items={galleryItems.map(i => i.id)} strategy={rectSortingStrategy}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
+                      {galleryItems.map((item, index) => (
+                        <SortableImage 
+                          key={item.id} 
+                          id={item.id} 
+                          url={item.url} 
+                          index={index}
+                          onRemove={() => setGalleryItems(items => items.filter(i => i.id !== item.id))} 
+                        />
+                      ))}
                     </div>
-                  ))}
-                  {images.map((file, i) => (
-                    <div key={`new-${i}`} style={{ position: 'relative', width: '80px', height: '60px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--primary)' }}>
-                      <img src={URL.createObjectURL(file)} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      <button type="button" onClick={() => removeNewImage(i)} style={{ position: 'absolute', top: 2, right: 2, background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', borderRadius: '50%', padding: '2px', cursor: 'pointer' }}><X size={12}/></button>
-                    </div>
-                  ))}
-                </div>
+                  </SortableContext>
+                </DndContext>
 
                 <label 
                   onDragEnter={(e) => handleDrag(e, setDragActiveImg)}
                   onDragLeave={(e) => handleDrag(e, setDragActiveImg)}
                   onDragOver={(e) => handleDrag(e, setDragActiveImg)}
-                  onDrop={handleDropImages}
-                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem 1rem', background: dragActiveImg ? 'rgba(124, 58, 237, 0.05)' : 'rgba(255,255,255,0.02)', border: '1px dashed', borderColor: dragActiveImg ? 'var(--primary)' : 'var(--border-color)', borderRadius: '12px', cursor: 'pointer', transition: 'all 0.2s' }}>
-                  <ImageIcon size={24} color={dragActiveImg ? "var(--primary)" : "var(--text-muted)"} style={{ marginBottom: '0.5rem' }} />
-                  <span style={{ fontSize: '0.9rem', color: dragActiveImg ? "var(--primary)" : "var(--text-secondary)" }}>Drag and drop images here, or click to browse</span>
-                  <input type="file" multiple accept="image/*" onChange={handleImageChange} style={{ display: 'none' }} />
+                  onDrop={handleDropGallery}
+                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1.5rem 1rem', background: dragActiveImg ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.02)', border: '1px dashed', borderColor: dragActiveImg ? '#fff' : 'var(--border-color)', borderRadius: '12px', cursor: 'pointer', transition: 'all 0.2s' }}>
+                  <ImageIcon size={24} color={dragActiveImg ? "#fff" : "var(--text-muted)"} style={{ marginBottom: '0.5rem' }} />
+                  <span style={{ fontSize: '0.85rem', color: dragActiveImg ? "#fff" : "var(--text-secondary)" }}>Drag gallery images here to upload</span>
+                  <input type="file" multiple accept="image/*" onChange={handleGalleryChange} style={{ display: 'none' }} />
                 </label>
               </div>
 
@@ -390,9 +521,9 @@ export default function AddProductPage() {
                     onDragLeave={(e) => handleDrag(e, setDragActiveZip)}
                     onDragOver={(e) => handleDrag(e, setDragActiveZip)}
                     onDrop={handleDropZip}
-                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem 1rem', background: dragActiveZip ? 'rgba(124, 58, 237, 0.05)' : 'rgba(255,255,255,0.02)', border: '1px dashed', borderColor: dragActiveZip ? 'var(--primary)' : 'var(--border-color)', borderRadius: '12px', cursor: 'pointer', transition: 'all 0.2s' }}>
+                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1.5rem 1rem', background: dragActiveZip ? 'rgba(124, 58, 237, 0.05)' : 'rgba(255,255,255,0.02)', border: '1px dashed', borderColor: dragActiveZip ? 'var(--primary)' : 'var(--border-color)', borderRadius: '12px', cursor: 'pointer', transition: 'all 0.2s' }}>
                     <UploadCloud size={24} color={dragActiveZip ? "var(--primary)" : "var(--text-muted)"} style={{ marginBottom: '0.5rem' }} />
-                    <span style={{ fontSize: '0.9rem', color: dragActiveZip ? "var(--primary)" : "var(--text-secondary)" }}>Drag and drop ZIP package here, or click</span>
+                    <span style={{ fontSize: '0.85rem', color: dragActiveZip ? "var(--primary)" : "var(--text-secondary)" }}>Drag source ZIP package here</span>
                     <input type="file" accept=".zip,.rar,.tar.gz" onChange={handleZipChange} style={{ display: 'none' }} />
                   </label>
                 )}
@@ -429,7 +560,7 @@ export default function AddProductPage() {
                     onDrop={handleDropPdf}
                     style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1.5rem 1rem', background: dragActivePdf ? 'rgba(124, 58, 237, 0.05)' : 'rgba(255,255,255,0.02)', border: '1px dashed', borderColor: dragActivePdf ? 'var(--primary)' : 'var(--border-color)', borderRadius: '12px', cursor: 'pointer', transition: 'all 0.2s' }}>
                     <UploadCloud size={24} color={dragActivePdf ? "var(--primary)" : "var(--text-muted)"} style={{ marginBottom: '0.5rem' }} />
-                    <span style={{ fontSize: '0.9rem', color: dragActivePdf ? "var(--primary)" : "var(--text-secondary)" }}>Drag and drop PDF documentation here, or click</span>
+                    <span style={{ fontSize: '0.85rem', color: dragActivePdf ? "var(--primary)" : "var(--text-secondary)" }}>Drag PDF documentation here</span>
                     <input type="file" accept=".pdf" onChange={handlePdfChange} style={{ display: 'none' }} />
                   </label>
                 )}
@@ -534,6 +665,48 @@ export default function AddProductPage() {
         </div>
 
       </div>
+
+      {/* CROP MODAL */}
+      {cropModalOpen && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
+          <div style={{ width: '100%', maxWidth: '800px', background: '#0c0c14', borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', height: '80vh' }}>
+            <div style={{ padding: '1.5rem 2rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>Crop Cover Thumbnail</h3>
+              <button onClick={() => setCropModalOpen(false)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}><X size={24}/></button>
+            </div>
+            
+            <div style={{ flexGrow: 1, position: 'relative', background: '#000' }}>
+              <Cropper
+                image={cropImageSrc}
+                crop={crop}
+                zoom={zoom}
+                aspect={16 / 9}
+                onCropChange={setCrop}
+                onCropComplete={onCropComplete}
+                onZoomChange={setZoom}
+              />
+            </div>
+
+            <div style={{ padding: '1.5rem 2rem', background: 'var(--bg-card)', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', width: '300px' }}>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Zoom</span>
+                <input 
+                  type="range" 
+                  value={zoom} 
+                  min={1} 
+                  max={3} 
+                  step={0.1} 
+                  onChange={(e) => setZoom(Number(e.target.value))} 
+                  style={{ flexGrow: 1 }}
+                />
+              </div>
+              <button onClick={saveCroppedImage} className="btn btn-primary" style={{ padding: '0.8rem 2rem', borderRadius: '12px' }}>
+                Crop & Save Thumbnail
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style jsx global>{`
         .admin-form-grid {

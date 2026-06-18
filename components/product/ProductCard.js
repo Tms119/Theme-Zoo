@@ -58,7 +58,7 @@ export default function ProductCard({ product }) {
   const isWordPress = category?.toLowerCase() === 'wordpress';
   const cardCategoryClass = isWordPress ? 'card-wp' : 'card-tech';
   const tagLabel = isWordPress ? 'WordPress' : 'Next.js';
-  const imageUrl = (images && images.length > 0) ? images[0] : `https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80`;
+  const imageUrl = product.thumbnail_url || ((images && images.length > 0) ? images[0] : `https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80`);
   const isFeatured = is_featured;
 
   return (

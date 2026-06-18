@@ -17,6 +17,8 @@ export default defineSchema({
     is_active:   v.boolean(),           // hide/show product without deleting
     is_featured: v.optional(v.boolean()),
     demo_url:    v.optional(v.string()),
+    thumbnail_id:v.optional(v.id("_storage")), // Cropped Cover Image ID
+    thumbnail_url:v.optional(v.string()),      // Cropped Cover Image URL
     file_id:     v.optional(v.id("_storage")), // Convex Storage ID for zip files
     file_url:    v.optional(v.string()),       // External download link fallback
     pdf_id:      v.optional(v.id("_storage")), // PDF Documentation
