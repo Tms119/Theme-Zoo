@@ -28,6 +28,9 @@ const geistMono = Geist_Mono({
 
 export const metadata = {
   metadataBase: new URL("https://www.themeszoo.com"),
+  alternates: {
+    canonical: "/",
+  },
   title: {
     default: "Themes Zoo | Premium Website Templates & Themes",
     template: "%s | Themes Zoo",

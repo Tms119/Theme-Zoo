@@ -21,6 +21,9 @@ export async function generateMetadata({ params }) {
       title: `${product.name} | Premium Website Template | Themes Zoo`,
       description: product.short_desc || product.desc?.substring(0, 160) || "Buy this premium website template.",
       keywords: ["premium website template", "themes zoo", product.name, product.category, product.tech],
+      alternates: {
+        canonical: `/templates/${slug}`,
+      },
       openGraph: {
         title: `${product.name} | Premium Website Template`,
         description: product.short_desc || "Buy this premium website template at Themes Zoo.",
