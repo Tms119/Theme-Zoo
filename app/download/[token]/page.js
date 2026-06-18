@@ -44,8 +44,31 @@ export default function DownloadPage() {
         throw new Error("Download link could not be generated.");
       }
       
-      // Trigger the download by navigating to the secure URL
-      window.location.href = fileUrl;
+      // If the file is hosted on Convex storage, fetch it as a blob so we can force a custom filename.
+      // We skip this for external links (like Google Drive) because of CORS restrictions.
+      if (fileUrl.includes('convex.cloud')) {
+        const response = await fetch(fileUrl);
+        if (!response.ok) throw new Error("Network error while downloading the file.");
+        
+        const blob = await response.blob();
+        const blobUrl = window.URL.createObjectURL(blob);
+        
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        
+        // Format the filename nicely (e.g., "astra-theme.zip")
+        const cleanName = product.name ? product.name.replace(/[^a-z0-9]/gi, '-').toLowerCase() : 'template';
+        link.setAttribute('download', `${cleanName}.zip`);
+        
+        document.body.appendChild(link);
+        link.click();
+        
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(blobUrl);
+      } else {
+        // Trigger the download by navigating to the secure URL (external links)
+        window.location.href = fileUrl;
+      }
     } catch (err) {
       console.error(err);
       setError(err.message || "Failed to initiate download. Ensure your payment was successful.");
@@ -147,7 +170,7 @@ export default function DownloadPage() {
               style={{ width: '100%', padding: '1.25rem', borderRadius: '16px', fontSize: '1.1rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
             >
               {downloading ? <Loader2 className="animate-spin" size={20} /> : null}
-              {downloading ? 'Generating Secure Link...' : 'Download Asset'}
+              {downloading ? 'Preparing Download...' : 'Download Asset'}
               {!downloading && <Download size={18} />}
             </button>
 
