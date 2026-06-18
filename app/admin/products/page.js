@@ -183,6 +183,11 @@ export default function AddProductPage() {
     e.target.value = null; // reset input
   };
 
+  const handleCropGalleryImage = (srcUrl) => {
+    setCropImageSrc(srcUrl);
+    setCropModalOpen(true);
+  };
+
   const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
@@ -429,13 +434,15 @@ export default function AddProductPage() {
                   {existingImages.map((img, i) => (
                     <div key={`ex-${i}`} style={{ position: 'relative', width: '80px', height: '60px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
                       <img src={img} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      <button type="button" onClick={() => removeExistingImage(i)} style={{ position: 'absolute', top: 2, right: 2, background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', borderRadius: '50%', padding: '2px', cursor: 'pointer' }}><X size={12}/></button>
+                      <button type="button" onClick={() => removeExistingImage(i)} style={{ position: 'absolute', top: 2, right: 2, background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', borderRadius: '50%', padding: '2px', cursor: 'pointer', zIndex: 5 }}><X size={12}/></button>
+                      <button type="button" onClick={() => handleCropGalleryImage(img)} style={{ position: 'absolute', bottom: 2, left: 2, right: 2, background: 'rgba(124, 58, 237, 0.9)', color: '#fff', border: 'none', borderRadius: '4px', padding: '2px', fontSize: '0.55rem', fontWeight: 700, cursor: 'pointer', zIndex: 5 }}>Set Cover</button>
                     </div>
                   ))}
                   {images.map((file, i) => (
                     <div key={`new-${i}`} style={{ position: 'relative', width: '80px', height: '60px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--primary)' }}>
                       <img src={URL.createObjectURL(file)} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      <button type="button" onClick={() => removeNewImage(i)} style={{ position: 'absolute', top: 2, right: 2, background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', borderRadius: '50%', padding: '2px', cursor: 'pointer' }}><X size={12}/></button>
+                      <button type="button" onClick={() => removeNewImage(i)} style={{ position: 'absolute', top: 2, right: 2, background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', borderRadius: '50%', padding: '2px', cursor: 'pointer', zIndex: 5 }}><X size={12}/></button>
+                      <button type="button" onClick={() => handleCropGalleryImage(URL.createObjectURL(file))} style={{ position: 'absolute', bottom: 2, left: 2, right: 2, background: 'rgba(124, 58, 237, 0.9)', color: '#fff', border: 'none', borderRadius: '4px', padding: '2px', fontSize: '0.55rem', fontWeight: 700, cursor: 'pointer', zIndex: 5 }}>Set Cover</button>
                     </div>
                   ))}
                 </div>
