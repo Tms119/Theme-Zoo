@@ -108,22 +108,30 @@ export default function Dashboard() {
                       </div>
 
                       <div style={{ marginTop: 'auto', paddingTop: '1rem', display: 'flex', gap: '0.5rem' }}>
-                        <button 
-                          onClick={() => handleDownload(order._id)}
-                          disabled={downloading === order._id}
-                          className="btn btn-primary" 
-                          style={{ flex: 1, display: 'flex', justifyContent: 'center', gap: '0.5rem', padding: '0.75rem', borderRadius: '8px', fontSize: '0.9rem' }}
-                        >
-                          <Download size={16} /> 
-                          {downloading === order._id ? 'Wait...' : 'Download'}
-                        </button>
-                        <Link
-                          href={`/invoice/${order._id}`}
-                          className="btn btn-secondary"
-                          style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', padding: '0.75rem', borderRadius: '8px', fontSize: '0.9rem', border: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.05)' }}
-                        >
-                          <FileText size={16} /> Invoice
-                        </Link>
+                        {order.status === 'paid' || order.status === 'delivered' ? (
+                          <>
+                            <button 
+                              onClick={() => handleDownload(order._id)}
+                              disabled={downloading === order._id}
+                              className="btn btn-primary" 
+                              style={{ flex: 1, display: 'flex', justifyContent: 'center', gap: '0.5rem', padding: '0.75rem', borderRadius: '8px', fontSize: '0.9rem' }}
+                            >
+                              <Download size={16} /> 
+                              {downloading === order._id ? 'Wait...' : 'Download'}
+                            </button>
+                            <Link
+                              href={`/invoice/${order._id}`}
+                              className="btn btn-secondary"
+                              style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', padding: '0.75rem', borderRadius: '8px', fontSize: '0.9rem', border: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.05)' }}
+                            >
+                              <FileText size={16} /> Invoice
+                            </Link>
+                          </>
+                        ) : (
+                          <div style={{ flex: 1, textAlign: 'center', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                            Awaiting Payment Verification...
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
