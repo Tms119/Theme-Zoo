@@ -1,4 +1,4 @@
-import { query, mutation } from "./_generated/server";
+import { query, mutation, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 import { requireAdmin } from "./auth";
 
@@ -199,5 +199,41 @@ export const getGuestDownloadUrl = mutation({
     }
 
     throw new Error("No file associated with this product");
+  },
+});
+
+// ── Expire Unpaid Orders (Internal) ──────────────────────────────
+export const expireUnpaidOrders = internalMutation({
+  handler: async (ctx) => {
+    // 2 hours ago in milliseconds
+    const twoHoursAgo = Date.now() - 2 * 60 * 60 * 1000;
+    
+    // Find all pending orders
+    const pendingOrders = await ctx.db
+      .query("orders")
+      .withIndex("by_status", (q) => q.eq("status", "pending"))
+      .collect();
+
+    // Filter orders older than 2 hours
+    const expiredOrders = pendingOrders.filter(o => o._creationTime < twoHoursAgo);
+
+    // Update their status to 'failed'
+    for (const order of expiredOrders) {
+      await ctx.db.patch(order._id, { status: "failed" });
+      console.log(`Expired unpaid order ${order._id}`);
+    }
+    
+    // Also handle custom service orders
+    const pendingServices = await ctx.db
+      .query("custom_orders")
+      .withIndex("by_status", (q) => q.eq("status", "pending"))
+      .collect();
+      
+    const expiredServices = pendingServices.filter(s => s._creationTime < twoHoursAgo);
+    
+    for (const service of expiredServices) {
+      await ctx.db.patch(service._id, { status: "failed" });
+      console.log(`Expired unpaid service order ${service._id}`);
+    }
   },
 });

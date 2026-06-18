@@ -29,7 +29,20 @@ export default function Dashboard() {
       });
       
       if (url) {
-        window.open(url, '_blank');
+        const isViewerSite = url.includes('drive.google.com') || url.includes('dropbox.com');
+        if (!isViewerSite) {
+          // Get the product name to generate a clean filename
+          const order = orders.find(o => o._id === orderId);
+          const cleanName = order?.product_name 
+            ? order.product_name.replace(/[^a-z0-9]/gi, '-').toLowerCase() 
+            : 'template';
+          
+          const timestamp = new Date().getTime();
+          const proxyUrl = `/api/download?url=${encodeURIComponent(url)}&name=${encodeURIComponent(cleanName)}&t=${timestamp}`;
+          window.location.href = proxyUrl;
+        } else {
+          window.open(url, '_blank');
+        }
       }
     } catch (err) {
       alert("Error generating download link: " + err.message);
