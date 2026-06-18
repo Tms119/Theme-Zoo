@@ -10,7 +10,7 @@ export const listActive = query({
       .query("products")
       .withIndex("by_active", (q) => q.eq("is_active", true))
       .collect();
-    return products.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+    return products.sort((a, b) => (a.sort_order ?? 999999) - (b.sort_order ?? 999999));
   },
 });
 
@@ -20,7 +20,7 @@ export const listAll = query({
   handler: async (ctx) => {
     await requireAdmin(ctx);
     const products = await ctx.db.query("products").collect();
-    return products.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+    return products.sort((a, b) => (a.sort_order ?? 999999) - (b.sort_order ?? 999999));
   },
 });
 
