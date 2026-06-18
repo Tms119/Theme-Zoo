@@ -438,8 +438,6 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      )}
-
       <style jsx global>{`
         .show-mobile-cell, .show-mobile-row {
           display: none !important;
