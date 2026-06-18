@@ -29,16 +29,16 @@ const geistMono = Geist_Mono({
 export const metadata = {
   metadataBase: new URL("https://www.themeszoo.com"),
   title: {
-    default: "Themes Zoo — Premium WordPress & Web Templates",
+    default: "Themes Zoo | Premium Website Templates & Themes",
     template: "%s | Themes Zoo",
   },
-  description: "Buy premium WordPress themes and website templates. Instant crypto payment. Instant download. No subscription — own it forever.",
-  keywords: ["wordpress themes", "web templates", "html templates", "buy templates with crypto", "premium themes", "website templates"],
+  description: "Themes Zoo offers premium website templates, HTML themes, and WordPress designs. Buy premium website templates with instant crypto payment and lifetime ownership.",
+  keywords: ["premium website template", "themes zoo", "premium website templates", "buy website templates", "premium html templates", "wordpress themes", "crypto web templates"],
   authors: [{ name: "Themes Zoo", url: "https://www.themeszoo.com" }],
   creator: "Themes Zoo",
   openGraph: {
-    title: "Themes Zoo — Premium WordPress & Web Templates",
-    description: "Buy premium WordPress themes and website templates. Instant crypto payment. Instant download. No subscription — own it forever.",
+    title: "Themes Zoo | Premium Website Templates",
+    description: "Discover premium website templates at Themes Zoo. High-quality designs with instant delivery and no subscriptions.",
     url: "https://www.themeszoo.com",
     siteName: "Themes Zoo",
     images: [
@@ -46,7 +46,7 @@ export const metadata = {
         url: "/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "Themes Zoo — Premium Web Templates",
+        alt: "Themes Zoo — Premium Website Templates",
       },
     ],
     locale: "en_US",
@@ -54,8 +54,8 @@ export const metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Themes Zoo — Premium WordPress & Web Templates",
-    description: "Buy premium WordPress themes and website templates. Instant crypto payment. Instant download.",
+    title: "Themes Zoo | Premium Website Templates",
+    description: "Buy premium website templates with instant crypto checkout. Own your design forever.",
     images: ["/og-image.jpg"],
     creator: "@themeszoo",
   },
@@ -76,8 +76,43 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }) {
+  // Organization Schema
+  const orgSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Themes Zoo",
+    "url": "https://www.themeszoo.com",
+    "logo": "https://www.themeszoo.com/og-image.jpg",
+    "description": "Premium website templates and digital marketplace",
+    "sameAs": [
+      "https://twitter.com/themeszoo"
+    ]
+  };
+
+  const webSiteSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Themes Zoo",
+    "url": "https://www.themeszoo.com",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://www.themeszoo.com/templates?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  };
+
   return (
     <html lang="en" className={`${chakraPetch.variable} ${onest.variable} ${geistMono.variable}`}>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(orgSchema) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteSchema) }}
+        />
+      </head>
       <body suppressHydrationWarning>
         <ClerkProvider
           appearance={{
