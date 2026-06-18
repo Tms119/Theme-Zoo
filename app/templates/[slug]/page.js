@@ -13,8 +13,7 @@ export async function generateMetadata({ params }) {
   const { slug } = params;
   
   try {
-    const allProducts = await convex.query(api.products.listAll);
-    const product = allProducts.find(p => p.slug === slug) || null;
+    const product = await convex.query(api.products.getBySlug, { slug });
     
     if (!product) {
       return { title: 'Product Not Found | Themes Zoo' };
@@ -47,10 +46,7 @@ export default async function ProductPage({ params }) {
   let errorMessage = null;
   
   try {
-    // Fallback to fetching all and filtering locally, since Vercel might not have deployed 
-    // the new 'getBySlug' function to the production Convex backend yet.
-    const allProducts = await convex.query(api.products.listAll);
-    product = allProducts.find(p => p.slug === slug) || null;
+    product = await convex.query(api.products.getBySlug, { slug });
     
     if (product) {
       const allActive = await convex.query(api.products.listActive);
