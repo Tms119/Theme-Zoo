@@ -401,7 +401,7 @@ export default function AddProductPage() {
               <div>
                 <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.75rem', fontWeight: 500 }}>
                   <span>Grid Cover Thumbnail (Optional)</span>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--primary)' }}>16:9 Aspect Ratio</span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--primary)' }}>16:11 Aspect Ratio</span>
                 </label>
                 
                 {(thumbnailPreviewUrl || existingThumbnailUrl) && (
@@ -648,7 +648,7 @@ export default function AddProductPage() {
                 image={cropImageSrc}
                 crop={crop}
                 zoom={zoom}
-                aspect={16 / 9}
+                aspect={16 / 11}
                 onCropChange={setCrop}
                 onCropComplete={onCropComplete}
                 onZoomChange={setZoom}
