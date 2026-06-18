@@ -6,23 +6,7 @@ import Link from 'next/link';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import ProductCard from '@/components/product/ProductCard';
-import Cropper from 'react-easy-crop';
 import { getCroppedImg } from '@/lib/cropUtils';
-import { SortableImage } from '@/components/admin/SortableImage';
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  rectSortingStrategy,
-} from '@dnd-kit/sortable';
 
 export default function AddProductPage() {
   const router = useRouter();
@@ -58,9 +42,9 @@ export default function AddProductPage() {
   const [newCatSlug, setNewCatSlug] = useState('');
   const [catCreating, setCatCreating] = useState(false);
   
-  // === Media State ===
-  // galleryItems: array of { id: string, type: 'existing'|'new', url: string, file?: File }
-  const [galleryItems, setGalleryItems] = useState([]); 
+  // File State
+  const [images, setImages] = useState([]); // File objects for new uploads
+  const [existingImages, setExistingImages] = useState([]); // Strings of URLs
   const [zipFile, setZipFile] = useState(null);
   const [existingZipUrl, setExistingZipUrl] = useState('');
   const [pdfFile, setPdfFile] = useState(null);
@@ -84,22 +68,7 @@ export default function AddProductPage() {
   const [dragActiveZip, setDragActiveZip] = useState(false);
   const [dragActivePdf, setDragActivePdf] = useState(false);
 
-  // Sensors for dnd-kit
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
-  );
 
-  const handleDragEnd = (event) => {
-    const { active, over } = event;
-    if (active.id !== over.id) {
-      setGalleryItems((items) => {
-        const oldIndex = items.findIndex(i => i.id === active.id);
-        const newIndex = items.findIndex(i => i.id === over.id);
-        return arrayMove(items, oldIndex, newIndex);
-      });
-    }
-  };
 
   // Drag handlers for Dropzones
   const handleDrag = (e, setDragState) => {
@@ -155,7 +124,7 @@ export default function AddProductPage() {
     name: name || "Product Name",
     short_desc: shortDesc || "Your short tagline will appear here...",
     price_usd: parseFloat(price) || 0.00,
-    images: thumbnailPreviewUrl ? [thumbnailPreviewUrl] : (existingThumbnailUrl ? [existingThumbnailUrl] : (galleryItems.length > 0 ? [galleryItems[0].url] : ["https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop"])),
+    images: thumbnailPreviewUrl ? [thumbnailPreviewUrl] : (existingThumbnailUrl ? [existingThumbnailUrl] : (existingImages.length > 0 ? [existingImages[0]] : (images.length > 0 ? [URL.createObjectURL(images[0])] : ["https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop"]))),
     category: category
   };
 
@@ -169,12 +138,7 @@ export default function AddProductPage() {
       setDemoUrl(existingProduct.demo_url || '');
       setFeatures(existingProduct.features?.join('\n') || '');
       
-      const mappedGallery = (existingProduct.images || []).map((url, i) => ({
-        id: `existing-${i}`,
-        type: 'existing',
-        url: url
-      }));
-      setGalleryItems(mappedGallery);
+      setExistingImages(existingProduct.images || []);
       setExistingThumbnailUrl(existingProduct.thumbnail_url || '');
       setExistingZipUrl(existingProduct.file_url || '');
       setExistingPdfUrl(existingProduct.pdf_url || '');
@@ -192,13 +156,15 @@ export default function AddProductPage() {
     }
     
     setError('');
-    const newItems = files.map(file => ({
-      id: `new-${Math.random().toString(36).substring(7)}`,
-      type: 'new',
-      url: URL.createObjectURL(file),
-      file: file
-    }));
-    setGalleryItems(prev => [...prev, ...newItems]);
+    setImages(prev => [...prev, ...files]);
+  };
+
+  const removeNewImage = (index) => {
+    setImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeExistingImage = (index) => {
+    setExistingImages(prev => prev.filter((_, i) => i !== index));
   };
 
   // Thumbnail Crop Selection
@@ -285,17 +251,12 @@ export default function AddProductPage() {
     setLoading(true);
 
     try {
-      // 1. Upload new gallery images while maintaining sort order
-      let finalGallery = [];
+      let finalImages = [...existingImages];
       setUploadProgress('Uploading gallery images...');
-      for (const item of galleryItems) {
-        if (item.type === 'new') {
-          const storageId = await uploadFileToConvex(item.file);
-          const publicUrl = await getFileUrl({ storageId });
-          finalGallery.push(publicUrl);
-        } else {
-          finalGallery.push(item.url);
-        }
+      for (const imgFile of images) {
+        const storageId = await uploadFileToConvex(imgFile);
+        const publicUrl = await getFileUrl({ storageId });
+        finalImages.push(publicUrl);
       }
 
       // 2. Upload Cropped Thumbnail
@@ -336,7 +297,7 @@ export default function AddProductPage() {
         short_desc: shortDesc,
         desc,
         price_usd: parseFloat(price),
-        images: finalGallery,
+        images: finalImages,
         thumbnail_id: finalThumbId,
         thumbnail_url: finalThumbUrl,
         features: features.split('\n').map(f => f.trim()).filter(Boolean),
@@ -464,21 +425,20 @@ export default function AddProductPage() {
               <div>
                 <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.75rem', fontWeight: 500 }}>Full Gallery Images (Max 5MB each)</label>
                 
-                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                  <SortableContext items={galleryItems.map(i => i.id)} strategy={rectSortingStrategy}>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
-                      {galleryItems.map((item, index) => (
-                        <SortableImage 
-                          key={item.id} 
-                          id={item.id} 
-                          url={item.url} 
-                          index={index}
-                          onRemove={() => setGalleryItems(items => items.filter(i => i.id !== item.id))} 
-                        />
-                      ))}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
+                  {existingImages.map((img, i) => (
+                    <div key={`ex-${i}`} style={{ position: 'relative', width: '80px', height: '60px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
+                      <img src={img} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <button type="button" onClick={() => removeExistingImage(i)} style={{ position: 'absolute', top: 2, right: 2, background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', borderRadius: '50%', padding: '2px', cursor: 'pointer' }}><X size={12}/></button>
                     </div>
-                  </SortableContext>
-                </DndContext>
+                  ))}
+                  {images.map((file, i) => (
+                    <div key={`new-${i}`} style={{ position: 'relative', width: '80px', height: '60px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--primary)' }}>
+                      <img src={URL.createObjectURL(file)} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <button type="button" onClick={() => removeNewImage(i)} style={{ position: 'absolute', top: 2, right: 2, background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', borderRadius: '50%', padding: '2px', cursor: 'pointer' }}><X size={12}/></button>
+                    </div>
+                  ))}
+                </div>
 
                 <label 
                   onDragEnter={(e) => handleDrag(e, setDragActiveImg)}
@@ -654,7 +614,7 @@ export default function AddProductPage() {
              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)' }}>
               <Eye size={16} /> Live Card Preview
             </h2>
-            <div style={{ pointerEvents: 'none' }}>
+            <div style={{ pointerEvents: 'none', maxWidth: '320px', margin: '0 auto' }}>
               <ProductCard product={livePreviewData} />
             </div>
             <div style={{ marginTop: '1.5rem', padding: '1rem', background: 'rgba(255,255,255,0.02)', border: '1px dashed var(--border-color)', borderRadius: '12px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
