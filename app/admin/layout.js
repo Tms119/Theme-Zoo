@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { ShieldAlert, LayoutDashboard, FilePlus, LogOut, ArrowLeft, KeySquare, Archive, Tags, Package, Tag, LifeBuoy, Briefcase, Megaphone } from 'lucide-react';
 
 import { useUser, SignInButton } from '@clerk/nextjs';
@@ -9,14 +10,17 @@ export default function AdminLayout({ children }) {
   const { isLoaded, isSignedIn, user } = useUser();
   const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
 
-  const navLinks = [
-    { href: '/admin', label: 'Dashboard', icon: <LayoutDashboard size={16} /> },
-    { href: '/admin/products', label: 'Products', icon: <Package size={16} /> },
-    { href: '/admin/categories', label: 'Categories', icon: <Tags size={16} /> },
-    { href: '/admin/promo', label: 'Promo Codes', icon: <Tag size={16} /> },
-    { href: '/admin/marketing', label: 'Marketing', icon: <Megaphone size={16} /> },
-    { href: '/admin/support', label: 'Support Tickets', icon: <LifeBuoy size={16} /> },
-    { href: '/admin/services', label: 'Custom Services', icon: <Briefcase size={16} /> },
+  const pathname = usePathname();
+
+  const tabLinks = [
+    { href: '/admin', label: 'Overview' },
+    { href: '/admin/templates', label: 'Templates' },
+    { href: '/admin/sales', label: 'Sales' },
+    { href: '/admin/categories', label: 'Categories' },
+    { href: '/admin/promo', label: 'Promo Codes' },
+    { href: '/admin/marketing', label: 'Marketing' },
+    { href: '/admin/services', label: 'Custom Services' },
+    { href: '/admin/support', label: 'Support Tickets' },
   ];
 
   if (!isLoaded) {
@@ -84,14 +88,6 @@ export default function AdminLayout({ children }) {
             <Link href="/admin" className="admin-logo">
               Themes Zoo <span className="admin-badge">ADMIN</span>
             </Link>
-            
-            <nav className="admin-nav">
-              {navLinks.map((link) => (
-                <Link key={link.href} href={link.href} className="admin-nav-link">
-                  {link.icon} <span>{link.label}</span>
-                </Link>
-              ))}
-            </nav>
           </div>
 
           <div className="admin-header-right">
@@ -105,6 +101,37 @@ export default function AdminLayout({ children }) {
       {/* Admin Content Area */}
       <main className="admin-main">
         <div className="admin-content-wrapper">
+          {/* Global Tab Navigation */}
+          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2.5rem', borderBottom: '1px solid rgba(255,255,255,0.06)', overflowX: 'auto', paddingBottom: '0.5rem', WebkitOverflowScrolling: 'touch' }}>
+            {tabLinks.map((tab) => {
+              const isActive = pathname === tab.href;
+              return (
+                <Link
+                  key={tab.href}
+                  href={tab.href}
+                  style={{
+                    padding: '0.6rem 1.25rem',
+                    background: isActive ? 'rgba(139,92,246,0.1)' : 'transparent',
+                    color: isActive ? 'var(--primary)' : 'var(--text-secondary)',
+                    border: 'none',
+                    borderBottom: isActive ? '2px solid var(--primary)' : '2px solid transparent',
+                    borderRadius: '8px 8px 0 0',
+                    fontWeight: isActive ? 700 : 500,
+                    cursor: 'pointer',
+                    textTransform: 'capitalize',
+                    transition: 'all 0.2s ease',
+                    whiteSpace: 'nowrap',
+                    textDecoration: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                  }}
+                >
+                  {tab.label}
+                </Link>
+              )
+            })}
+          </div>
           {children}
         </div>
       </main>

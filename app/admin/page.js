@@ -12,72 +12,9 @@ export default function AdminDashboard() {
   
   const {
     results: orders,
-    status: ordersStatus,
-    loadMore: loadMoreOrders,
   } = usePaginatedQuery(api.orders.listPaginated, {}, { initialNumItems: 20 });
   
   const orderStats = useQuery(api.orders.getStats);
-  
-  const toggleActive = useMutation(api.products.toggleActive);
-  const removeProduct = useMutation(api.products.remove);
-  const updateSortOrders = useMutation(api.products.updateSortOrders);
-
-  const [localProducts, setLocalProducts] = useState(null);
-  React.useEffect(() => {
-    if (products) {
-      setLocalProducts([...products]);
-    }
-  }, [products]);
-
-  const handleDragStart = (e, index) => {
-    e.dataTransfer.setData('text/plain', index);
-    e.dataTransfer.effectAllowed = 'move';
-  };
-
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-  };
-
-  const handleDrop = async (e, dropIndex) => {
-    e.preventDefault();
-    const dragIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
-    if (dragIndex === dropIndex || isNaN(dragIndex)) return;
-
-    const newArray = [...localProducts];
-    const [draggedItem] = newArray.splice(dragIndex, 1);
-    newArray.splice(dropIndex, 0, draggedItem);
-
-    setLocalProducts(newArray);
-
-    const updates = newArray.map((p, i) => ({
-      id: p._id,
-      sort_order: i + 1
-    }));
-
-    try {
-      await updateSortOrders({ updates });
-      toast.success('Display order saved!');
-    } catch (err) {
-      console.error(err);
-      toast.error('Failed to save order.');
-    }
-  };
-
-  const handleDeleteProduct = (id) => {
-    if (confirm("Are you sure you want to permanently delete this product?")) {
-      removeProduct({ id });
-    }
-  };
-
-  const createProduct = useMutation(api.products.create);
-  const generateUploadUrl = useMutation(api.products.generateUploadUrl);
-  const getFileUrl = useMutation(api.products.getFileUrl);
-  
-  // Mobile expansion state
-  const [expandedProduct, setExpandedProduct] = useState(null);
-  const [expandedOrder, setExpandedOrder] = useState(null);
-  const [activeTab, setActiveTab] = useState('overview');
 
   const [extMetrics, setExtMetrics] = useState({ totalUsers: 0 });
   React.useEffect(() => {
@@ -95,18 +32,7 @@ export default function AdminDashboard() {
     fetchMetrics();
   }, []);
 
-  const uploadBlobToConvex = async (blob) => {
-    const postUrl = await generateUploadUrl();
-    const result = await fetch(postUrl, {
-      method: "POST",
-      headers: { "Content-Type": blob.type },
-      body: blob,
-    });
-    const { storageId } = await result.json();
-    return storageId;
-  };
-
-  if (products === undefined || localProducts === null || ordersStatus === "LoadingFirstPage" || orderStats === undefined) {
+  if (products === undefined || orders === undefined || orderStats === undefined) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', padding: '5rem' }}>
         <p style={{ color: 'var(--text-secondary)' }}>Loading Dashboard Data...</p>
@@ -132,44 +58,8 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2.5rem', borderBottom: '1px solid rgba(255,255,255,0.06)', overflowX: 'auto', paddingBottom: '0.5rem', WebkitOverflowScrolling: 'touch' }}>
-        {['overview', 'templates', 'sales'].map((tab) => {
-          const tabKey = tab.replace(' ', '_');
-          const isActive = activeTab === tabKey;
-          
-          return (
-            <button
-              key={tabKey}
-              onClick={() => setActiveTab(tabKey)}
-              style={{
-                padding: '0.6rem 1.25rem',
-                background: isActive ? 'rgba(139,92,246,0.1)' : 'transparent',
-                color: isActive ? 'var(--primary)' : 'var(--text-secondary)',
-                border: 'none',
-                borderBottom: isActive ? '2px solid var(--primary)' : '2px solid transparent',
-                borderRadius: '8px 8px 0 0',
-                fontWeight: isActive ? 700 : 500,
-                cursor: 'pointer',
-                textTransform: 'capitalize',
-                transition: 'all 0.2s ease',
-                whiteSpace: 'nowrap',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem'
-              }}
-            >
-              {tab}
-            </button>
-          )
-        })}
-      </div>
-
-      {/* Overview Tab */}
-      {activeTab === 'overview' && (
-        <>
-          {/* Metrics Row */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
+      {/* Metrics Row */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
         {[
           { label: 'Total Revenue', value: `$${totalRevenue.toFixed(2)} USD`, desc: 'Total gross volume', icon: <DollarSign size={20} color="var(--accent-emerald)" />, glow: 'rgba(16, 189, 129, 0.04)' },
           { label: 'Total Sales', value: `${totalOrders} Completed`, desc: '100% automatic delivery', icon: <CheckCircle2 size={20} color="var(--primary)" />, glow: 'rgba(124, 58, 237, 0.04)' },
@@ -193,7 +83,7 @@ export default function AdminDashboard() {
       <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.75rem', marginBottom: '2rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontWeight: 800, margin: 0 }}>Latest Sales</h2>
-          <button onClick={() => setActiveTab('sales')} style={{ background: 'none', border: 'none', color: 'var(--accent-cyan)', fontWeight: 600, cursor: 'pointer', fontSize: '0.9rem' }}>View All →</button>
+          <Link href="/admin/sales" style={{ background: 'none', border: 'none', color: 'var(--accent-cyan)', fontWeight: 600, cursor: 'pointer', fontSize: '0.9rem' }}>View All →</Link>
         </div>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem', whiteSpace: 'nowrap' }}>
@@ -205,238 +95,20 @@ export default function AdminDashboard() {
               </tr>
             </thead>
             <tbody>
-              {orders.slice(0, 5).map((o) => (
+              {orders && orders.slice(0, 5).map((o) => (
                 <tr key={o._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                   <td style={{ padding: '1rem 0.5rem', fontWeight: 500 }}>{o.product_name}</td>
                   <td style={{ padding: '1rem 0.5rem', color: 'var(--text-muted)' }}>{o.buyer_email}</td>
                   <td style={{ padding: '1rem 0.5rem', fontWeight: 600 }}>${o.price_usd.toFixed(2)}</td>
                 </tr>
               ))}
-              {orders.length === 0 && (
+              {(!orders || orders.length === 0) && (
                 <tr><td colSpan={3} style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>No orders yet.</td></tr>
               )}
             </tbody>
           </table>
         </div>
       </div>
-      </>
-      )}
-
-      {/* Templates Tab */}
-      {activeTab === 'templates' && (
-        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.75rem', marginBottom: '2rem' }}>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontWeight: 800, marginBottom: '1.5rem' }}>Your Templates</h2>
-          
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem', whiteSpace: 'nowrap' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                  <th style={{ width: '40px' }}></th>
-                  <th style={{ padding: '0.75rem 0.5rem', color: 'var(--text-muted)', fontWeight: 500 }}>Name</th>
-                  <th className="hide-mobile" style={{ padding: '0.75rem 0.5rem', color: 'var(--text-muted)', fontWeight: 500 }}>Category</th>
-                  <th className="hide-mobile" style={{ padding: '0.75rem 0.5rem', color: 'var(--text-muted)', fontWeight: 500 }}>Price</th>
-                  <th className="hide-mobile" style={{ padding: '0.75rem 0.5rem', color: 'var(--text-muted)', fontWeight: 500, textAlign: 'right' }}>Actions</th>
-                  <th className="show-mobile-cell" style={{ padding: '0.75rem 0.5rem', textAlign: 'right' }}></th>
-                </tr>
-              </thead>
-              <tbody>
-                {localProducts.map((p, index) => (
-                  <React.Fragment key={p._id}>
-                    <tr 
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, index)}
-                      onDragOver={handleDragOver}
-                      onDrop={(e) => handleDrop(e, index)}
-                      style={{ 
-                        borderBottom: expandedProduct === p._id ? 'none' : '1px solid rgba(255,255,255,0.03)',
-                        transition: 'background 0.2s',
-                        background: 'transparent'
-                      }}
-                      onDragEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)' }}
-                      onDragLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
-                      onDropCapture={(e) => { e.currentTarget.style.background = 'transparent' }}
-                    >
-                      <td style={{ padding: '1rem 0.5rem', color: 'var(--text-muted)', cursor: 'grab' }} title="Drag to reorder">
-                        <GripVertical size={16} />
-                      </td>
-                      <td style={{ padding: '1rem 0.5rem', fontWeight: 600, color: 'var(--text-main)', whiteSpace: 'normal' }}>
-                        {p.name}
-                        {!p.is_active && <span style={{ marginLeft: '0.5rem', color: '#ef4444', fontSize: '0.7rem' }}>(Hidden)</span>}
-                      </td>
-                      <td className="hide-mobile" style={{ padding: '1rem 0.5rem', color: 'var(--text-secondary)', textTransform: 'capitalize' }}>{p.category}</td>
-                      <td className="hide-mobile" style={{ padding: '1rem 0.5rem', fontWeight: 600 }}>${p.price_usd.toFixed(2)}</td>
-                      <td className="hide-mobile" style={{ padding: '1rem 0.5rem', textAlign: 'right' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.75rem' }}>
-                          <Link href={`/templates/${p.slug}`} target="_blank" style={{ display: 'inline-flex', alignItems: 'center', color: 'var(--accent-cyan)', fontSize: '0.8rem' }}>
-                            View <ExternalLink size={12} style={{ marginLeft: '2px' }} />
-                          </Link>
-                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <button 
-                              onClick={() => toggleActive({ id: p._id, is_active: !p.is_active })}
-                              style={{ 
-                                position: 'relative', width: '36px', height: '20px', 
-                                background: p.is_active ? 'var(--accent-cyan)' : 'rgba(255,255,255,0.1)', 
-                                borderRadius: '20px', border: 'none', cursor: 'pointer', transition: 'background 0.3s ease', padding: 0
-                              }}
-                              title={p.is_active ? "Hide Product" : "Show Product"}
-                            >
-                              <div style={{ 
-                                position: 'absolute', top: '2px', left: p.is_active ? '18px' : '2px', width: '16px', height: '16px', 
-                                background: '#fff', borderRadius: '50%', transition: 'left 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-                              }} />
-                            </button>
-                          </div>
-                          <Link 
-                            href={`/admin/products?id=${p._id}`}
-                            style={{ display: 'inline-flex', alignItems: 'center', color: 'var(--text-secondary)', fontSize: '0.8rem' }}
-                            title="Edit Product"
-                          >
-                            Edit
-                          </Link>
-                          <button 
-                            onClick={() => handleDeleteProduct(p._id)}
-                            style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.8rem', cursor: 'pointer' }}
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                      <td className="show-mobile-cell" style={{ padding: '1rem 0.5rem', textAlign: 'right' }}>
-                        <button 
-                          onClick={() => setExpandedProduct(expandedProduct === p._id ? null : p._id)}
-                          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: '#fff', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.8rem', cursor: 'pointer' }}
-                        >
-                          {expandedProduct === p._id ? 'Less' : 'More'}
-                        </button>
-                      </td>
-                    </tr>
-                    {/* Mobile Expanded Row */}
-                    {expandedProduct === p._id && (
-                      <tr className="show-mobile-row" style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', background: 'rgba(255,255,255,0.01)' }}>
-                        <td colSpan={3} style={{ padding: '0 0.5rem 1rem 0.5rem' }}>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '1rem', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', border: '1px dashed var(--border-color)' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                              <span style={{ color: 'var(--text-secondary)' }}>Category:</span>
-                              <span style={{ textTransform: 'capitalize', color: 'var(--text-main)' }}>{p.category}</span>
-                            </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                              <span style={{ color: 'var(--text-secondary)' }}>Price:</span>
-                              <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>${p.price_usd.toFixed(2)}</span>
-                            </div>
-                            <div style={{ height: '1px', background: 'var(--border-color)', margin: '0.5rem 0' }} />
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'center' }}>
-                              <Link href={`/templates/${p.slug}`} target="_blank" style={{ color: 'var(--accent-cyan)', fontSize: '0.85rem' }}>View</Link>
-                              <Link href={`/admin/products?id=${p._id}`} style={{ color: 'var(--text-main)', fontSize: '0.85rem' }}>Edit</Link>
-                              <button onClick={() => toggleActive({ id: p._id, is_active: !p.is_active })} style={{ background: 'none', border: 'none', color: 'var(--text-main)', fontSize: '0.85rem' }}>
-                                {p.is_active ? 'Hide' : 'Show'}
-                              </button>
-                              <button onClick={() => handleDeleteProduct(p._id)} style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.85rem' }}>Delete</button>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* Sales Tab */}
-      {activeTab === 'sales' && (
-        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.75rem', marginBottom: '2rem' }}>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontWeight: 800, marginBottom: '1.5rem' }}>Recent Orders</h2>
-          
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem', whiteSpace: 'nowrap' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                  <th className="hide-mobile" style={{ padding: '0.75rem 0.5rem', color: 'var(--text-muted)', fontWeight: 500 }}>Tx ID</th>
-                  <th style={{ padding: '0.75rem 0.5rem', color: 'var(--text-muted)', fontWeight: 500 }}>Template</th>
-                  <th className="hide-mobile" style={{ padding: '0.75rem 0.5rem', color: 'var(--text-muted)', fontWeight: 500 }}>Buyer</th>
-                  <th style={{ padding: '0.75rem 0.5rem', color: 'var(--text-muted)', fontWeight: 500 }}>Amount</th>
-                  <th className="hide-mobile" style={{ padding: '0.75rem 0.5rem', color: 'var(--text-muted)', fontWeight: 500, textAlign: 'right' }}>Status</th>
-                  <th className="show-mobile-cell" style={{ padding: '0.75rem 0.5rem', textAlign: 'right' }}></th>
-                </tr>
-              </thead>
-              <tbody>
-                {orders.map((o) => (
-                  <React.Fragment key={o._id}>
-                    <tr style={{ borderBottom: expandedOrder === o._id ? 'none' : '1px solid rgba(255,255,255,0.03)' }}>
-                      <td className="hide-mobile" style={{ padding: '1rem 0.5rem', fontFamily: 'monospace', color: 'var(--text-secondary)' }}>{o._id.substring(0, 8)}...</td>
-                      <td style={{ padding: '1rem 0.5rem', fontWeight: 500, whiteSpace: 'normal' }}>{o.product_name}</td>
-                      <td className="hide-mobile" style={{ padding: '1rem 0.5rem', color: 'var(--text-muted)' }}>{o.buyer_email}</td>
-                      <td style={{ padding: '1rem 0.5rem', fontWeight: 600 }}>${o.price_usd.toFixed(2)}</td>
-                      <td className="hide-mobile" style={{ padding: '1rem 0.5rem', textAlign: 'right' }}>
-                        <span style={{ fontSize: '0.75rem', background: 'rgba(16, 189, 129, 0.1)', border: '1px solid rgba(16, 189, 129, 0.2)', color: 'var(--accent-emerald)', padding: '0.15rem 0.5rem', borderRadius: '6px', fontWeight: 600, textTransform: 'uppercase' }}>
-                          {o.status}
-                        </span>
-                      </td>
-                      <td className="show-mobile-cell" style={{ padding: '1rem 0.5rem', textAlign: 'right' }}>
-                        <button 
-                          onClick={() => setExpandedOrder(expandedOrder === o._id ? null : o._id)}
-                          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: '#fff', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.8rem', cursor: 'pointer' }}
-                        >
-                          {expandedOrder === o._id ? 'Less' : 'More'}
-                        </button>
-                      </td>
-                    </tr>
-                    {/* Mobile Expanded Row */}
-                    {expandedOrder === o._id && (
-                      <tr className="show-mobile-row" style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', background: 'rgba(255,255,255,0.01)' }}>
-                        <td colSpan={3} style={{ padding: '0 0.5rem 1rem 0.5rem' }}>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '1rem', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', border: '1px dashed var(--border-color)' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                              <span style={{ color: 'var(--text-secondary)' }}>Tx ID:</span>
-                              <span style={{ fontFamily: 'monospace', color: 'var(--text-main)' }}>{o._id}</span>
-                            </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                              <span style={{ color: 'var(--text-secondary)' }}>Buyer:</span>
-                              <span style={{ color: 'var(--text-main)' }}>{o.buyer_email}</span>
-                            </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', alignItems: 'center' }}>
-                              <span style={{ color: 'var(--text-secondary)' }}>Status:</span>
-                              <span style={{ fontSize: '0.75rem', background: 'rgba(16, 189, 129, 0.1)', border: '1px solid rgba(16, 189, 129, 0.2)', color: 'var(--accent-emerald)', padding: '0.15rem 0.5rem', borderRadius: '6px', fontWeight: 600, textTransform: 'uppercase' }}>
-                                {o.status}
-                              </span>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
-                ))}
-                {orders.length === 0 && (
-                  <tr>
-                    <td colSpan={6} style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-                      No orders yet.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-            
-            {ordersStatus === "CanLoadMore" && (
-              <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
-                <button 
-                  onClick={() => loadMoreOrders(20)}
-                  className="btn btn-secondary"
-                  style={{ padding: '0.6rem 1.5rem', borderRadius: '100px' }}
-                >
-                  Load More Orders
-                </button>
-              </div>
-            )}
-            {ordersStatus === "LoadingMore" && (
-              <div style={{ textAlign: 'center', marginTop: '1.5rem', color: 'var(--text-secondary)' }}>
-                Loading...
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       <style jsx global>{`
         .show-mobile-cell, .show-mobile-row {
