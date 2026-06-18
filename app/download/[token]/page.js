@@ -49,16 +49,10 @@ export default function DownloadPage() {
       const isViewerSite = fileUrl.includes('drive.google.com') || fileUrl.includes('dropbox.com');
       
       if (!isViewerSite) {
-        let finalUrl = fileUrl;
         const cleanName = product.name ? product.name.replace(/[^a-z0-9]/gi, '-').toLowerCase() : 'template';
-        
-        // If it's a raw storage ID or a Convex storage URL, route it through our new Convex HTTP Action
-        if (!fileUrl.startsWith('http') || fileUrl.includes('convex.cloud/api/storage/')) {
-          const storageId = fileUrl.startsWith('http') ? fileUrl.split('api/storage/')[1] : fileUrl;
-          finalUrl = `${process.env.NEXT_PUBLIC_CONVEX_SITE_URL}/getFile?id=${storageId}&name=${encodeURIComponent(cleanName)}`;
-        }
-        
-        window.location.href = finalUrl;
+        const timestamp = new Date().getTime();
+        const proxyUrl = `/api/download?url=${encodeURIComponent(fileUrl)}&name=${encodeURIComponent(cleanName)}&t=${timestamp}`;
+        window.location.href = proxyUrl;
       } else {
         // Trigger the download by navigating to the secure URL (external links)
         window.location.href = fileUrl;
