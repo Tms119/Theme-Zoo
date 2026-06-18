@@ -158,7 +158,7 @@ export default function DownloadPage() {
               style={{ width: '100%', padding: '1.25rem', borderRadius: '16px', fontSize: '1.1rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
             >
               {downloading ? <Loader2 className="animate-spin" size={20} /> : null}
-              {downloading ? 'Preparing Download...' : 'Download Asset'}
+              {downloading ? 'Preparing Download...' : 'Secure Download'}
               {!downloading && <Download size={18} />}
             </button>
 
