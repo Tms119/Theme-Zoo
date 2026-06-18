@@ -82,6 +82,7 @@ export default function AdminDashboard() {
   const [expandedProduct, setExpandedProduct] = useState(null);
   const [expandedOrder, setExpandedOrder] = useState(null);
   const [supportFilter, setSupportFilter] = useState('all'); // 'all', 'open', 'replied', 'closed'
+  const [activeTab, setActiveTab] = useState('overview');
 
   const [extMetrics, setExtMetrics] = useState({ totalUsers: 0 });
   React.useEffect(() => {
@@ -138,8 +139,61 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Metrics Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
+      {/* Tabs */}
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2.5rem', borderBottom: '1px solid rgba(255,255,255,0.06)', overflowX: 'auto', paddingBottom: '0.5rem', WebkitOverflowScrolling: 'touch' }}>
+        {['overview', 'templates', 'sales', 'custom orders', 'support tickets'].map((tab) => {
+          const tabKey = tab.replace(' ', '_');
+          const isActive = activeTab === tabKey;
+          
+          let badgeCount = null;
+          if (tabKey === 'custom_orders' && customOrders) {
+            const pending = customOrders.filter(co => co.status === 'pending').length;
+            if (pending > 0) badgeCount = pending;
+          } else if (tabKey === 'support_tickets' && supportTickets) {
+            const open = supportTickets.filter(t => t.status === 'open').length;
+            if (open > 0) badgeCount = open;
+          }
+
+          return (
+            <button
+              key={tabKey}
+              onClick={() => setActiveTab(tabKey)}
+              style={{
+                padding: '0.6rem 1.25rem',
+                background: isActive ? 'rgba(139,92,246,0.1)' : 'transparent',
+                color: isActive ? 'var(--primary)' : 'var(--text-secondary)',
+                border: 'none',
+                borderBottom: isActive ? '2px solid var(--primary)' : '2px solid transparent',
+                borderRadius: '8px 8px 0 0',
+                fontWeight: isActive ? 700 : 500,
+                cursor: 'pointer',
+                textTransform: 'capitalize',
+                transition: 'all 0.2s ease',
+                whiteSpace: 'nowrap',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}
+            >
+              {tab}
+              {badgeCount !== null && (
+                <span style={{ 
+                  background: 'var(--primary)', color: '#fff', fontSize: '0.7rem', fontWeight: 800, 
+                  padding: '0.1rem 0.4rem', borderRadius: '100px' 
+                }}>
+                  {badgeCount}
+                </span>
+              )}
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Overview Tab */}
+      {activeTab === 'overview' && (
+        <>
+          {/* Metrics Row */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
         {[
           { label: 'Total Revenue', value: `$${totalRevenue.toFixed(2)} USD`, desc: 'Total gross volume', icon: <DollarSign size={20} color="var(--accent-emerald)" />, glow: 'rgba(16, 189, 129, 0.04)' },
           { label: 'Total Sales', value: `${totalOrders} Completed`, desc: '100% automatic delivery', icon: <CheckCircle2 size={20} color="var(--primary)" />, glow: 'rgba(124, 58, 237, 0.04)' },
@@ -159,9 +213,42 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem' }} className="admin-grid-double">
-        {/* Templates List */}
-        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.75rem' }}>
+      {/* Recent Orders Overview */}
+      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.75rem', marginBottom: '2rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontWeight: 800, margin: 0 }}>Latest Sales</h2>
+          <button onClick={() => setActiveTab('sales')} style={{ background: 'none', border: 'none', color: 'var(--accent-cyan)', fontWeight: 600, cursor: 'pointer', fontSize: '0.9rem' }}>View All →</button>
+        </div>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem', whiteSpace: 'nowrap' }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <th style={{ padding: '0.75rem 0.5rem', color: 'var(--text-muted)', fontWeight: 500 }}>Template</th>
+                <th style={{ padding: '0.75rem 0.5rem', color: 'var(--text-muted)', fontWeight: 500 }}>Buyer</th>
+                <th style={{ padding: '0.75rem 0.5rem', color: 'var(--text-muted)', fontWeight: 500 }}>Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {orders.slice(0, 5).map((o) => (
+                <tr key={o._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                  <td style={{ padding: '1rem 0.5rem', fontWeight: 500 }}>{o.product_name}</td>
+                  <td style={{ padding: '1rem 0.5rem', color: 'var(--text-muted)' }}>{o.buyer_email}</td>
+                  <td style={{ padding: '1rem 0.5rem', fontWeight: 600 }}>${o.price_usd.toFixed(2)}</td>
+                </tr>
+              ))}
+              {orders.length === 0 && (
+                <tr><td colSpan={3} style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>No orders yet.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      </>
+      )}
+
+      {/* Templates Tab */}
+      {activeTab === 'templates' && (
+        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.75rem', marginBottom: '2rem' }}>
           <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontWeight: 800, marginBottom: '1.5rem' }}>Your Templates</h2>
           
           <div style={{ overflowX: 'auto' }}>
@@ -279,9 +366,11 @@ export default function AdminDashboard() {
             </table>
           </div>
         </div>
+      )}
 
-        {/* Recent Orders */}
-        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.75rem' }}>
+      {/* Sales Tab */}
+      {activeTab === 'sales' && (
+        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.75rem', marginBottom: '2rem' }}>
           <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontWeight: 800, marginBottom: '1.5rem' }}>Recent Orders</h2>
           
           <div style={{ overflowX: 'auto' }}>
@@ -371,11 +460,12 @@ export default function AdminDashboard() {
             )}
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Recent Custom Orders */}
-      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.75rem', marginTop: '2rem' }}>
-        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontWeight: 800, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+      {/* Custom Orders Tab */}
+      {activeTab === 'custom_orders' && (
+        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.75rem', marginBottom: '2rem' }}>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontWeight: 800, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <Briefcase size={20} color="var(--primary)" /> Custom Orders
         </h2>
         
@@ -453,10 +543,12 @@ export default function AdminDashboard() {
           </table>
         </div>
       </div>
+      )}
 
-      {/* Support Tickets */}
-      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.75rem', marginTop: '2rem' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', gap: '1rem' }}>
+      {/* Support Tickets Tab */}
+      {activeTab === 'support_tickets' && (
+        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.75rem', marginBottom: '2rem' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', gap: '1rem' }}>
           <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <LifeBuoy size={20} color="var(--primary)" /> Support Tickets
           </h2>
@@ -548,6 +640,7 @@ export default function AdminDashboard() {
           </table>
         </div>
       </div>
+      )}
 
       <style jsx global>{`
         .show-mobile-cell, .show-mobile-row {
