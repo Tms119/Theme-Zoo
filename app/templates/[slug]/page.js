@@ -13,7 +13,7 @@ export async function generateMetadata({ params }) {
   const { slug } = params;
   
   try {
-    const product = await convex.query(api.products.getBySlug, { slug });
+    const product = await convex.query("products:getBySlug", { slug });
     
     if (!product) {
       return { title: 'Product Not Found | Themes Zoo' };
@@ -46,10 +46,10 @@ export default async function ProductPage({ params }) {
   let errorMessage = null;
   
   try {
-    product = await convex.query(api.products.getBySlug, { slug });
+    product = await convex.query("products:getBySlug", { slug });
     
     if (product) {
-      const allActive = await convex.query(api.products.listActive);
+      const allActive = await convex.query("products:listActive");
       relatedProducts = allActive?.filter(p => p.category === product.category && p._id !== product._id).slice(0, 3) || [];
     }
   } catch (error) {
