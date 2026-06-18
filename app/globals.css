@@ -168,6 +168,7 @@ body {
   gap: 0.5rem;
   flex-grow: 1;
   overflow-y: auto;
+  min-height: 0;
 }
 .sidebar-link {
   display: flex;
