@@ -8,6 +8,7 @@ import CartDrawer from "@/components/ui/CartDrawer";
 import DashboardShell from "@/components/ui/DashboardShell";
 import GlobalBanner from "@/components/marketing/GlobalBanner";
 import SocialProof from "@/components/ui/SocialProof";
+import SecurityProvider from "@/components/ui/SecurityProvider";
 
 const chakraPetch = Chakra_Petch({
   weight: ['300', '400', '500', '600', '700'],
@@ -85,22 +86,23 @@ export default function RootLayout({ children }) {
           }}
         >
           <ConvexClientProvider>
-            <GlobalBanner />
-            <Toaster position="bottom-right" toastOptions={{
-              style: {
-                background: '#1a1a2e',
-                color: '#fff',
-                border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: '12px'
-              }
-            }}/>
-            
-            <DashboardShell>
-              <CartDrawer />
-              <SocialProof />
-              {children}
-            </DashboardShell>
-
+            <SecurityProvider>
+              <GlobalBanner />
+              <Toaster position="bottom-right" toastOptions={{
+                style: {
+                  background: '#1a1a2e',
+                  color: '#fff',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '12px'
+                }
+              }}/>
+              
+              <DashboardShell>
+                <CartDrawer />
+                <SocialProof />
+                {children}
+              </DashboardShell>
+            </SecurityProvider>
           </ConvexClientProvider>
         </ClerkProvider>
       </body>
