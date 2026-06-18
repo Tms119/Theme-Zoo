@@ -51,6 +51,10 @@ export default function AddProductPage() {
   const [pdfFile, setPdfFile] = useState(null);
   const [existingPdfUrl, setExistingPdfUrl] = useState('');
   
+  // === Delivery Method ===
+  const [deliveryMethod, setDeliveryMethod] = useState('upload'); // 'upload' or 'link'
+  const [externalDeliveryLink, setExternalDeliveryLink] = useState('');
+  
   // === Thumbnail State ===
   const [existingThumbnailUrl, setExistingThumbnailUrl] = useState('');
   const [thumbnailBlob, setThumbnailBlob] = useState(null);
@@ -141,8 +145,15 @@ export default function AddProductPage() {
       
       setExistingImages(existingProduct.images || []);
       setExistingThumbnailUrl(existingProduct.thumbnail_url || '');
-      setExistingZipUrl(existingProduct.file_url || '');
       setExistingPdfUrl(existingProduct.pdf_url || '');
+      
+      if (existingProduct.file_id) {
+        setDeliveryMethod('upload');
+        setExistingZipUrl(existingProduct.file_url || '');
+      } else if (existingProduct.file_url) {
+        setDeliveryMethod('link');
+        setExternalDeliveryLink(existingProduct.file_url);
+      }
     }
   }, [existingProduct]);
 
@@ -247,9 +258,9 @@ export default function AddProductPage() {
       setError('Please fill in Name, Short Description, and Price.');
       return;
     }
-    if (!zipFile && !existingZipUrl && !existingProduct?.file_url && !existingProduct?.file_id) {
+    if (!zipFile && !existingZipUrl && !externalDeliveryLink && !existingProduct?.file_url && !existingProduct?.file_id) {
       const confirmed = window.confirm(
-        '⚠️ Warning: No ZIP file is attached to this product.\n\nCustomers who purchase this will not be able to download anything.\n\nAre you sure you want to publish without a delivery file?'
+        '⚠️ Warning: No Delivery File or Link is attached to this product.\n\nCustomers who purchase this will not be able to download anything.\n\nAre you sure you want to publish without a delivery file?'
       );
       if (!confirmed) return;
     }
@@ -276,13 +287,20 @@ export default function AddProductPage() {
         finalThumbUrl = await getFileUrl({ storageId: finalThumbId });
       }
 
-      // 3. Upload ZIP file if present
+      // 3. Upload ZIP file or Save External Link
       let finalFileId = existingProduct?.file_id;
       let finalFileUrl = existingZipUrl;
-      if (zipFile) {
-        setUploadProgress('Uploading source ZIP file...');
-        finalFileId = await uploadFileToConvex(zipFile);
-        finalFileUrl = await getFileUrl({ storageId: finalFileId });
+      
+      if (deliveryMethod === 'upload') {
+        if (zipFile) {
+          setUploadProgress('Uploading source ZIP file...');
+          finalFileId = await uploadFileToConvex(zipFile);
+          finalFileUrl = await getFileUrl({ storageId: finalFileId });
+        }
+      } else {
+        // External Link Selected
+        finalFileId = undefined; // Clear out the file_id if it existed
+        finalFileUrl = externalDeliveryLink;
       }
 
       // 4. Upload PDF file if present
@@ -463,37 +481,67 @@ export default function AddProductPage() {
               <div style={{ height: '1px', background: 'var(--border-color)' }} />
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.75rem', fontWeight: 500 }}>Source ZIP File (Max 50MB)</label>
+                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.75rem', fontWeight: 500 }}>Product Delivery Method</label>
                 
-                {existingZipUrl && !zipFile && (
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1rem', background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '8px', marginBottom: '1rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent-emerald)', fontSize: '0.85rem' }}>
-                      <FileArchive size={16} /> Existing file attached
-                    </div>
-                    <button type="button" onClick={() => setExistingZipUrl('')} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8rem' }}><Trash2 size={14}/></button>
-                  </div>
-                )}
-
-                {zipFile && (
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1rem', background: 'rgba(124, 58, 237, 0.1)', border: '1px solid rgba(124, 58, 237, 0.2)', borderRadius: '8px', marginBottom: '1rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary)', fontSize: '0.85rem' }}>
-                      <FileArchive size={16} /> {zipFile.name} ({(zipFile.size / 1024 / 1024).toFixed(2)} MB)
-                    </div>
-                    <button type="button" onClick={() => setZipFile(null)} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8rem' }}><X size={14}/></button>
-                  </div>
-                )}
-
-                {!zipFile && (
-                  <label 
-                    onDragEnter={(e) => handleDrag(e, setDragActiveZip)}
-                    onDragLeave={(e) => handleDrag(e, setDragActiveZip)}
-                    onDragOver={(e) => handleDrag(e, setDragActiveZip)}
-                    onDrop={handleDropZip}
-                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1.5rem 1rem', background: dragActiveZip ? 'rgba(124, 58, 237, 0.05)' : 'rgba(255,255,255,0.02)', border: '1px dashed', borderColor: dragActiveZip ? 'var(--primary)' : 'var(--border-color)', borderRadius: '12px', cursor: 'pointer', transition: 'all 0.2s' }}>
-                    <UploadCloud size={24} color={dragActiveZip ? "var(--primary)" : "var(--text-muted)"} style={{ marginBottom: '0.5rem' }} />
-                    <span style={{ fontSize: '0.85rem', color: dragActiveZip ? "var(--primary)" : "var(--text-secondary)" }}>Drag source ZIP package here</span>
-                    <input type="file" accept=".zip,.rar,.tar.gz" onChange={handleZipChange} style={{ display: 'none' }} />
+                <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.25rem' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', color: deliveryMethod === 'upload' ? '#fff' : 'var(--text-muted)' }}>
+                    <input type="radio" checked={deliveryMethod === 'upload'} onChange={() => setDeliveryMethod('upload')} style={{ accentColor: 'var(--primary)' }} />
+                    Upload ZIP File
                   </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', color: deliveryMethod === 'link' ? '#fff' : 'var(--text-muted)' }}>
+                    <input type="radio" checked={deliveryMethod === 'link'} onChange={() => setDeliveryMethod('link')} style={{ accentColor: 'var(--primary)' }} />
+                    External Link
+                  </label>
+                </div>
+
+                {deliveryMethod === 'upload' && (
+                  <>
+                    {existingZipUrl && !zipFile && (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1rem', background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '8px', marginBottom: '1rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent-emerald)', fontSize: '0.85rem' }}>
+                          <FileArchive size={16} /> Existing file attached
+                        </div>
+                        <button type="button" onClick={() => setExistingZipUrl('')} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8rem' }}><Trash2 size={14}/></button>
+                      </div>
+                    )}
+
+                    {zipFile && (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1rem', background: 'rgba(124, 58, 237, 0.1)', border: '1px solid rgba(124, 58, 237, 0.2)', borderRadius: '8px', marginBottom: '1rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary)', fontSize: '0.85rem' }}>
+                          <FileArchive size={16} /> {zipFile.name} ({(zipFile.size / 1024 / 1024).toFixed(2)} MB)
+                        </div>
+                        <button type="button" onClick={() => setZipFile(null)} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8rem' }}><X size={14}/></button>
+                      </div>
+                    )}
+
+                    {!zipFile && (
+                      <label 
+                        onDragEnter={(e) => handleDrag(e, setDragActiveZip)}
+                        onDragLeave={(e) => handleDrag(e, setDragActiveZip)}
+                        onDragOver={(e) => handleDrag(e, setDragActiveZip)}
+                        onDrop={handleDropZip}
+                        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1.5rem 1rem', background: dragActiveZip ? 'rgba(124, 58, 237, 0.05)' : 'rgba(255,255,255,0.02)', border: '1px dashed', borderColor: dragActiveZip ? 'var(--primary)' : 'var(--border-color)', borderRadius: '12px', cursor: 'pointer', transition: 'all 0.2s' }}>
+                        <UploadCloud size={24} color={dragActiveZip ? "var(--primary)" : "var(--text-muted)"} style={{ marginBottom: '0.5rem' }} />
+                        <span style={{ fontSize: '0.85rem', color: dragActiveZip ? "var(--primary)" : "var(--text-secondary)" }}>Drag source ZIP package here (Max 50MB)</span>
+                        <input type="file" accept=".zip,.rar,.tar.gz" onChange={handleZipChange} style={{ display: 'none' }} />
+                      </label>
+                    )}
+                  </>
+                )}
+
+                {deliveryMethod === 'link' && (
+                  <div>
+                    <input 
+                      type="url" 
+                      placeholder="https://drive.google.com/..." 
+                      value={externalDeliveryLink} 
+                      onChange={(e) => setExternalDeliveryLink(e.target.value)} 
+                      style={{ width: '100%', padding: '0.8rem 1rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', color: '#fff', outline: 'none' }} 
+                    />
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+                      Customers will be redirected to this secure link when they click Download.
+                    </div>
+                  </div>
                 )}
               </div>
 
