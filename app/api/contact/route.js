@@ -140,7 +140,7 @@ export async function POST(request) {
             </div>
 
             <p style="font-size: 14px; color: #6b6f7b; line-height: 1.6;">
-              In the meantime, feel free to browse our <a href="https://themezoo.dev/templates" style="color: #8b5cf6; text-decoration: none;">template collection</a> for inspiration.
+              In the meantime, feel free to browse our <a href="https://www.themeszoo.com/templates" style="color: #8b5cf6; text-decoration: none;">template collection</a> for inspiration.
             </p>
           </div>
 
