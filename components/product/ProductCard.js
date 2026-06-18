@@ -135,9 +135,6 @@ export default function ProductCard({ product }) {
           <div className="card-info-row" style={{ paddingBottom: '0.5rem', flexGrow: 1, alignItems: 'flex-start' }}>
             <div className="card-info-left" style={{ flexGrow: 1, paddingRight: '0.5rem' }}>
               <h3 className="card-title-new" style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>{name}</h3>
-              <span className={`card-pill-tag ${price_usd === 0 ? 'tag-free' : 'tag-premium'}`} style={{ display: 'inline-block' }}>
-                {price_usd === 0 ? 'Free' : 'Premium'}
-              </span>
             </div>
           </div>
         </Link>
