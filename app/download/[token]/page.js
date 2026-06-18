@@ -44,9 +44,14 @@ export default function DownloadPage() {
         throw new Error("Download link could not be generated.");
       }
       
-      if (fileUrl.includes('convex')) {
+      // Proxy all direct file links to enforce our custom filename.
+      // We skip viewer sites like Google Drive or Dropbox since proxying them would just download their HTML pages.
+      const isViewerSite = fileUrl.includes('drive.google.com') || fileUrl.includes('dropbox.com');
+      
+      if (!isViewerSite) {
         const cleanName = product.name ? product.name.replace(/[^a-z0-9]/gi, '-').toLowerCase() : 'template';
-        const proxyUrl = `/api/download?url=${encodeURIComponent(fileUrl)}&name=${encodeURIComponent(cleanName)}`;
+        const timestamp = new Date().getTime();
+        const proxyUrl = `/api/download?url=${encodeURIComponent(fileUrl)}&name=${encodeURIComponent(cleanName)}&t=${timestamp}`;
         window.location.href = proxyUrl;
       } else {
         // Trigger the download by navigating to the secure URL (external links)
