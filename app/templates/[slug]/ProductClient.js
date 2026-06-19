@@ -69,7 +69,7 @@ export default function ProductClient({ product, relatedProducts }) {
           <div className="product-detail-grid">
 
             {/* ── Left: Gallery + Description ───────── */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem', minWidth: 0 }}>
 
               {/* Image Gallery */}
               <ImageGallery images={product.images} alt={product.name} />
@@ -104,7 +104,7 @@ export default function ProductClient({ product, relatedProducts }) {
             </div>
 
             {/* ── Right: Purchase Sidebar ──────────── */}
-            <div>
+            <div style={{ minWidth: 0 }}>
               <div className="product-sidebar-card" style={{
                 background: 'var(--bg-card)', border: '1px solid var(--border-color)',
                 borderRadius: '24px', position: 'sticky', top: '100px',
@@ -124,7 +124,7 @@ export default function ProductClient({ product, relatedProducts }) {
                 <h1 className="product-title">
                   {product.name}
                 </h1>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '2rem', lineHeight: 1.5 }}>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '2rem', lineHeight: 1.5, wordBreak: 'break-word' }}>
                   {product.short_desc}
                 </p>
 

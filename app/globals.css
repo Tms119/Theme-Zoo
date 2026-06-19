@@ -1230,7 +1230,7 @@ body {
 
 @media (max-width: 768px) {
   .product-detail-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 2rem;
   }
   .product-detail-grid > div:last-child > div {

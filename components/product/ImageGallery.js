@@ -45,7 +45,7 @@ export default function ImageGallery({ images = [], alt = '' }) {
   if (!images.length) return null;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', minWidth: 0 }}>
       {/* Main image */}
       <div
         style={{
