@@ -133,6 +133,22 @@ export default function AddProductPage() {
     category: category
   };
 
+  // Prevent default global drag-and-drop to stop accidental navigation/reloads
+  useEffect(() => {
+    const handleGlobalDrag = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+
+    window.addEventListener('dragover', handleGlobalDrag);
+    window.addEventListener('drop', handleGlobalDrag);
+
+    return () => {
+      window.removeEventListener('dragover', handleGlobalDrag);
+      window.removeEventListener('drop', handleGlobalDrag);
+    };
+  }, []);
+
   useEffect(() => {
     if (existingProduct) {
       setName(existingProduct.name || '');
