@@ -1241,6 +1241,16 @@ body {
   }
 }
 
+.product-sidebar-card {
+  padding: 2rem;
+}
+
+@media (max-width: 768px) {
+  .product-sidebar-card {
+    padding: 1.25rem;
+  }
+}
+
 /* Mobile Sticky Bottom Bar for Checkout */
 .mobile-sticky-checkout {
   display: none;
@@ -1272,6 +1282,8 @@ body {
   margin-bottom: 0.5rem;
   letter-spacing: -0.5px;
   line-height: 1.1;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .product-overview-title {

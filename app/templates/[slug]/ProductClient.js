@@ -105,9 +105,9 @@ export default function ProductClient({ product, relatedProducts }) {
 
             {/* ── Right: Purchase Sidebar ──────────── */}
             <div>
-              <div style={{
+              <div className="product-sidebar-card" style={{
                 background: 'var(--bg-card)', border: '1px solid var(--border-color)',
-                borderRadius: '24px', padding: '2rem', position: 'sticky', top: '100px',
+                borderRadius: '24px', position: 'sticky', top: '100px',
                 maxHeight: 'calc(100vh - 120px)', overflowY: 'auto'
               }}>
                 {/* Verified badge */}
