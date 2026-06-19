@@ -53,7 +53,7 @@ export default function ProductClient({ product, relatedProducts }) {
       </div>
 
       <main style={{ minHeight: '80vh', paddingTop: '4rem', paddingBottom: '6rem' }}>
-        <div className="container">
+        <div className="product-container">
 
           {/* Back button */}
           <Link
@@ -76,7 +76,7 @@ export default function ProductClient({ product, relatedProducts }) {
 
               {/* Overview */}
               <div>
-                <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.6rem', fontWeight: 800, marginBottom: '0.85rem', letterSpacing: '-0.5px' }}>
+                <h2 className="product-overview-title">
                   Overview
                 </h2>
                 <div style={{ color: 'var(--text-secondary)', lineHeight: '1.7', fontSize: '1rem', marginBottom: '2rem', whiteSpace: 'pre-wrap' }}>
@@ -108,6 +108,7 @@ export default function ProductClient({ product, relatedProducts }) {
               <div style={{
                 background: 'var(--bg-card)', border: '1px solid var(--border-color)',
                 borderRadius: '24px', padding: '2rem', position: 'sticky', top: '100px',
+                maxHeight: 'calc(100vh - 120px)', overflowY: 'auto'
               }}>
                 {/* Verified badge */}
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', padding: '0.35rem 0.75rem', background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.2)', borderRadius: '100px', color: 'var(--primary)', fontSize: '0.75rem', fontWeight: 700, marginBottom: '1.5rem' }}>
@@ -120,7 +121,7 @@ export default function ProductClient({ product, relatedProducts }) {
                   {isWordPress ? 'WordPress' : 'Website Template'}
                 </div>
 
-                <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.75rem', fontWeight: 900, marginBottom: '0.5rem', letterSpacing: '-0.5px', lineHeight: 1.2 }}>
+                <h1 className="product-title">
                   {product.name}
                 </h1>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '2rem', lineHeight: 1.5 }}>
@@ -191,7 +192,7 @@ export default function ProductClient({ product, relatedProducts }) {
                     }
                   }}
                   className="btn btn-primary"
-                  style={{ width: '100%', padding: '1rem', borderRadius: '14px', fontSize: '1rem', justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                  style={{ width: '100%', padding: '1rem', borderRadius: '14px', fontSize: '1rem', justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '0.5rem', minHeight: '54px' }}
                 >
                   <ShoppingCart size={18} /> {inCart ? 'View in Cart' : 'Add to Cart'}
                 </button>
@@ -224,6 +225,29 @@ export default function ProductClient({ product, relatedProducts }) {
 
         </div>
       </main>
+
+      {/* Mobile Sticky Checkout */}
+      <div className="mobile-sticky-checkout">
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>One-time Price</span>
+          <span style={{ fontSize: '1.4rem', fontWeight: 900, fontFamily: 'var(--font-display)', color: 'var(--text-main)', lineHeight: 1 }}>${product.price_usd.toFixed(2)}</span>
+        </div>
+        <button
+          onClick={() => {
+            if (!inCart) {
+              addItem(product);
+              toast.success(`${product.name} added to cart!`);
+              openCart();
+            } else {
+              openCart();
+            }
+          }}
+          className="btn btn-primary"
+          style={{ padding: '0.8rem 1.2rem', borderRadius: '12px', fontSize: '0.95rem', minHeight: '48px', flexShrink: 0 }}
+        >
+          {inCart ? 'In Cart' : 'Add to Cart'}
+        </button>
+      </div>
     </>
   );
 }

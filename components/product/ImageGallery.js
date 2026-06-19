@@ -145,6 +145,8 @@ export default function ImageGallery({ images = [], alt = '' }) {
           display: 'flex', gap: '0.6rem',
           overflowX: 'auto', paddingBottom: '4px',
           scrollbarWidth: 'thin',
+          scrollSnapType: 'x mandatory',
+          WebkitOverflowScrolling: 'touch',
         }}>
           {images.map((src, i) => (
             <button
@@ -163,6 +165,7 @@ export default function ImageGallery({ images = [], alt = '' }) {
                 transform: i === active ? 'scale(1.05)' : 'scale(1)',
                 boxShadow: i === active ? '0 0 12px rgba(139,92,246,0.35)' : 'none',
                 position: 'relative',
+                scrollSnapAlign: 'start',
               }}
             >
               <Image
