@@ -185,7 +185,17 @@ export default function CheckoutCartPage() {
         setPayCurrency(data.payCurrency);
         setPaymentId(data.paymentId);
         setUsdPrice(data.usdPrice);
-        setQrCodeUrl(`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${data.payCurrency}:${data.payAddress}?amount=${data.payAmount}`);
+        
+        let qrData = data.payAddress;
+        if (data.payCurrency === 'btc') {
+          qrData = `bitcoin:${data.payAddress}?amount=${data.payAmount}`;
+        } else if (data.payCurrency === 'ltc') {
+          qrData = `litecoin:${data.payAddress}?amount=${data.payAmount}`;
+        } else if (data.payCurrency === 'eth') {
+          qrData = `ethereum:${data.payAddress}?amount=${data.payAmount}`;
+        }
+        
+        setQrCodeUrl(`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrData)}`);
         setStep('payment');
       }
     } catch (err) {
