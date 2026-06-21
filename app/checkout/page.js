@@ -186,16 +186,10 @@ export default function CheckoutCartPage() {
         setPaymentId(data.paymentId);
         setUsdPrice(data.usdPrice);
         
-        let qrData = data.payAddress;
-        if (data.payCurrency === 'btc') {
-          qrData = `bitcoin:${data.payAddress}?amount=${data.payAmount}`;
-        } else if (data.payCurrency === 'ltc') {
-          qrData = `litecoin:${data.payAddress}?amount=${data.payAmount}`;
-        } else if (data.payCurrency === 'eth') {
-          qrData = `ethereum:${data.payAddress}?amount=${data.payAmount}`;
-        }
+        // Binance and some centralized exchanges do not properly support BIP-21 URIs with amounts.
+        // Therefore, we only encode the raw address to ensure 100% scan compatibility across all apps.
+        setQrCodeUrl(`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${data.payAddress}`);
         
-        setQrCodeUrl(`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrData)}`);
         setStep('payment');
       }
     } catch (err) {
