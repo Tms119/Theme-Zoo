@@ -105,7 +105,13 @@ export async function POST(req) {
 
     if (!nowPaymentsRes.ok) {
       console.error('NOWPayments API Error:', paymentData);
-      return NextResponse.json({ error: 'Failed to generate crypto invoice', details: paymentData }, { status: 500 });
+      
+      let errorMessage = 'Failed to generate crypto invoice';
+      if (paymentData && paymentData.code === 'AMOUNT_MINIMAL_ERROR') {
+        errorMessage = 'Service price is below the minimum required by the network. Please choose a different coin like Litecoin (LTC).';
+      }
+      
+      return NextResponse.json({ error: errorMessage, details: paymentData }, { status: 400 });
     }
 
     // Insert into custom_orders with the tx_hash as orderId
