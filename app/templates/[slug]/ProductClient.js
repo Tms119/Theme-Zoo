@@ -1,11 +1,14 @@
 'use client';
+import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import ImageGallery from '@/components/product/ImageGallery';
-import { ArrowLeft, Check, Sparkles, FileCode, Cpu, ShieldCheck, Tag, ShoppingCart, FileText, Layers } from 'lucide-react';
+import { ArrowLeft, Check, Sparkles, FileCode, Cpu, ShieldCheck, Tag, ShoppingCart, FileText, Layers, X, Send, Wand2 } from 'lucide-react';
 import useCart from '@/store/useCart';
 import toast from 'react-hot-toast';
 import ProductCard from '@/components/product/ProductCard';
+import { useMutation } from 'convex/react';
+import { api } from '@/convex/_generated/api';
 
 // ─── Badge helpers ───────────────────────────────────────────────
 const WPLogo = () => (
@@ -16,8 +19,48 @@ const WPLogo = () => (
 
 export default function ProductClient({ product, relatedProducts }) {
   const { addItem, items, openCart } = useCart();
-  
   const inCart = product && items.some(item => item._id === product._id);
+
+  // Quote Modal State
+  const [isQuoteOpen, setIsQuoteOpen] = useState(false);
+  const [form, setForm] = useState({ name: '', email: '', budget: '', message: '' });
+  const [status, setStatus] = useState('idle'); // idle | loading | success | error
+  const [errorMsg, setErrorMsg] = useState('');
+  
+  const createOrder = useMutation(api.services.createOrder);
+
+  const handleQuoteSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.name.trim() || !form.email.trim() || !form.message.trim()) {
+      setErrorMsg('Please fill in your name, email, and requirements.');
+      return;
+    }
+    setErrorMsg('');
+    setStatus('loading');
+
+    try {
+      const serviceType = `Customization: ${product.name}`;
+      
+      await createOrder({
+        name: form.name,
+        email: form.email,
+        service_type: serviceType,
+        budget: form.budget,
+        message: form.message,
+      });
+
+      await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...form, projectType: serviceType }),
+      });
+
+      setStatus('success');
+    } catch (err) {
+      setStatus('error');
+      setErrorMsg(err.message || 'Something went wrong. Please try again.');
+    }
+  };
 
   if (product === undefined) {
     return (
@@ -172,9 +215,21 @@ export default function ProductClient({ product, relatedProducts }) {
                     }
                   }}
                   className="btn btn-primary"
-                  style={{ width: '100%', padding: '1rem', borderRadius: '14px', fontSize: '1rem', justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '0.5rem', minHeight: '54px' }}
+                  style={{ width: '100%', padding: '1rem', borderRadius: '14px', fontSize: '1rem', justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '0.5rem', minHeight: '54px', marginBottom: '0.75rem' }}
                 >
                   <ShoppingCart size={18} /> {inCart ? 'View in Cart' : 'Add to Cart'}
+                </button>
+
+                <button
+                  onClick={() => {
+                    setIsQuoteOpen(true);
+                    setStatus('idle');
+                    setForm({ name: '', email: '', budget: '', message: '' });
+                  }}
+                  className="btn"
+                  style={{ width: '100%', padding: '1rem', borderRadius: '14px', fontSize: '1rem', justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '0.5rem', minHeight: '54px', background: 'transparent', border: '1px solid rgba(139,92,246,0.3)', color: 'var(--primary)' }}
+                >
+                  <Wand2 size={18} /> Need Customizations?
                 </button>
 
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginTop: '1.1rem', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
@@ -212,22 +267,96 @@ export default function ProductClient({ product, relatedProducts }) {
           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>One-time Price</span>
           <span style={{ fontSize: '1.4rem', fontWeight: 900, fontFamily: 'var(--font-display)', color: 'var(--text-main)', lineHeight: 1 }}>${product.price_usd.toFixed(2)}</span>
         </div>
-        <button
-          onClick={() => {
-            if (!inCart) {
-              addItem(product);
-              toast.success(`${product.name} added to cart!`);
-              openCart();
-            } else {
-              openCart();
-            }
-          }}
-          className="btn btn-primary"
-          style={{ padding: '0.8rem 1.2rem', borderRadius: '12px', fontSize: '0.95rem', minHeight: '48px', flexShrink: 0 }}
-        >
-          {inCart ? 'In Cart' : 'Add to Cart'}
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button
+            onClick={() => setIsQuoteOpen(true)}
+            className="btn"
+            style={{ padding: '0.8rem', borderRadius: '12px', background: 'rgba(139,92,246,0.1)', color: 'var(--primary)', border: '1px solid rgba(139,92,246,0.2)', minHeight: '48px', flexShrink: 0 }}
+            title="Need Customizations?"
+          >
+            <Wand2 size={18} />
+          </button>
+          <button
+            onClick={() => {
+              if (!inCart) {
+                addItem(product);
+                toast.success(`${product.name} added to cart!`);
+                openCart();
+              } else {
+                openCart();
+              }
+            }}
+            className="btn btn-primary"
+            style={{ padding: '0.8rem 1.2rem', borderRadius: '12px', fontSize: '0.95rem', minHeight: '48px', flexShrink: 0 }}
+          >
+            {inCart ? 'In Cart' : 'Add to Cart'}
+          </button>
+        </div>
       </div>
+
+      {/* Quote Modal */}
+      {isQuoteOpen && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)' }} onClick={() => setIsQuoteOpen(false)}></div>
+          
+          <div style={{ position: 'relative', width: '100%', maxWidth: '500px', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '24px', padding: '2rem', zIndex: 1001, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}>
+            <button onClick={() => setIsQuoteOpen(false)} style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', cursor: 'pointer' }}>
+              <X size={16} />
+            </button>
+
+            {status === 'success' ? (
+              <div style={{ textAlign: 'center', padding: '2rem 0' }}>
+                <CheckCircle size={48} color="var(--accent-emerald)" style={{ margin: '0 auto 1rem auto' }} />
+                <h3 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>Request Sent!</h3>
+                <p style={{ color: 'var(--text-secondary)' }}>We've received your customization request for <strong>{product.name}</strong>. Our team will email you shortly with a quote.</p>
+                <button className="btn btn-primary" style={{ marginTop: '2rem', width: '100%' }} onClick={() => setIsQuoteOpen(false)}>Close</button>
+              </div>
+            ) : (
+              <>
+                <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>Need Customizations?</h3>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+                  Request a quote to customize: <strong style={{ color: 'var(--primary)' }}>{product.name}</strong>
+                </p>
+
+                <form onSubmit={handleQuoteSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>Your Name</label>
+                      <input type="text" name="name" value={form.name} onChange={(e) => setForm({...form, name: e.target.value})} required style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', color: '#fff', outline: 'none' }} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>Email Address</label>
+                      <input type="email" name="email" value={form.email} onChange={(e) => setForm({...form, email: e.target.value})} required style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', color: '#fff', outline: 'none' }} />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>Budget Range (Optional)</label>
+                    <select name="budget" value={form.budget} onChange={(e) => setForm({...form, budget: e.target.value})} style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', color: '#fff', outline: 'none', appearance: 'none' }}>
+                      <option value="" disabled>Select a budget...</option>
+                      <option value="<$200">Under $200</option>
+                      <option value="$200-$500">$200 - $500</option>
+                      <option value="$500-$1000">$500 - $1,000</option>
+                      <option value="$1000+">$1,000+</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>What do you need modified?</label>
+                    <textarea name="message" value={form.message} onChange={(e) => setForm({...form, message: e.target.value})} required rows={4} placeholder="Describe the changes, features, or design tweaks you need..." style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', color: '#fff', outline: 'none', resize: 'vertical' }} />
+                  </div>
+
+                  {errorMsg && <div style={{ color: '#ef4444', fontSize: '0.85rem' }}>{errorMsg}</div>}
+
+                  <button type="submit" disabled={status === 'loading'} className="btn btn-primary" style={{ width: '100%', marginTop: '0.5rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}>
+                    {status === 'loading' ? 'Sending...' : <><Send size={16} /> Request Quote</>}
+                  </button>
+                </form>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </>
   );
 }
