@@ -25,11 +25,20 @@ export const getStats = query({
   args: {},
   handler: async (ctx) => {
     await requireAdmin(ctx);
+    
+    // Fetch template orders
     const orders = await ctx.db.query("orders").collect();
-    const totalRevenue = orders.reduce((acc, order) => acc + (order.price_usd || 0), 0);
+    const successfulOrders = orders.filter(o => ['paid', 'delivered', 'completed'].includes(o.status));
+    const templateRevenue = successfulOrders.reduce((acc, order) => acc + (order.price_usd || 0), 0);
+    
+    // Fetch custom service orders
+    const customOrders = await ctx.db.query("custom_orders").collect();
+    const successfulCustom = customOrders.filter(o => ['paid', 'delivered', 'completed', 'in_progress'].includes(o.status));
+    const customRevenue = successfulCustom.reduce((acc, order) => acc + (order.price_usd || 0), 0);
+
     return {
-      totalRevenue,
-      totalOrders: orders.length
+      totalRevenue: templateRevenue + customRevenue,
+      totalOrders: successfulOrders.length + successfulCustom.length
     };
   }
 });
