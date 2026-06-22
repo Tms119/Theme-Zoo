@@ -1,8 +1,16 @@
 'use client';
 import { useEffect } from 'react';
+import { useUser } from '@clerk/nextjs';
 
 export default function SecurityProvider({ children }) {
+  const { user } = useUser();
+
   useEffect(() => {
+    // If the user is an admin, completely bypass security restrictions
+    if (user && user.publicMetadata?.role === 'admin') {
+      return;
+    }
+
     // 1. Disable Right-Click (Context Menu)
     const handleContextMenu = (e) => {
       e.preventDefault();
@@ -75,7 +83,7 @@ export default function SecurityProvider({ children }) {
       document.removeEventListener('keydown', handleKeyDown);
       clearInterval(debuggerInterval);
     };
-  }, []);
+  }, [user]);
 
   return <>{children}</>;
 }
