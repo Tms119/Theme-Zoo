@@ -33,7 +33,7 @@ export default function AddProductPage() {
   const [shortDesc, setShortDesc] = useState('');
   const [desc, setDesc] = useState('');
   const [price, setPrice] = useState('');
-  const [category, setCategory] = useState('wordpress');
+  const [category, setCategory] = useState('unassigned');
   const [demoUrl, setDemoUrl] = useState('');
   const [features, setFeatures] = useState('');
   
@@ -155,7 +155,7 @@ export default function AddProductPage() {
       setShortDesc(existingProduct.short_desc || '');
       setDesc(existingProduct.desc || '');
       setPrice(existingProduct.price_usd?.toString() || '');
-      setCategory(existingProduct.category || 'wordpress');
+      setCategory(existingProduct.category || 'unassigned');
       setDemoUrl(existingProduct.demo_url || '');
       setFeatures(existingProduct.features?.join('\n') || '');
       
@@ -618,12 +618,10 @@ export default function AddProductPage() {
                 {!showNewCatInput ? (
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
                     <select value={category} onChange={(e) => setCategory(e.target.value)} style={{ flexGrow: 1, padding: '0.8rem 1rem', background: '#0c0c14', border: '1px solid var(--border-color)', borderRadius: '12px', color: '#fff', outline: 'none' }}>
+                      <option value="unassigned">Unassigned</option>
                       {dbCategories && dbCategories.map(c => (
                         <option key={c._id} value={c.slug}>{c.name}</option>
                       ))}
-                      {(!dbCategories || dbCategories.length === 0) && (
-                        <option value="wordpress">WordPress Template</option>
-                      )}
                     </select>
                     <button type="button" onClick={() => setShowNewCatInput(true)} style={{ padding: '0 1.25rem', background: 'var(--accent-cyan)', color: '#000', border: 'none', borderRadius: '12px', whiteSpace: 'nowrap', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       + New
