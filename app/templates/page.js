@@ -27,7 +27,7 @@ export default function TemplatesPage() {
               Premium Templates
             </h1>
             <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem' }}>
-              Discover production-ready source files and WordPress packages.
+              Discover production-ready source files and premium templates.
             </p>
           </div>
         </div>
