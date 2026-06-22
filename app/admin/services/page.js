@@ -5,6 +5,19 @@ import { api } from '@/convex/_generated/api';
 import { Save, Plus, Loader2, CheckCircle, Mail, Briefcase, Filter } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+const DEFAULT_CONFIG = {
+  tier1_name: 'PHP Clone',
+  tier1_price: 30,
+  tier1_desc: 'Perfect for quick setups. Get a fully functional PHP script clone of your choice.',
+  tier2_name: 'HTML Clone',
+  tier2_price: 70,
+  tier2_desc: 'High-quality HTML clone tailored to your specific requirements and design.',
+  tier3_name: 'Custom High-End Website',
+  tier3_desc: 'A premium, custom-built website tailored perfectly to your brand and business goals.',
+  design_title: 'Custom Designs & Graphics',
+  design_desc: 'Need a custom logo, banner, or infographics? Our elite design team will craft visually stunning assets for your brand.',
+};
+
 export default function AdminServices() {
   const [activeTab, setActiveTab] = useState('config'); // config | orders
   
@@ -13,10 +26,10 @@ export default function AdminServices() {
   const updateConfig = useMutation(api.services.updateConfig);
   
   const [form, setForm] = useState({
-    tier1_name: '', tier1_price: 30, tier1_desc: '',
-    tier2_name: '', tier2_price: 70, tier2_desc: '',
-    tier3_name: '', tier3_desc: '',
-    design_title: '', design_desc: ''
+    tier1_name: DEFAULT_CONFIG.tier1_name, tier1_price: DEFAULT_CONFIG.tier1_price, tier1_desc: DEFAULT_CONFIG.tier1_desc,
+    tier2_name: DEFAULT_CONFIG.tier2_name, tier2_price: DEFAULT_CONFIG.tier2_price, tier2_desc: DEFAULT_CONFIG.tier2_desc,
+    tier3_name: DEFAULT_CONFIG.tier3_name, tier3_desc: DEFAULT_CONFIG.tier3_desc,
+    design_title: DEFAULT_CONFIG.design_title, design_desc: DEFAULT_CONFIG.design_desc
   });
   
   const [savingConfig, setSavingConfig] = useState(false);
@@ -24,10 +37,10 @@ export default function AdminServices() {
   useEffect(() => {
     if (configData) {
       setForm({
-        tier1_name: configData.tier1_name || '', tier1_price: configData.tier1_price || 30, tier1_desc: configData.tier1_desc || '',
-        tier2_name: configData.tier2_name || '', tier2_price: configData.tier2_price || 70, tier2_desc: configData.tier2_desc || '',
-        tier3_name: configData.tier3_name || '', tier3_desc: configData.tier3_desc || '',
-        design_title: configData.design_title || '', design_desc: configData.design_desc || '',
+        tier1_name: configData.tier1_name || DEFAULT_CONFIG.tier1_name, tier1_price: configData.tier1_price || DEFAULT_CONFIG.tier1_price, tier1_desc: configData.tier1_desc || DEFAULT_CONFIG.tier1_desc,
+        tier2_name: configData.tier2_name || DEFAULT_CONFIG.tier2_name, tier2_price: configData.tier2_price || DEFAULT_CONFIG.tier2_price, tier2_desc: configData.tier2_desc || DEFAULT_CONFIG.tier2_desc,
+        tier3_name: configData.tier3_name || DEFAULT_CONFIG.tier3_name, tier3_desc: configData.tier3_desc || DEFAULT_CONFIG.tier3_desc,
+        design_title: configData.design_title || DEFAULT_CONFIG.design_title, design_desc: configData.design_desc || DEFAULT_CONFIG.design_desc,
       });
     }
   }, [configData]);
