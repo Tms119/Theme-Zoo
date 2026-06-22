@@ -20,14 +20,14 @@ export default function Home() {
         {/* Core Store Grid */}
         <ProductGrid />
 
+        {/* Custom Website Order + Contact */}
+        <Services />
+
         {/* How it works simple steps */}
         <ValueProp />
         
         {/* Bento grid highlights */}
         <BentoFeatures />
-
-        {/* Custom Website Order + Contact */}
-        <Services />
       </main>
       
       <Footer />
