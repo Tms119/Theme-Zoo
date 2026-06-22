@@ -105,6 +105,15 @@ export default defineSchema({
   services_config: defineTable({
     design_title: v.optional(v.string()),
     design_desc: v.optional(v.string()),
+    // Legacy fields - kept as optional to prevent schema validation crashes
+    tier1_name: v.optional(v.any()),
+    tier1_price: v.optional(v.any()),
+    tier1_desc: v.optional(v.any()),
+    tier2_name: v.optional(v.any()),
+    tier2_price: v.optional(v.any()),
+    tier2_desc: v.optional(v.any()),
+    tier3_name: v.optional(v.any()),
+    tier3_desc: v.optional(v.any()),
   }),
 
   // Custom Orders (Form Submissions)
