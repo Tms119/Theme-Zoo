@@ -29,7 +29,15 @@ export const getStats = query({
     // Fetch template orders
     const orders = await ctx.db.query("orders").collect();
     const successfulOrders = orders.filter(o => ['paid', 'delivered', 'completed'].includes(o.status));
-    const templateRevenue = successfulOrders.reduce((acc, order) => acc + (order.price_usd || 0), 0);
+    
+    // Calculate template revenue, strictly ignoring 100% free promo orders 
+    // (identified by tx_hash starting with 'promo_') which may have old inaccurate price_usd data
+    const templateRevenue = successfulOrders.reduce((acc, order) => {
+      if (order.tx_hash && order.tx_hash.startsWith('promo_')) {
+        return acc;
+      }
+      return acc + (order.price_usd || 0);
+    }, 0);
     
     // Fetch custom service orders
     const customOrders = await ctx.db.query("custom_orders").collect();
