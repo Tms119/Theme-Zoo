@@ -136,27 +136,7 @@ export default function ProductClient({ product, relatedProducts }) {
                   </div>
                 </div>
 
-                {/* Meta */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem', marginBottom: '2rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.875rem' }}>
-                    <span style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                      <Cpu size={14} /> Technology
-                    </span>
-                    <span style={{ fontWeight: 600, fontSize: '0.82rem', color: 'var(--text-main)' }}>{product.tech}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.875rem' }}>
-                    <span style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                      <FileCode size={14} /> File Size
-                    </span>
-                    <span style={{ fontWeight: 600, fontSize: '0.82rem', color: 'var(--text-main)' }}>{product.filesize}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.875rem' }}>
-                    <span style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                      📸 Screenshots
-                    </span>
-                    <span style={{ fontWeight: 600, fontSize: '0.82rem', color: 'var(--text-main)' }}>{product.images.length} included</span>
-                  </div>
-                </div>
+
 
                 {/* CTA */}
                 {product.pdf_url && (
