@@ -28,8 +28,8 @@ export const setGlobalSetting = mutation({
     } else {
       await ctx.db.insert("globalSettings", { key, value });
     }
-
-
+  },
+});
 // ── Campaigns (Volume Discounts) ──────────────────────────────────
 
 export const getActiveVolumeCampaign = query({

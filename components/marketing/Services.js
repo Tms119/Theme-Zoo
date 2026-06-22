@@ -36,7 +36,7 @@ export default function Services() {
   // Form State
   const [status, setStatus] = useState('idle'); // idle | loading | success | payment_generated | error
   const [errorMsg, setErrorMsg] = useState('');
-  const [form, setForm] = useState({ name: '', email: '', budget: '', message: '', coin: 'usdttrc20' });
+  const [form, setForm] = useState({ name: '', email: '', budget: '', message: '', coin: 'usdttrc20', promoCode: '' });
   const [paymentInfo, setPaymentInfo] = useState(null);
 
   const configData = useQuery(api.services.getConfig);
@@ -64,7 +64,7 @@ export default function Services() {
     setIsModalOpen(true);
     setStatus('idle');
     setPaymentInfo(null);
-    setForm({ name: '', email: '', budget: requiresPayment ? `$${price}` : '', message: '', coin: 'usdttrc20' });
+    setForm({ name: '', email: '', budget: requiresPayment ? `$${price}` : '', message: '', coin: 'usdttrc20', promoCode: '' });
   };
 
   const handleChange = (e) => setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -91,6 +91,7 @@ export default function Services() {
             message: form.message,
             price_usd: servicePrice,
             coin: form.coin,
+            promoCode: form.promoCode || null,
           }),
         });
 
@@ -265,13 +266,19 @@ export default function Services() {
                   )}
 
                   {isPaymentMode && (
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>Select Crypto Currency</label>
-                      <select name="coin" value={form.coin} onChange={handleChange} style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', color: '#fff', outline: 'none', appearance: 'none' }}>
-                        {CRYPTO_OPTIONS.map(opt => (
-                          <option key={opt.id} value={opt.id} style={{ background: '#0a0a0f', color: '#fff' }}>{opt.name}</option>
-                        ))}
-                      </select>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>Select Crypto Currency</label>
+                        <select name="coin" value={form.coin} onChange={handleChange} style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', color: '#fff', outline: 'none', appearance: 'none' }}>
+                          {CRYPTO_OPTIONS.map(opt => (
+                            <option key={opt.id} value={opt.id} style={{ background: '#0a0a0f', color: '#fff' }}>{opt.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>Promo Code (Optional)</label>
+                        <input type="text" name="promoCode" value={form.promoCode} onChange={handleChange} placeholder="Enter code" style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', color: '#fff', outline: 'none' }} />
+                      </div>
                     </div>
                   )}
 

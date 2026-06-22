@@ -38,10 +38,25 @@ export const getStats = query({
       }
       return acc + (order.price_usd || 0);
     }, 0);
+    
+    // Fetch custom service orders
+    const customOrders = await ctx.db.query("custom_orders").collect();
+    // Only count as revenue if it was strictly 'paid' or 'completed', AND has a tx_hash.
+    const successfulCustom = customOrders.filter(o => 
+      ['paid', 'completed'].includes(o.status) && o.tx_hash
+    );
+    
+    // Calculate custom revenue, strictly ignoring 100% free promo bypasses
+    const customRevenue = successfulCustom.reduce((acc, order) => {
+      if (order.tx_hash.startsWith('promo_')) {
+        return acc;
+      }
+      return acc + (order.price_usd || 0);
+    }, 0);
 
     return {
-      totalRevenue: templateRevenue,
-      totalOrders: successfulOrders.length
+      totalRevenue: templateRevenue + customRevenue,
+      totalOrders: successfulOrders.length + successfulCustom.length
     };
   }
 });

@@ -66,6 +66,15 @@ export async function POST(req) {
         status: 'paid',
       });
       
+      // Increment Promo Code Usage
+      if (pc) {
+        try {
+          await convex.mutation(api.promo_codes.incrementUse, { id: pc._id });
+        } catch (e) {
+          console.error("Failed to increment promo code usage:", e);
+        }
+      }
+      
       const serviceOrder = await convex.query(api.services.getOrderByTx, { tx_hash: freeOrderId });
       if (serviceOrder) {
         await sendServiceConfirmationEmail(serviceOrder, baseUrl);

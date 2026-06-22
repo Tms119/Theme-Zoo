@@ -1,0 +1,13 @@
+{"name":"categories","id":10001}
+{"name":"contact_requests","id":10002}
+{"name":"orders","id":10003}
+{"name":"products","id":10004}
+{"name":"support_tickets","id":10005}
+{"name":"custom_orders","id":10006}
+{"name":"promo_codes","id":10007}
+{"name":"wishlists","id":10008}
+{"name":"services_config","id":10009}
+{"name":"campaigns","id":10010}
+{"name":"globalSettings","id":10011}
+{"name":"services","id":10012}
+{"name":"rate_limits","id":10013}
