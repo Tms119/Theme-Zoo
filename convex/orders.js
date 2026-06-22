@@ -38,16 +38,27 @@ export const getStats = query({
       }
       return acc + (order.price_usd || 0);
     }, 0);
-    
-    // Fetch custom service orders
-    const customOrders = await ctx.db.query("custom_orders").collect();
-    const successfulCustom = customOrders.filter(o => ['paid', 'delivered', 'completed'].includes(o.status));
-    const customRevenue = successfulCustom.reduce((acc, order) => acc + (order.price_usd || 0), 0);
 
     return {
-      totalRevenue: templateRevenue + customRevenue,
-      totalOrders: successfulOrders.length + successfulCustom.length
+      totalRevenue: templateRevenue,
+      totalOrders: successfulOrders.length
     };
+  }
+});
+
+// TEMPORARY DEBUG QUERY
+export const debugRevenue = query({
+  args: {},
+  handler: async (ctx) => {
+    const orders = await ctx.db.query("orders").collect();
+    const successfulOrders = orders.filter(o => ['paid', 'delivered', 'completed'].includes(o.status));
+    const templateDetails = successfulOrders.map(o => ({ id: o._id, name: o.product_name, price: o.price_usd, status: o.status, tx: o.tx_hash }));
+    
+    const customOrders = await ctx.db.query("custom_orders").collect();
+    const successfulCustom = customOrders.filter(o => ['paid', 'delivered', 'completed'].includes(o.status));
+    const customDetails = successfulCustom.map(o => ({ id: o._id, type: o.service_type, price: o.price_usd, status: o.status }));
+
+    return { templateDetails, customDetails };
   }
 });
 
