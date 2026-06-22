@@ -41,7 +41,7 @@ export const getStats = query({
     
     // Fetch custom service orders
     const customOrders = await ctx.db.query("custom_orders").collect();
-    const successfulCustom = customOrders.filter(o => ['paid', 'delivered', 'completed', 'in_progress'].includes(o.status));
+    const successfulCustom = customOrders.filter(o => ['paid', 'delivered', 'completed'].includes(o.status));
     const customRevenue = successfulCustom.reduce((acc, order) => acc + (order.price_usd || 0), 0);
 
     return {
