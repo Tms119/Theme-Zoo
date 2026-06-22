@@ -91,18 +91,20 @@ export default defineSchema({
     product_id: v.id("products"),
   }).index("by_user", ["user_email"]),
 
+  // Dynamic Service Tiers (replaces hardcoded Tier 1/2/3)
+  service_tiers: defineTable({
+    name: v.string(),
+    price: v.number(), // 0 means 'Custom Quote'
+    description: v.string(),
+    icon: v.string(), // "monitor", "layout", "zap", "palette", "code"
+    is_active: v.boolean(),
+    sort_order: v.number(),
+  }).index("by_active", ["is_active"]),
+
   // Services Config Table (Singular config for Custom Services Section)
   services_config: defineTable({
-    tier1_name: v.string(),
-    tier1_price: v.number(),
-    tier1_desc: v.string(),
-    tier2_name: v.string(),
-    tier2_price: v.number(),
-    tier2_desc: v.string(),
-    tier3_name: v.string(),
-    tier3_desc: v.string(),
-    design_title: v.string(),
-    design_desc: v.string(),
+    design_title: v.optional(v.string()),
+    design_desc: v.optional(v.string()),
   }),
 
   // Custom Orders (Form Submissions)

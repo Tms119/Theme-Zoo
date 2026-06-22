@@ -1,21 +1,8 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
-import { Palette, Zap, CheckCircle, Send, Sparkles, Clock, Shield, Monitor, Layout, X, QrCode } from 'lucide-react';
+import { Palette, Zap, CheckCircle, Send, Sparkles, Clock, Shield, Monitor, Layout, X, QrCode, Code } from 'lucide-react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
-
-const DEFAULT_CONFIG = {
-  tier1_name: 'PHP Clone',
-  tier1_price: 30,
-  tier1_desc: 'Perfect for quick setups. Get a fully functional PHP script clone of your choice.',
-  tier2_name: 'HTML Clone',
-  tier2_price: 70,
-  tier2_desc: 'High-quality HTML clone tailored to your specific requirements and design.',
-  tier3_name: 'Custom High-End Website',
-  tier3_desc: 'A premium, custom-built website tailored perfectly to your brand and business goals.',
-  design_title: 'Custom Designs & Graphics',
-  design_desc: 'Need a custom logo, banner, or infographics? Our elite design team will craft visually stunning assets for your brand.',
-};
 
 const CRYPTO_OPTIONS = [
   { id: 'btc', name: 'Bitcoin (BTC)' },
@@ -24,6 +11,14 @@ const CRYPTO_OPTIONS = [
   { id: 'usdttrc20', name: 'USDT (TRC20)' },
   { id: 'sol', name: 'Solana (SOL)' },
 ];
+
+const ICONS = {
+  Monitor: <Monitor size={24} />,
+  Layout: <Layout size={24} />,
+  Zap: <Zap size={24} />,
+  Code: <Code size={24} />,
+  Palette: <Palette size={24} />
+};
 
 export default function Services() {
   const sectionRef = useRef(null);
@@ -40,10 +35,8 @@ export default function Services() {
   const [paymentInfo, setPaymentInfo] = useState(null);
 
   const configData = useQuery(api.services.getConfig);
+  const tiersData = useQuery(api.services.listTiers);
   const createOrder = useMutation(api.services.createOrder);
-
-  // Use DB config if available, else fallback
-  const config = configData || DEFAULT_CONFIG;
 
   // Scroll reveal
   useEffect(() => {
@@ -126,6 +119,8 @@ export default function Services() {
     }
   };
 
+  const activeTiers = tiersData ? tiersData.filter(t => t.is_active).sort((a,b) => a.sort_order - b.sort_order) : [];
+
   return (
     <section id="custom-order" ref={sectionRef} style={{ position: 'relative', padding: '6rem 0' }}>
       <div className="container" style={{ position: 'relative', zIndex: 1 }}>
@@ -141,37 +136,33 @@ export default function Services() {
           </p>
         </div>
 
-        {/* Website Tiers */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginBottom: '4rem' }}>
-          
-          {/* Tier 1 */}
-          <div className="service-card" style={{ animationDelay: '0.1s' }}>
-            <div className="service-icon"><Monitor size={24} /></div>
-            <h3>{config.tier1_name}</h3>
-            <div className="price">${config.tier1_price}</div>
-            <p>{config.tier1_desc}</p>
-            <button className="btn btn-primary" onClick={() => openModal('Tier 1: ' + config.tier1_name, config.tier1_price, true)}>Buy Now</button>
+        {/* Dynamic Website Tiers */}
+        {tiersData === undefined ? (
+           <div style={{ textAlign: 'center', color: 'var(--text-secondary)', marginBottom: '4rem' }}>Loading services...</div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginBottom: '4rem' }}>
+            {activeTiers.map((tier, index) => {
+              const isHighlight = index === 1; // Highlight the second item typically
+              return (
+                <div key={tier._id} className="service-card" style={{ animationDelay: `${0.1 * (index + 1)}s`, ...(isHighlight ? { border: '1px solid var(--primary)', background: 'linear-gradient(180deg, rgba(124,58,237,0.05) 0%, rgba(0,0,0,0) 100%)' } : {}) }}>
+                  <div className="service-icon" style={isHighlight ? { background: 'var(--primary)', color: '#fff' } : {}}>
+                    {ICONS[tier.icon] || <Monitor size={24} />}
+                  </div>
+                  <h3>{tier.name}</h3>
+                  <div className="price">{tier.price === 0 ? 'Custom Quote' : `$${tier.price}`}</div>
+                  <p>{tier.description}</p>
+                  <button 
+                    className={`btn ${tier.price > 0 ? 'btn-primary' : 'btn-secondary'}`} 
+                    style={{ width: '100%' }} 
+                    onClick={() => openModal(tier.name, tier.price, tier.price > 0)}
+                  >
+                    {tier.price > 0 ? 'Buy Now' : 'Contact Us'}
+                  </button>
+                </div>
+              );
+            })}
           </div>
-
-          {/* Tier 2 */}
-          <div className="service-card" style={{ animationDelay: '0.2s', border: '1px solid var(--primary)', background: 'linear-gradient(180deg, rgba(124,58,237,0.05) 0%, rgba(0,0,0,0) 100%)' }}>
-            <div className="service-icon" style={{ background: 'var(--primary)', color: '#fff' }}><Layout size={24} /></div>
-            <h3>{config.tier2_name}</h3>
-            <div className="price">${config.tier2_price}</div>
-            <p>{config.tier2_desc}</p>
-            <button className="btn btn-primary" onClick={() => openModal('Tier 2: ' + config.tier2_name, config.tier2_price, true)}>Buy Now</button>
-          </div>
-
-          {/* Tier 3 */}
-          <div className="service-card" style={{ animationDelay: '0.3s' }}>
-            <div className="service-icon"><Zap size={24} /></div>
-            <h3>{config.tier3_name}</h3>
-            <div className="price">Custom Quote</div>
-            <p>{config.tier3_desc}</p>
-            <button className="btn btn-secondary" style={{ width: '100%' }} onClick={() => openModal('Tier 3: ' + config.tier3_name, 0, false)}>Contact Us</button>
-          </div>
-
-        </div>
+        )}
 
         {/* Custom Design Banner */}
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '24px', padding: '3rem', display: 'flex', flexWrap: 'wrap', gap: '2rem', alignItems: 'center', justifyContent: 'space-between', opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(20px)', transition: 'all 0.8s ease 0.4s' }}>
@@ -179,8 +170,12 @@ export default function Services() {
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', color: 'var(--accent-cyan)', fontWeight: 600 }}>
               <Palette size={18} /> Creative Services
             </div>
-            <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.8rem', fontWeight: 800, marginBottom: '1rem' }}>{config.design_title}</h3>
-            <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>{config.design_desc}</p>
+            <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.8rem', fontWeight: 800, marginBottom: '1rem' }}>
+              {configData?.design_title || 'Custom Designs & Graphics'}
+            </h3>
+            <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+              {configData?.design_desc || 'Need a custom logo, banner, or infographics? Our elite design team will craft visually stunning assets for your brand.'}
+            </p>
           </div>
           <button className="btn btn-primary" style={{ padding: '1rem 2rem', fontSize: '1rem' }} onClick={() => openModal('Custom Design', 0, false)}>
             Hire Our Designers

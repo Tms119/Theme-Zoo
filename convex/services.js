@@ -14,14 +14,6 @@ export const getConfig = query({
 export const updateConfig = mutation({
   args: {
     id: v.optional(v.id("services_config")),
-    tier1_name: v.string(),
-    tier1_price: v.number(),
-    tier1_desc: v.string(),
-    tier2_name: v.string(),
-    tier2_price: v.number(),
-    tier2_desc: v.string(),
-    tier3_name: v.string(),
-    tier3_desc: v.string(),
     design_title: v.string(),
     design_desc: v.string(),
   },
@@ -33,6 +25,54 @@ export const updateConfig = mutation({
     } else {
       await ctx.db.insert("services_config", data);
     }
+  },
+});
+
+// ─── Dynamic Service Tiers ────────────────────────────────────────────────
+export const listTiers = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db.query("service_tiers").order("asc").collect();
+  },
+});
+
+export const addTier = mutation({
+  args: {
+    name: v.string(),
+    price: v.number(),
+    description: v.string(),
+    icon: v.string(),
+    is_active: v.boolean(),
+    sort_order: v.number(),
+  },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx);
+    return await ctx.db.insert("service_tiers", args);
+  },
+});
+
+export const updateTier = mutation({
+  args: {
+    id: v.id("service_tiers"),
+    name: v.optional(v.string()),
+    price: v.optional(v.number()),
+    description: v.optional(v.string()),
+    icon: v.optional(v.string()),
+    is_active: v.optional(v.boolean()),
+    sort_order: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx);
+    const { id, ...data } = args;
+    await ctx.db.patch(id, data);
+  },
+});
+
+export const deleteTier = mutation({
+  args: { id: v.id("service_tiers") },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx);
+    await ctx.db.delete(args.id);
   },
 });
 

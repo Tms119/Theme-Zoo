@@ -2,61 +2,91 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
-import { Save, Plus, Loader2, CheckCircle, Mail, Briefcase, Filter } from 'lucide-react';
+import { Save, Plus, Loader2, CheckCircle, Mail, Briefcase, Filter, Edit, Trash2, X } from 'lucide-react';
 import toast from 'react-hot-toast';
-
-const DEFAULT_CONFIG = {
-  tier1_name: 'PHP Clone',
-  tier1_price: 30,
-  tier1_desc: 'Perfect for quick setups. Get a fully functional PHP script clone of your choice.',
-  tier2_name: 'HTML Clone',
-  tier2_price: 70,
-  tier2_desc: 'High-quality HTML clone tailored to your specific requirements and design.',
-  tier3_name: 'Custom High-End Website',
-  tier3_desc: 'A premium, custom-built website tailored perfectly to your brand and business goals.',
-  design_title: 'Custom Designs & Graphics',
-  design_desc: 'Need a custom logo, banner, or infographics? Our elite design team will craft visually stunning assets for your brand.',
-};
 
 export default function AdminServices() {
   const [activeTab, setActiveTab] = useState('config'); // config | orders
   
-  // -- Config State --
+  // -- Config State (Banner) --
   const configData = useQuery(api.services.getConfig);
   const updateConfig = useMutation(api.services.updateConfig);
-  
-  const [form, setForm] = useState({
-    tier1_name: DEFAULT_CONFIG.tier1_name, tier1_price: DEFAULT_CONFIG.tier1_price, tier1_desc: DEFAULT_CONFIG.tier1_desc,
-    tier2_name: DEFAULT_CONFIG.tier2_name, tier2_price: DEFAULT_CONFIG.tier2_price, tier2_desc: DEFAULT_CONFIG.tier2_desc,
-    tier3_name: DEFAULT_CONFIG.tier3_name, tier3_desc: DEFAULT_CONFIG.tier3_desc,
-    design_title: DEFAULT_CONFIG.design_title, design_desc: DEFAULT_CONFIG.design_desc
-  });
-  
-  const [savingConfig, setSavingConfig] = useState(false);
+  const [bannerForm, setBannerForm] = useState({ design_title: '', design_desc: '' });
+  const [savingBanner, setSavingBanner] = useState(false);
 
   useEffect(() => {
     if (configData) {
-      setForm({
-        tier1_name: configData.tier1_name || DEFAULT_CONFIG.tier1_name, tier1_price: configData.tier1_price || DEFAULT_CONFIG.tier1_price, tier1_desc: configData.tier1_desc || DEFAULT_CONFIG.tier1_desc,
-        tier2_name: configData.tier2_name || DEFAULT_CONFIG.tier2_name, tier2_price: configData.tier2_price || DEFAULT_CONFIG.tier2_price, tier2_desc: configData.tier2_desc || DEFAULT_CONFIG.tier2_desc,
-        tier3_name: configData.tier3_name || DEFAULT_CONFIG.tier3_name, tier3_desc: configData.tier3_desc || DEFAULT_CONFIG.tier3_desc,
-        design_title: configData.design_title || DEFAULT_CONFIG.design_title, design_desc: configData.design_desc || DEFAULT_CONFIG.design_desc,
+      setBannerForm({
+        design_title: configData.design_title || 'Custom Designs & Graphics',
+        design_desc: configData.design_desc || 'Need a custom logo, banner, or infographics? Our elite design team will craft visually stunning assets for your brand.',
+      });
+    } else {
+      setBannerForm({
+        design_title: 'Custom Designs & Graphics',
+        design_desc: 'Need a custom logo, banner, or infographics? Our elite design team will craft visually stunning assets for your brand.',
       });
     }
   }, [configData]);
 
-  const handleConfigChange = (e) => setForm(prev => ({ ...prev, [e.target.name]: e.target.type === 'number' ? Number(e.target.value) : e.target.value }));
-
-  const handleSaveConfig = async (e) => {
+  const handleSaveBanner = async (e) => {
     e.preventDefault();
-    setSavingConfig(true);
+    setSavingBanner(true);
     try {
-      await updateConfig({ id: configData?._id, ...form });
-      toast.success('Services configuration saved successfully!');
+      await updateConfig({ id: configData?._id, ...bannerForm });
+      toast.success('Banner configuration saved!');
     } catch (err) {
-      toast.error('Failed to save configuration.');
+      toast.error('Failed to save banner.');
     }
-    setSavingConfig(false);
+    setSavingBanner(false);
+  };
+
+  // -- Dynamic Tiers State --
+  const tiersData = useQuery(api.services.listTiers);
+  const addTier = useMutation(api.services.addTier);
+  const updateTier = useMutation(api.services.updateTier);
+  const deleteTier = useMutation(api.services.deleteTier);
+
+  const [isTierModalOpen, setIsTierModalOpen] = useState(false);
+  const [editingTier, setEditingTier] = useState(null);
+  const [tierForm, setTierForm] = useState({ name: '', price: 30, description: '', icon: 'Monitor', is_active: true, sort_order: 0 });
+
+  const openAddTierModal = () => {
+    setEditingTier(null);
+    setTierForm({ name: '', price: 30, description: '', icon: 'Monitor', is_active: true, sort_order: (tiersData?.length || 0) + 1 });
+    setIsTierModalOpen(true);
+  };
+
+  const openEditTierModal = (tier) => {
+    setEditingTier(tier);
+    setTierForm({ name: tier.name, price: tier.price, description: tier.description, icon: tier.icon || 'Monitor', is_active: tier.is_active, sort_order: tier.sort_order });
+    setIsTierModalOpen(true);
+  };
+
+  const handleSaveTier = async (e) => {
+    e.preventDefault();
+    try {
+      if (editingTier) {
+        await updateTier({ id: editingTier._id, ...tierForm });
+        toast.success('Service updated!');
+      } else {
+        await addTier(tierForm);
+        toast.success('Service added!');
+      }
+      setIsTierModalOpen(false);
+    } catch (err) {
+      toast.error('Failed to save service.');
+    }
+  };
+
+  const handleDeleteTier = async (id) => {
+    if (confirm('Are you sure you want to delete this service?')) {
+      try {
+        await deleteTier({ id });
+        toast.success('Service deleted.');
+      } catch (err) {
+        toast.error('Failed to delete.');
+      }
+    }
   };
 
   // -- Orders State --
@@ -88,77 +118,81 @@ export default function AdminServices() {
           onClick={() => setActiveTab('config')}
           style={{ background: activeTab === 'config' ? 'var(--primary)' : 'transparent', color: activeTab === 'config' ? '#fff' : 'var(--text-secondary)', padding: '0.5rem 1rem', borderRadius: '8px', fontWeight: 600, border: 'none', cursor: 'pointer' }}
         >
-          Frontend Config
+          Service Config
         </button>
         <button 
           onClick={() => setActiveTab('orders')}
           style={{ background: activeTab === 'orders' ? 'var(--primary)' : 'transparent', color: activeTab === 'orders' ? '#fff' : 'var(--text-secondary)', padding: '0.5rem 1rem', borderRadius: '8px', fontWeight: 600, border: 'none', cursor: 'pointer' }}
         >
-          Custom Orders & Inquiries
+          Orders & Inquiries
         </button>
       </div>
 
       {activeTab === 'config' && (
-        <form onSubmit={handleSaveConfig} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '2rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
           
-          <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1.5rem', color: 'var(--primary)' }}>Tier 1 (e.g. PHP Clone)</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Service Name</label>
-              <input type="text" name="tier1_name" value={form.tier1_name} onChange={handleConfigChange} required style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', color: '#fff' }} />
+          {/* Tiers Management */}
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '2rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-main)' }}>Dynamic Services</h3>
+              <button onClick={openAddTierModal} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.85rem' }}>
+                <Plus size={16} /> Add New Service
+              </button>
             </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Price ($)</label>
-              <input type="number" name="tier1_price" value={form.tier1_price} onChange={handleConfigChange} required style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', color: '#fff' }} />
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {tiersData === undefined ? (
+                <div style={{ color: 'var(--text-muted)' }}>Loading...</div>
+              ) : tiersData.length === 0 ? (
+                <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', border: '1px dashed var(--border-color)', borderRadius: '12px' }}>
+                  No services configured. Click "Add New Service" to create one.
+                </div>
+              ) : (
+                tiersData.map(tier => (
+                  <div key={tier._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.5rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
+                    <div>
+                      <div style={{ fontWeight: 600, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        {tier.name}
+                        {!tier.is_active && <span style={{ fontSize: '0.7rem', padding: '0.1rem 0.4rem', background: 'rgba(239,68,68,0.1)', color: '#ef4444', borderRadius: '4px' }}>Hidden</span>}
+                      </div>
+                      <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.25rem' }}>
+                        {tier.price === 0 ? 'Custom Quote' : `$${tier.price}`}
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button onClick={() => openEditTierModal(tier)} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', padding: '0.5rem', borderRadius: '8px', cursor: 'pointer' }}>
+                        <Edit size={16} />
+                      </button>
+                      <button onClick={() => handleDeleteTier(tier._id)} style={{ background: 'rgba(239,68,68,0.1)', border: 'none', color: '#ef4444', padding: '0.5rem', borderRadius: '8px', cursor: 'pointer' }}>
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
-          </div>
-          <div style={{ marginBottom: '2.5rem' }}>
-            <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Description</label>
-            <textarea name="tier1_desc" value={form.tier1_desc} onChange={handleConfigChange} required rows={2} style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', color: '#fff' }} />
           </div>
 
-          <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1.5rem', color: 'var(--primary)' }}>Tier 2 (e.g. HTML Clone)</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Service Name</label>
-              <input type="text" name="tier2_name" value={form.tier2_name} onChange={handleConfigChange} required style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', color: '#fff' }} />
+          {/* Banner Management */}
+          <form onSubmit={handleSaveBanner} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '2rem' }}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1.5rem', color: 'var(--accent-cyan)' }}>Custom Design Banner</h3>
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Banner Title</label>
+              <input type="text" value={bannerForm.design_title} onChange={(e) => setBannerForm({...bannerForm, design_title: e.target.value})} required style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', color: '#fff' }} />
             </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Price ($)</label>
-              <input type="number" name="tier2_price" value={form.tier2_price} onChange={handleConfigChange} required style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', color: '#fff' }} />
+            <div style={{ marginBottom: '2.5rem' }}>
+              <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Banner Description</label>
+              <textarea value={bannerForm.design_desc} onChange={(e) => setBannerForm({...bannerForm, design_desc: e.target.value})} required rows={2} style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', color: '#fff' }} />
             </div>
-          </div>
-          <div style={{ marginBottom: '2.5rem' }}>
-            <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Description</label>
-            <textarea name="tier2_desc" value={form.tier2_desc} onChange={handleConfigChange} required rows={2} style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', color: '#fff' }} />
-          </div>
+            <button type="submit" disabled={savingBanner} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              {savingBanner ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} Save Banner
+            </button>
+          </form>
 
-          <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1.5rem', color: 'var(--primary)' }}>Tier 3 (e.g. High-End Custom)</h3>
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Service Name</label>
-            <input type="text" name="tier3_name" value={form.tier3_name} onChange={handleConfigChange} required style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', color: '#fff' }} />
-          </div>
-          <div style={{ marginBottom: '2.5rem' }}>
-            <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Description</label>
-            <textarea name="tier3_desc" value={form.tier3_desc} onChange={handleConfigChange} required rows={2} style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', color: '#fff' }} />
-          </div>
-
-          <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1.5rem', color: 'var(--accent-cyan)' }}>Custom Design Banner</h3>
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Banner Title</label>
-            <input type="text" name="design_title" value={form.design_title} onChange={handleConfigChange} required style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', color: '#fff' }} />
-          </div>
-          <div style={{ marginBottom: '2.5rem' }}>
-            <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Banner Description</label>
-            <textarea name="design_desc" value={form.design_desc} onChange={handleConfigChange} required rows={2} style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', color: '#fff' }} />
-          </div>
-
-          <button type="submit" disabled={savingConfig} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            {savingConfig ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} Save Configuration
-          </button>
-        </form>
+        </div>
       )}
 
+      {/* Orders Tab */}
       {activeTab === 'orders' && (
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', overflow: 'hidden' }}>
           <div style={{ overflowX: 'auto' }}>
@@ -220,6 +254,9 @@ export default function AdminServices() {
                           <option value="open">Open</option>
                           <option value="contacted">Contacted</option>
                           <option value="closed">Closed</option>
+                          <option value="pending">Pending</option>
+                          <option value="paid">Paid</option>
+                          <option value="completed">Completed</option>
                         </select>
                       </td>
                     </tr>
@@ -227,6 +264,58 @@ export default function AdminServices() {
                 )}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* Tier Modal */}
+      {isTierModalOpen && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)' }} onClick={() => setIsTierModalOpen(false)}></div>
+          <div style={{ position: 'relative', width: '100%', maxWidth: '500px', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '24px', padding: '2rem', zIndex: 1001, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 700 }}>{editingTier ? 'Edit Service' : 'Add New Service'}</h3>
+              <button onClick={() => setIsTierModalOpen(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}><X size={20} /></button>
+            </div>
+            <form onSubmit={handleSaveTier} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Service Name</label>
+                  <input type="text" value={tierForm.name} onChange={(e) => setTierForm({...tierForm, name: e.target.value})} required style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', color: '#fff' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Price ($) (0 = Custom Quote)</label>
+                  <input type="number" value={tierForm.price} onChange={(e) => setTierForm({...tierForm, price: Number(e.target.value)})} required style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', color: '#fff' }} />
+                </div>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Description</label>
+                <textarea value={tierForm.description} onChange={(e) => setTierForm({...tierForm, description: e.target.value})} required rows={3} style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', color: '#fff' }} />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Icon</label>
+                  <select value={tierForm.icon} onChange={(e) => setTierForm({...tierForm, icon: e.target.value})} style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', color: '#fff', outline: 'none' }}>
+                    <option value="Monitor" style={{background: '#0a0a0f'}}>Monitor</option>
+                    <option value="Layout" style={{background: '#0a0a0f'}}>Layout</option>
+                    <option value="Zap" style={{background: '#0a0a0f'}}>Zap (Lightning)</option>
+                    <option value="Code" style={{background: '#0a0a0f'}}>Code</option>
+                    <option value="Palette" style={{background: '#0a0a0f'}}>Palette</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Sort Order</label>
+                  <input type="number" value={tierForm.sort_order} onChange={(e) => setTierForm({...tierForm, sort_order: Number(e.target.value)})} required style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', color: '#fff' }} />
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
+                <input type="checkbox" id="isActive" checked={tierForm.is_active} onChange={(e) => setTierForm({...tierForm, is_active: e.target.checked})} style={{ width: '16px', height: '16px', accentColor: 'var(--primary)' }} />
+                <label htmlFor="isActive" style={{ fontSize: '0.9rem', color: 'var(--text-main)', cursor: 'pointer' }}>Active (Visible on Website)</label>
+              </div>
+              <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '1rem' }}>
+                {editingTier ? 'Update Service' : 'Add Service'}
+              </button>
+            </form>
           </div>
         </div>
       )}
