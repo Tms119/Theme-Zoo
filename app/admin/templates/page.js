@@ -129,6 +129,11 @@ export default function TemplatesPage() {
                         <Link href={`/templates/${p.slug}`} target="_blank" style={{ display: 'inline-flex', alignItems: 'center', color: 'var(--accent-cyan)', fontSize: '0.8rem' }}>
                           View <ExternalLink size={12} style={{ marginLeft: '2px' }} />
                         </Link>
+                        {p.file_url && (
+                          <Link href={p.file_url} target="_blank" style={{ display: 'inline-flex', alignItems: 'center', color: 'var(--accent-emerald)', fontSize: '0.8rem' }} title="Download Source ZIP">
+                            Source
+                          </Link>
+                        )}
                         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
                           <button 
                             onClick={() => toggleActive({ id: p._id, is_active: !p.is_active })}
@@ -184,6 +189,9 @@ export default function TemplatesPage() {
                           <div style={{ height: '1px', background: 'var(--border-color)', margin: '0.5rem 0' }} />
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'center' }}>
                             <Link href={`/templates/${p.slug}`} target="_blank" style={{ color: 'var(--accent-cyan)', fontSize: '0.85rem' }}>View</Link>
+                            {p.file_url && (
+                              <Link href={p.file_url} target="_blank" style={{ color: 'var(--accent-emerald)', fontSize: '0.85rem' }}>Source</Link>
+                            )}
                             <Link href={`/admin/products?id=${p._id}`} style={{ color: 'var(--text-main)', fontSize: '0.85rem' }}>Edit</Link>
                             <button onClick={() => toggleActive({ id: p._id, is_active: !p.is_active })} style={{ background: 'none', border: 'none', color: 'var(--text-main)', fontSize: '0.85rem' }}>
                               {p.is_active ? 'Hide' : 'Show'}
