@@ -357,7 +357,7 @@ export default function AddProductPage() {
       }
 
       setLoading(false);
-      router.push('/admin');
+      router.push('/admin/templates');
     } catch (err) {
       console.error(err);
       setError('An error occurred during upload: ' + err.message);
