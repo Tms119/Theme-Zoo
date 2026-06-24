@@ -191,7 +191,7 @@ export default function Hero() {
             transition: 'opacity 1s ease 0.6s, transform 1s cubic-bezier(0.16, 1, 0.3, 1) 0.6s'
           }}
         >
-          Find the best websites and premium templates. <span className="desktop-only">Pay easily with coin values and download your files in one click.</span>
+          We can build absolutely any website you imagine. <span className="desktop-only">Premium templates or custom development on challenge pricing.</span>
         </p>
         
         <div 
