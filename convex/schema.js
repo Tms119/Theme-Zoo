@@ -156,4 +156,21 @@ export default defineSchema({
     startDate: v.optional(v.number()),
     endDate: v.optional(v.number()),
   }).index("by_active", ["isActive"]),
+
+  // ── Blog Posts ──────────────────────────────────────────────────
+  posts: defineTable({
+    title: v.string(),
+    slug: v.string(),
+    content: v.string(), // HTML or Markdown
+    short_desc: v.string(),
+    cover_image_url: v.optional(v.string()),
+    author: v.optional(v.string()),
+    status: v.string(), // "draft" | "published"
+    meta_title: v.optional(v.string()),
+    meta_desc: v.optional(v.string()),
+    meta_keywords: v.optional(v.string()),
+    published_at: v.optional(v.number()),
+  })
+    .index("by_slug", ["slug"])
+    .index("by_status", ["status"]),
 });

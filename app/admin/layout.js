@@ -22,6 +22,7 @@ export default function AdminLayout({ children }) {
     { href: '/admin/services', label: 'Custom Services' },
     { href: '/admin/support', label: 'Support Tickets' },
     { href: '/admin/settings', label: 'Settings' },
+    { href: '/admin/blog', label: 'Blog Posts' },
   ];
 
   if (!isLoaded) {

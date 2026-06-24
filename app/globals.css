@@ -2204,3 +2204,12 @@ body {
 }
 
 
+
+.blog-content h1, .blog-content h2, .blog-content h3 { color: var(--text-main); margin-top: 2rem; margin-bottom: 1rem; }
+.blog-content p { margin-bottom: 1.5rem; }
+.blog-content a { color: var(--primary); text-decoration: none; }
+.blog-content a:hover { text-decoration: underline; }
+.blog-content img { max-width: 100%; border-radius: 12px; margin: 2rem 0; }
+.blog-content ul, .blog-content ol { margin-bottom: 1.5rem; padding-left: 2rem; }
+.blog-content li { margin-bottom: 0.5rem; }
+

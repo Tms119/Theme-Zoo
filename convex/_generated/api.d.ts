@@ -15,6 +15,7 @@ import type * as crons from "../crons.js";
 import type * as emails from "../emails.js";
 import type * as marketing from "../marketing.js";
 import type * as orders from "../orders.js";
+import type * as posts from "../posts.js";
 import type * as products from "../products.js";
 import type * as promo_codes from "../promo_codes.js";
 import type * as rateLimit from "../rateLimit.js";
@@ -37,6 +38,7 @@ declare const fullApi: ApiFromModules<{
   emails: typeof emails;
   marketing: typeof marketing;
   orders: typeof orders;
+  posts: typeof posts;
   products: typeof products;
   promo_codes: typeof promo_codes;
   rateLimit: typeof rateLimit;
