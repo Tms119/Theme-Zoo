@@ -2,7 +2,6 @@ import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
 import { notFound } from 'next/navigation';
 import Navbar from '@/components/ui/Navbar';
-import Footer from '@/components/ui/Footer';
 import Link from 'next/link';
 import { ArrowLeft, Calendar, User } from 'lucide-react';
 
@@ -98,7 +97,6 @@ export default async function BlogPost({ params }) {
         </article>
       </main>
 
-      <Footer />
     </div>
   );
 }

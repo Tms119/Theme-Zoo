@@ -5,7 +5,6 @@ import ValueProp from '@/components/marketing/ValueProp';
 import BentoFeatures from '@/components/marketing/BentoFeatures';
 import Services from '@/components/marketing/Services';
 import ScrollReveal from '@/components/ui/ScrollReveal';
-import Footer from '@/components/ui/Footer';
 
 
 export default function Home() {
@@ -30,7 +29,6 @@ export default function Home() {
         <BentoFeatures />
       </main>
       
-      <Footer />
     </>
   );
 }

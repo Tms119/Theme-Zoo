@@ -4,7 +4,6 @@ import { api } from "@/convex/_generated/api";
 import Link from 'next/link';
 import { ArrowRight, Calendar } from 'lucide-react';
 import Navbar from '@/components/ui/Navbar';
-import Footer from '@/components/ui/Footer';
 
 export default function BlogListing() {
   const posts = useQuery(api.posts.listPublished);
@@ -101,8 +100,6 @@ export default function BlogListing() {
           </div>
         )}
       </main>
-
-      <Footer />
     </div>
   );
 }

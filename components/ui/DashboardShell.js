@@ -3,6 +3,7 @@ import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import Sidebar from '@/components/ui/Sidebar';
 import TopHeader from '@/components/ui/TopHeader';
+import Footer from '@/components/ui/Footer';
 
 export default function DashboardShell({ children }) {
   const pathname = usePathname();
@@ -35,6 +36,7 @@ export default function DashboardShell({ children }) {
         <main className="dashboard-content">
           {children}
         </main>
+        <Footer />
       </div>
     </div>
   );
