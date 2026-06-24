@@ -3,16 +3,18 @@ import { useState } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import Link from 'next/link';
-import { PlusCircle, Tag, ArrowLeft, Trash2 } from 'lucide-react';
+import { PlusCircle, Tag, ArrowLeft, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
 
 export default function CategoriesPage() {
   const categories = useQuery(api.categories.listAll);
   const createCategory = useMutation(api.categories.create);
   const removeCategory = useMutation(api.categories.remove);
+  const reorderCategories = useMutation(api.categories.reorder);
 
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
   const [error, setError] = useState('');
+  const [isReordering, setIsReordering] = useState(false);
 
   const handleNameChange = (e) => {
     const val = e.target.value;
@@ -37,6 +39,37 @@ export default function CategoriesPage() {
   const handleDelete = async (id) => {
     if (confirm("Are you sure you want to delete this category?")) {
       await removeCategory({ id });
+    }
+  };
+
+  const handleReorder = async (direction, index) => {
+    if (!categories || isReordering) return;
+    
+    // Check bounds
+    if (direction === 'up' && index === 0) return;
+    if (direction === 'down' && index === categories.length - 1) return;
+
+    setIsReordering(true);
+    try {
+      const newArray = [...categories];
+      const targetIndex = direction === 'up' ? index - 1 : index + 1;
+      
+      // Swap elements
+      const temp = newArray[index];
+      newArray[index] = newArray[targetIndex];
+      newArray[targetIndex] = temp;
+
+      // Create payload with exact order matching index
+      const payload = newArray.map((cat, i) => ({
+        id: cat._id,
+        sort_order: i + 1
+      }));
+
+      await reorderCategories({ items: payload });
+    } catch (err) {
+      setError(err.message || 'Failed to reorder categories.');
+    } finally {
+      setIsReordering(false);
     }
   };
 
@@ -113,18 +146,39 @@ export default function CategoriesPage() {
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {categories.map(c => (
-                <div key={c._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', padding: '1rem', borderRadius: '12px' }}>
+              {categories.map((c, i) => (
+                <div key={c._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', padding: '1rem', borderRadius: '12px', opacity: isReordering ? 0.7 : 1 }}>
                   <div>
                     <div style={{ fontWeight: 600, color: 'var(--text-main)', fontSize: '0.95rem' }}>{c.name}</div>
                     <div style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontFamily: 'var(--font-mono)' }}>slug: {c.slug}</div>
                   </div>
-                  <button 
-                    onClick={() => handleDelete(c._id)}
-                    style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: 'none', padding: '0.5rem', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                      <button 
+                        onClick={() => handleReorder('up', i)}
+                        disabled={i === 0 || isReordering}
+                        style={{ background: 'transparent', color: i === 0 ? 'rgba(255,255,255,0.1)' : 'var(--text-secondary)', border: 'none', padding: '0.1rem', cursor: i === 0 ? 'not-allowed' : 'pointer' }}
+                        title="Move Up"
+                      >
+                        <ArrowUp size={14} />
+                      </button>
+                      <button 
+                        onClick={() => handleReorder('down', i)}
+                        disabled={i === categories.length - 1 || isReordering}
+                        style={{ background: 'transparent', color: i === categories.length - 1 ? 'rgba(255,255,255,0.1)' : 'var(--text-secondary)', border: 'none', padding: '0.1rem', cursor: i === categories.length - 1 ? 'not-allowed' : 'pointer' }}
+                        title="Move Down"
+                      >
+                        <ArrowDown size={14} />
+                      </button>
+                    </div>
+                    <button 
+                      onClick={() => handleDelete(c._id)}
+                      disabled={isReordering}
+                      style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: 'none', padding: '0.5rem', borderRadius: '8px', cursor: isReordering ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

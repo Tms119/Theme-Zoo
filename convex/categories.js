@@ -6,7 +6,8 @@ import { requireAdmin } from "./auth";
 export const listAll = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query("categories").order("asc").collect();
+    const categories = await ctx.db.query("categories").collect();
+    return categories.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
   },
 });
 
@@ -15,6 +16,7 @@ export const create = mutation({
   args: {
     name: v.string(),
     slug: v.string(),
+    sort_order: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
@@ -26,6 +28,12 @@ export const create = mutation({
 
     if (existing) {
       throw new Error("Category already exists.");
+    }
+    
+    if (args.sort_order === undefined) {
+      const all = await ctx.db.query("categories").collect();
+      const maxSort = all.reduce((max, c) => Math.max(max, c.sort_order || 0), 0);
+      args.sort_order = maxSort + 1;
     }
 
     return await ctx.db.insert("categories", args);
@@ -39,6 +47,22 @@ export const remove = mutation({
     await requireAdmin(ctx);
     await ctx.db.delete(id);
   },
+});
+
+// ── Reorder Categories ──────────────────────────────────────────
+export const reorder = mutation({
+  args: {
+    items: v.array(v.object({
+      id: v.id("categories"),
+      sort_order: v.number()
+    }))
+  },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx);
+    for (const item of args.items) {
+      await ctx.db.patch(item.id, { sort_order: item.sort_order });
+    }
+  }
 });
 
 // ── Seed Categories ─────────────────────────────────────────────

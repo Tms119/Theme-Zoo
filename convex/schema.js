@@ -136,6 +136,7 @@ export default defineSchema({
     name: v.string(), // "Dashboard", "E-commerce", "Landing Page", "Admin"
     description: v.optional(v.string()),
     slug: v.string(),
+    sort_order: v.optional(v.number()),
   })
     .index("by_slug", ["slug"]),
     
