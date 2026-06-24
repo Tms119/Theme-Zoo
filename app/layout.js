@@ -33,16 +33,19 @@ export const metadata = {
     canonical: "/",
   },
   title: {
-    default: "Themes Zoo | Premium Website Templates & Themes",
+    default: "Premium Website Templates & Themes | Themes Zoo - We Build Anything You Imagine",
     template: "%s | Themes Zoo",
   },
-  description: "Buy premium website templates, HTML themes, and WordPress designs. Instant crypto payment and lifetime ownership at Themes Zoo.",
-  keywords: ["premium website template", "themes zoo", "premium website templates", "buy website templates", "premium html templates", "wordpress themes", "crypto web templates"],
+  description: "Download premium website templates, WordPress themes, Elementor kits & React templates instantly. Custom web development, designs, DApps, automation & UI/UX on challenge pricing. Pay with crypto. Buy premium website templates, WordPress themes & HTML designs at challenge prices. Custom websites, DApps, automation & UI — built to your imagination. Instant delivery, crypto payments accepted, Buy premium websites. Premium templates, custom websites, DApps & automation — at challenge prices. Pay with crypto. Instant delivery. We build websites, DApps, software & automation. Challenge us with your idea. Crypto payments accepted.",
+  keywords: [
+    "premium website templates", "custom website development", "DApp development", "UI design", "web automation", "WordPress themes", "HTML templates", "crypto web templates", "affordable web design",
+    "Elementor themes", "buy website templates", "React Next.js templates", "custom web design", "crypto payment templates", "automation services", "fast loading themes"
+  ],
   authors: [{ name: "Themes Zoo", url: "https://www.themeszoo.com" }],
   creator: "Themes Zoo",
   openGraph: {
-    title: "Themes Zoo | Premium Website Templates",
-    description: "Discover premium website templates at Themes Zoo. High-quality designs with instant delivery and no subscriptions.",
+    title: "Themes Zoo - Premium Website Templates & Custom Development",
+    description: "Instant download premium themes & templates. Build anything with our custom services - websites, software, DApps, designs & automation.",
     url: "https://www.themeszoo.com",
     siteName: "Themes Zoo",
     images: [
@@ -58,8 +61,8 @@ export const metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Themes Zoo | Premium Website Templates",
-    description: "Buy premium website templates with instant crypto checkout. Own your design forever.",
+    title: "Themes Zoo - Premium Website Templates & Custom Development",
+    description: "Instant download premium themes & templates. Build anything with our custom services - websites, software, DApps, designs & automation.",
     images: ["/og-image.jpg"],
     creator: "@themeszoo",
   },
