@@ -106,6 +106,7 @@ export default function BentoFeatures() {
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [downloadState, setDownloadState] = useState('loading'); // 'loading', 'success'
   const [score, setScore] = useState(0);
+  const [visitors, setVisitors] = useState(0);
   const [visible, setVisible] = useState(false);
   const [devMode, setDevMode] = useState(false);
   const sectionRef = useRef(null);
@@ -166,6 +167,7 @@ export default function BentoFeatures() {
         } else {
           setVisible(false);
           setScore(0); // reset score on exit
+          setVisitors(0);
         }
       });
     }, {
@@ -177,13 +179,14 @@ export default function BentoFeatures() {
     return () => observer.disconnect();
   }, []);
 
-  // PageSpeed counter animation trigger
+  // PageSpeed and Visitors counter animation trigger
   useEffect(() => {
     if (!visible) return;
 
     let start = 0;
-    const end = 99;
-    const duration = 1500; // 1.5 seconds
+    const scoreEnd = 99;
+    const visitorsEnd = 14258; // Realistic daily visitors number
+    const duration = 1800; // 1.8 seconds
     const startTime = performance.now();
 
     const animate = (now) => {
@@ -192,9 +195,9 @@ export default function BentoFeatures() {
 
       // Ease out quad
       const easeProgress = progressPercent * (2 - progressPercent);
-      const currentScore = Math.floor(easeProgress * end);
-
-      setScore(currentScore);
+      
+      setScore(Math.floor(easeProgress * scoreEnd));
+      setVisitors(Math.floor(easeProgress * visitorsEnd));
 
       if (progressPercent < 1) {
         requestAnimationFrame(animate);
@@ -472,32 +475,44 @@ export default function BentoFeatures() {
             </div>
 
             {/* Visual element: PageSpeed Performance Dial (Only when not devMode) */}
-            <div className="bento-visual flex-center" style={{ position: 'relative', height: '100%', minHeight: '110px', width: '220px', flexShrink: 0 }}>
+            <div className="bento-visual flex-center" style={{ position: 'relative', height: '100%', minHeight: '110px', minWidth: '280px', flexShrink: 0, paddingRight: '2rem' }}>
               {!devMode ? (
-                <div className="pagespeed-gauge" style={{ animation: 'fadeIn 0.3s ease' }}>
-                  <svg width="100" height="100" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="40" stroke="rgba(255,255,255,0.02)" strokeWidth="8" fill="none" />
-                    <circle
-                      cx="50"
-                      cy="50"
-                      r="40"
-                      stroke="var(--accent-emerald)"
-                      strokeWidth="8"
-                      fill="none"
-                      strokeDasharray="251"
-                      strokeDashoffset={251 - (251 * (score / 100))}
-                      style={{
-                        transform: 'rotate(-90deg)',
-                        transformOrigin: '50px 50px',
-                        transition: 'stroke-dashoffset 0.05s linear'
-                      }}
-                    />
-                  </svg>
-                  <div className="pagespeed-score">
-                    <Odometer value={score} />
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2.5rem', flexWrap: 'wrap', width: '100%' }}>
+                  <div className="pagespeed-gauge" style={{ animation: 'fadeIn 0.3s ease' }}>
+                    <svg width="100" height="100" viewBox="0 0 100 100">
+                      <circle cx="50" cy="50" r="40" stroke="rgba(255,255,255,0.02)" strokeWidth="8" fill="none" />
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="40"
+                        stroke="var(--accent-emerald)"
+                        strokeWidth="8"
+                        fill="none"
+                        strokeDasharray="251"
+                        strokeDashoffset={251 - (251 * (score / 100))}
+                        style={{
+                          transform: 'rotate(-90deg)',
+                          transformOrigin: '50px 50px',
+                          transition: 'stroke-dashoffset 0.05s linear'
+                        }}
+                      />
+                    </svg>
+                    <div className="pagespeed-score">
+                      <Odometer value={score} />
+                    </div>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--accent-emerald)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', marginTop: '0.5rem', textAlign: 'center' }}>
+                      Performance
+                    </div>
                   </div>
-                  <div style={{ fontSize: '0.7rem', color: 'var(--accent-emerald)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', marginTop: '0.5rem', textAlign: 'center' }}>
-                    Performance
+
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', animation: 'fadeIn 0.3s ease 0.2s', minWidth: '120px' }}>
+                    <div style={{ fontSize: '2.2rem', fontWeight: 800, color: 'var(--text-main)', lineHeight: 1, display: 'flex', alignItems: 'center' }}>
+                      <Odometer value={visitors} />
+                      <span style={{ color: 'var(--primary)', fontSize: '1.5rem', marginLeft: '2px' }}>+</span>
+                    </div>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', marginTop: '0.5rem', textAlign: 'center' }}>
+                      Daily Visitors
+                    </div>
                   </div>
                 </div>
               ) : (
