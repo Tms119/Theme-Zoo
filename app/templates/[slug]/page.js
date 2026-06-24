@@ -22,7 +22,7 @@ export async function generateMetadata({ params }) {
     return {
       title: `${product.name} | Premium Website Template | Themes Zoo`,
       description: product.short_desc || product.desc?.substring(0, 160) || "Buy this premium website template.",
-      keywords: ["premium website template", "themes zoo", product.name, product.category, product.tech],
+      keywords: ["premium website template", "themes zoo", product.name, ...(product.categories || []), product.category, product.tech].filter(Boolean),
       alternates: {
         canonical: `/templates/${slug}`,
       },
@@ -48,7 +48,12 @@ export default async function ProductPage({ params }) {
     
     if (product) {
       const allActive = await convex.query("products:listActive");
-      relatedProducts = allActive?.filter(p => p.category === product.category && p._id !== product._id).slice(0, 3) || [];
+      relatedProducts = allActive?.filter(p => {
+        if (p._id === product._id) return false;
+        const productCats = product.categories || (product.category ? [product.category] : []);
+        const pCats = p.categories || (p.category ? [p.category] : []);
+        return pCats.some(c => productCats.includes(c));
+      }).slice(0, 3) || [];
     }
   } catch (error) {
     console.error("Failed to fetch product server-side", error);

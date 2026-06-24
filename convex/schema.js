@@ -6,7 +6,8 @@ export default defineSchema({
   products: defineTable({
     name:        v.string(),
     slug:        v.string(),            // URL-safe ID e.g. "1-wp-neon"
-    category:    v.string(),            // "wordpress" | "website"
+    categories:  v.optional(v.array(v.string())), // multiple categories
+    category:    v.optional(v.string()), // legacy single category
     short_desc:  v.string(),
     desc:        v.string(),
     price_usd:   v.number(),

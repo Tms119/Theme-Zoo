@@ -33,7 +33,7 @@ export default function AddProductPage() {
   const [shortDesc, setShortDesc] = useState('');
   const [desc, setDesc] = useState('');
   const [price, setPrice] = useState('');
-  const [category, setCategory] = useState('unassigned');
+  const [categories, setCategories] = useState([]);
   const [demoUrl, setDemoUrl] = useState('');
   const [features, setFeatures] = useState('');
   
@@ -130,7 +130,8 @@ export default function AddProductPage() {
     short_desc: shortDesc || "Your short tagline will appear here...",
     price_usd: parseFloat(price) || 0.00,
     images: thumbnailPreviewUrl ? [thumbnailPreviewUrl] : (existingThumbnailUrl ? [existingThumbnailUrl] : (existingImages.length > 0 ? [existingImages[0]] : (images.length > 0 ? [URL.createObjectURL(images[0])] : ["https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop"]))),
-    category: category
+    categories: categories,
+    category: categories.length > 0 ? categories[0] : 'unassigned' // Legacy fallback
   };
 
   // Prevent default global drag-and-drop to stop accidental navigation/reloads
@@ -155,7 +156,10 @@ export default function AddProductPage() {
       setShortDesc(existingProduct.short_desc || '');
       setDesc(existingProduct.desc || '');
       setPrice(existingProduct.price_usd?.toString() || '');
-      setCategory(existingProduct.category || 'unassigned');
+      
+      const parsedCategories = existingProduct.categories || (existingProduct.category && existingProduct.category !== 'unassigned' ? [existingProduct.category] : []);
+      setCategories(parsedCategories);
+      
       setDemoUrl(existingProduct.demo_url || '');
       setFeatures(existingProduct.features?.join('\n') || '');
       
@@ -333,7 +337,8 @@ export default function AddProductPage() {
       const payload = {
         name,
         slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-        category,
+        categories: categories,
+        category: categories.length > 0 ? categories[0] : 'unassigned', // Legacy fallback
         short_desc: shortDesc,
         desc,
         price_usd: parseFloat(price),
@@ -341,7 +346,7 @@ export default function AddProductPage() {
         thumbnail_id: finalThumbId,
         thumbnail_url: finalThumbUrl,
         features: features.split('\n').map(f => f.trim()).filter(Boolean),
-        tech: category === 'wordpress' ? 'WordPress' : 'HTML/React',
+        tech: categories.includes('wordpress') ? 'WordPress' : 'HTML/React',
         filesize: zipFile ? `${(zipFile.size / (1024 * 1024)).toFixed(1)} MB` : (existingProduct?.filesize || '0 MB'),
         demo_url: demoUrl,
         file_id: finalFileId,
@@ -613,18 +618,34 @@ export default function AddProductPage() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', fontWeight: 500 }}>Category</label>
+                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', fontWeight: 500 }}>Categories</label>
                 
                 {!showNewCatInput ? (
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <select value={category} onChange={(e) => setCategory(e.target.value)} style={{ flexGrow: 1, padding: '0.8rem 1rem', background: '#0c0c14', border: '1px solid var(--border-color)', borderRadius: '12px', color: '#fff', outline: 'none' }}>
-                      <option value="unassigned">Unassigned</option>
-                      {dbCategories && dbCategories.map(c => (
-                        <option key={c._id} value={c.slug}>{c.name}</option>
-                      ))}
-                    </select>
-                    <button type="button" onClick={() => setShowNewCatInput(true)} style={{ padding: '0 1.25rem', background: 'var(--accent-cyan)', color: '#000', border: 'none', borderRadius: '12px', whiteSpace: 'nowrap', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      + New
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '1rem' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+                      {dbCategories && dbCategories.map(c => {
+                        const isSelected = categories.includes(c.slug);
+                        return (
+                          <label key={c._id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', padding: '0.5rem 0.8rem', background: isSelected ? 'rgba(139,92,246,0.1)' : 'rgba(255,255,255,0.02)', border: isSelected ? '1px solid var(--primary)' : '1px solid transparent', borderRadius: '100px', fontSize: '0.8rem', color: isSelected ? 'var(--primary)' : 'var(--text-secondary)', transition: 'all 0.2s' }}>
+                            <input 
+                              type="checkbox" 
+                              checked={isSelected}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setCategories([...categories, c.slug]);
+                                } else {
+                                  setCategories(categories.filter(cat => cat !== c.slug));
+                                }
+                              }}
+                              style={{ display: 'none' }} 
+                            />
+                            {c.name}
+                          </label>
+                        );
+                      })}
+                    </div>
+                    <button type="button" onClick={() => setShowNewCatInput(true)} style={{ width: 'fit-content', padding: '0.5rem 1rem', background: 'transparent', color: 'var(--accent-cyan)', border: '1px dashed var(--accent-cyan)', borderRadius: '100px', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      + New Category
                     </button>
                   </div>
                 ) : (

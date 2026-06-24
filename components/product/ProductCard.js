@@ -10,7 +10,7 @@ import toast from 'react-hot-toast';
 import useCart from '@/store/useCart';
 
 export default function ProductCard({ product }) {
-  const { slug, name, category, price_usd, images, is_featured } = product;
+  const { slug, name, price_usd, images, is_featured } = product;
   const { user } = useUser();
   const cardRef = useRef(null);
   const [coords, setCoords] = useState({ x: 0, y: 0 });
@@ -53,9 +53,12 @@ export default function ProductCard({ product }) {
     toast.success('Added to cart!');
   };
 
-  const isWordPress = category?.toLowerCase() === 'wordpress';
+  const isWordPress = (product.categories && product.categories.includes('wordpress')) || product.category?.toLowerCase() === 'wordpress';
   const cardCategoryClass = isWordPress ? 'card-wp' : 'card-tech';
-  const tagLabel = isWordPress ? 'WordPress' : 'Next.js';
+  
+  // Try to use a nice label based on categories
+  const primaryCat = (product.categories && product.categories.length > 0) ? product.categories[0] : product.category;
+  const tagLabel = isWordPress ? 'WordPress' : (primaryCat === 'website' ? 'Next.js' : (primaryCat ? primaryCat.charAt(0).toUpperCase() + primaryCat.slice(1).replace(/-/g, ' ') : 'Template'));
   const imageUrl = product.thumbnail_url || ((images && images.length > 0) ? images[0] : `https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80`);
   const isFeatured = is_featured;
 

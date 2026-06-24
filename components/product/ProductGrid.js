@@ -62,7 +62,9 @@ export default function ProductGrid() {
   }
   
   const filteredProducts = products.filter(product => {
-    const matchesCategory = filter === 'all' || product.category?.toLowerCase() === filter;
+    const matchesCategory = filter === 'all' || 
+      (product.categories && product.categories.includes(filter)) || 
+      product.category?.toLowerCase() === filter;
     const matchesSearch = product.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           product.short_desc?.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;

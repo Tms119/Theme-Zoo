@@ -42,7 +42,9 @@ export default function ProductClient({ product, relatedProducts }) {
     );
   }
 
-  const isWordPress = product.category?.toLowerCase() === 'wordpress';
+  const isWordPress = (product.categories && product.categories.includes('wordpress')) || product.category?.toLowerCase() === 'wordpress';
+  const primaryCat = (product.categories && product.categories.length > 0) ? product.categories[0] : product.category;
+  const displayLabel = isWordPress ? 'WordPress' : (primaryCat === 'website' ? 'Next.js' : (primaryCat ? primaryCat.charAt(0).toUpperCase() + primaryCat.slice(1).replace(/-/g, ' ') : 'Website Template'));
 
   return (
     <>
@@ -118,7 +120,7 @@ export default function ProductClient({ product, relatedProducts }) {
                 {/* Category pill */}
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', padding: '0.3rem 0.65rem', background: isWordPress ? 'rgba(139,92,246,0.08)' : 'rgba(6,182,212,0.08)', border: `1px solid ${isWordPress ? 'rgba(139,92,246,0.2)' : 'rgba(6,182,212,0.2)'}`, borderRadius: '100px', color: isWordPress ? 'var(--primary)' : 'var(--accent-cyan)', fontSize: '0.72rem', fontWeight: 700, marginBottom: '1rem', marginLeft: '0.5rem' }}>
                   {isWordPress ? <WPLogo /> : <Tag size={10} />}
-                  {isWordPress ? 'WordPress' : 'Website Template'}
+                  {displayLabel}
                 </div>
 
                 <h1 className="product-title">
