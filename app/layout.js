@@ -33,10 +33,10 @@ export const metadata = {
     canonical: "/",
   },
   title: {
-    default: "Premium Website Templates & Themes | Themes Zoo - We Build Anything You Imagine",
+    default: "Themes Zoo | Premium Website Templates & Custom Web Dev",
     template: "%s | Themes Zoo",
   },
-  description: "Download premium website templates, WordPress themes, Elementor kits & React templates instantly. Custom web development, designs, DApps, automation & UI/UX on challenge pricing. Pay with crypto. Buy premium website templates, WordPress themes & HTML designs at challenge prices. Custom websites, DApps, automation & UI — built to your imagination. Instant delivery, crypto payments accepted, Buy premium websites. Premium templates, custom websites, DApps & automation — at challenge prices. Pay with crypto. Instant delivery. We build websites, DApps, software & automation. Challenge us with your idea. Crypto payments accepted.",
+  description: "Download premium website templates & WordPress themes instantly. We offer custom web development, DApps & automation at challenge prices. Pay with crypto.",
   keywords: [
     "premium website templates", "custom website development", "DApp development", "UI design", "web automation", "WordPress themes", "HTML templates", "crypto web templates", "affordable web design",
     "Elementor themes", "buy website templates", "React Next.js templates", "custom web design", "crypto payment templates", "automation services", "fast loading themes"
