@@ -19,6 +19,7 @@ import type * as products from "../products.js";
 import type * as promo_codes from "../promo_codes.js";
 import type * as rateLimit from "../rateLimit.js";
 import type * as services from "../services.js";
+import type * as settings from "../settings.js";
 import type * as support from "../support.js";
 import type * as wishlist from "../wishlist.js";
 
@@ -40,6 +41,7 @@ declare const fullApi: ApiFromModules<{
   promo_codes: typeof promo_codes;
   rateLimit: typeof rateLimit;
   services: typeof services;
+  settings: typeof settings;
   support: typeof support;
   wishlist: typeof wishlist;
 }>;

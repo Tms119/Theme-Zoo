@@ -21,6 +21,7 @@ export default function AdminLayout({ children }) {
     { href: '/admin/marketing', label: 'Marketing' },
     { href: '/admin/services', label: 'Custom Services' },
     { href: '/admin/support', label: 'Support Tickets' },
+    { href: '/admin/settings', label: 'Settings' },
   ];
 
   if (!isLoaded) {
