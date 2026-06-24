@@ -8,6 +8,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 export default function ProductGrid() {
   const [filter, setFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortOption, setSortOption] = useState('newest');
   const [currentPage, setCurrentPage] = useState(1);
   
   const products = useQuery(api.products.listActive);
@@ -17,7 +18,7 @@ export default function ProductGrid() {
   // Reset pagination if user changes filters
   useEffect(() => {
     setCurrentPage(1);
-  }, [filter, searchQuery]);
+  }, [filter, searchQuery, sortOption]);
   
   // Intersection Observer for products
   useEffect(() => {
@@ -36,7 +37,7 @@ export default function ProductGrid() {
     elements.forEach(el => observer.observe(el));
 
     return () => observer.disconnect();
-  }, [products, currentPage, filter, searchQuery]);
+  }, [products, currentPage, filter, searchQuery, sortOption]);
   
   // Loading state
   if (products === undefined) {
@@ -68,6 +69,15 @@ export default function ProductGrid() {
     const matchesSearch = product.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           product.short_desc?.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
+  });
+
+  // Apply sorting
+  filteredProducts.sort((a, b) => {
+    if (sortOption === 'price-low') return a.price_usd - b.price_usd;
+    if (sortOption === 'price-high') return b.price_usd - a.price_usd;
+    if (sortOption === 'oldest') return a._creationTime - b._creationTime;
+    // default to newest
+    return b._creationTime - a._creationTime;
   });
 
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
@@ -115,6 +125,37 @@ export default function ProductGrid() {
               }}
               className="search-input-field"
             />
+            
+            <select 
+              value={sortOption} 
+              onChange={(e) => setSortOption(e.target.value)}
+              style={{
+                position: 'absolute',
+                right: '4px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                padding: '0.4rem 0.8rem',
+                borderRadius: '100px',
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                color: 'var(--text-main)',
+                fontSize: '0.75rem',
+                outline: 'none',
+                cursor: 'pointer',
+                appearance: 'none',
+                paddingRight: '2rem'
+              }}
+            >
+              <option value="newest" style={{ background: '#06060c' }}>Newest First</option>
+              <option value="oldest" style={{ background: '#06060c' }}>Oldest First</option>
+              <option value="price-low" style={{ background: '#06060c' }}>Price: Low to High</option>
+              <option value="price-high" style={{ background: '#06060c' }}>Price: High to Low</option>
+            </select>
+            <div style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--text-muted)' }}>
+              <svg width="10" height="10" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </div>
           </div>
 
           {/* Filter Toolbar - Category Pills */}
