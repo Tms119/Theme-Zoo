@@ -159,7 +159,7 @@ export default function ProductGrid() {
           </div>
 
           {/* Filter Toolbar - Category Pills */}
-          <div className="filter-container" style={{ margin: 0, display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <div className="filter-container scrollable-filter" style={{ margin: 0, display: 'flex', gap: '0.5rem', flexWrap: 'nowrap' }}>
             {[{ id: 'all', label: 'All Resources' }, ...(dbCategories || []).map(c => ({ id: c.slug, label: c.name }))].map(pill => (
               <button 
                 key={pill.id}
@@ -174,7 +174,9 @@ export default function ProductGrid() {
                   fontSize: '0.8rem',
                   fontWeight: 700,
                   cursor: 'pointer',
-                  transition: 'all 0.3s ease'
+                  transition: 'all 0.3s ease',
+                  flexShrink: 0,
+                  whiteSpace: 'nowrap'
                 }}
               >
                 {pill.label}

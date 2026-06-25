@@ -2213,3 +2213,6 @@ body {
 .blog-content ul, .blog-content ol { margin-bottom: 1.5rem; padding-left: 2rem; }
 .blog-content li { margin-bottom: 0.5rem; }
 
+
+.scrollable-filter::-webkit-scrollbar { display: none; }
+.scrollable-filter { -ms-overflow-style: none; scrollbar-width: none; overflow-x: auto; flex-wrap: nowrap; padding-bottom: 0.5rem; }
