@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { LayoutGrid, MessageCircle, Link as LinkIcon } from 'lucide-react';
+import { LayoutGrid, MessageCircle } from 'lucide-react';
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 
@@ -18,16 +18,57 @@ const InstagramIcon = ({ size=16 }) => (
   </svg>
 );
 
+const FacebookIcon = ({ size=16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+  </svg>
+);
+
+const YoutubeIcon = ({ size=16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"></path>
+    <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon>
+  </svg>
+);
+
+const PinterestIcon = ({ size=16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" stroke="none">
+    <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.162-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.663.967-2.911 2.168-2.911 1.024 0 1.518.769 1.518 1.688 0 1.029-.653 2.567-.992 3.992-.285 1.193.6 2.165 1.775 2.165 2.128 0 3.768-2.245 3.768-5.487 0-2.861-2.063-4.869-5.008-4.869-3.41 0-5.409 2.562-5.409 5.199 0 1.033.394 2.143.889 2.741.099.12.112.225.085.345-.09.375-.293 1.199-.334 1.363-.053.225-.172.271-.401.165-1.495-.69-2.433-2.878-2.433-4.646 0-3.776 2.748-7.252 7.951-7.252 4.168 0 7.392 2.967 7.392 6.923 0 4.135-2.607 7.462-6.233 7.462-1.214 0-2.354-.629-2.758-1.379l-.749 2.848c-.269 1.045-1.004 2.352-1.498 3.146 1.123.345 2.306.535 3.55.535 6.607 0 11.985-5.365 11.985-11.987C23.97 5.367 18.633 0 12.017 0z"/>
+  </svg>
+)
+
+
 export default function Footer() {
   const year = new Date().getFullYear();
   const socialLinks = useQuery(api.settings?.getSocialLinks);
+
+  const socialLinkStyle = {
+    width: '32px',
+    height: '32px',
+    borderRadius: '50%',
+    background: '#737373',
+    color: '#171717',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'all 0.2s',
+    textDecoration: 'none'
+  };
+
+  const onEnter = (e) => {
+    e.currentTarget.style.background = '#a3a3a3';
+  };
+
+  const onLeave = (e) => {
+    e.currentTarget.style.background = '#737373';
+  };
 
   return (
     <footer style={{ paddingTop: '3rem', paddingBottom: '8rem', borderTop: '1px solid var(--border-color)', marginTop: '4rem' }}>
       <div className="container" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
         
         <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: '3rem' }}>
-          {/* Left Side: Brand & Copyright */}
+          {/* Left Side: Brand */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
               <span style={{ fontSize: '1.1rem', fontWeight: 900, fontFamily: 'var(--font-display)', display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-main)' }}>
@@ -53,32 +94,28 @@ export default function Footer() {
             {socialLinks && (
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
                 {socialLinks.x && (
-                  <a href={socialLinks.x} target="_blank" rel="noreferrer" style={{ color: 'var(--text-muted)', transition: 'color 0.2s' }} onMouseEnter={e => e.target.style.color = '#fff'} onMouseLeave={e => e.target.style.color = 'var(--text-muted)'} title="X (Twitter)">
+                  <a href={socialLinks.x} target="_blank" rel="noreferrer" style={socialLinkStyle} onMouseEnter={onEnter} onMouseLeave={onLeave} title="X (Twitter)">
                     <TwitterIcon size={16} />
                   </a>
                 )}
-                {socialLinks.reddit && (
-                  <a href={socialLinks.reddit} target="_blank" rel="noreferrer" style={{ color: 'var(--text-muted)', transition: 'color 0.2s' }} onMouseEnter={e => e.target.style.color = '#ff4500'} onMouseLeave={e => e.target.style.color = 'var(--text-muted)'} title="Reddit">
-                    <div style={{ width: 16, height: 16, borderRadius: '50%', background: 'currentColor', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <span style={{ fontSize: '10px', color: '#06060c', fontWeight: 800 }}>R</span>
-                    </div>
+                {socialLinks.facebook && (
+                  <a href={socialLinks.facebook} target="_blank" rel="noreferrer" style={socialLinkStyle} onMouseEnter={onEnter} onMouseLeave={onLeave} title="Facebook">
+                    <FacebookIcon size={16} />
+                  </a>
+                )}
+                {socialLinks.youtube && (
+                  <a href={socialLinks.youtube} target="_blank" rel="noreferrer" style={socialLinkStyle} onMouseEnter={onEnter} onMouseLeave={onLeave} title="YouTube">
+                    <YoutubeIcon size={16} />
                   </a>
                 )}
                 {socialLinks.instagram && (
-                  <a href={socialLinks.instagram} target="_blank" rel="noreferrer" style={{ color: 'var(--text-muted)', transition: 'color 0.2s' }} onMouseEnter={e => e.target.style.color = '#E1306C'} onMouseLeave={e => e.target.style.color = 'var(--text-muted)'} title="Instagram">
+                  <a href={socialLinks.instagram} target="_blank" rel="noreferrer" style={socialLinkStyle} onMouseEnter={onEnter} onMouseLeave={onLeave} title="Instagram">
                     <InstagramIcon size={16} />
                   </a>
                 )}
                 {socialLinks.pinterest && (
-                  <a href={socialLinks.pinterest} target="_blank" rel="noreferrer" style={{ color: 'var(--text-muted)', transition: 'color 0.2s' }} onMouseEnter={e => e.target.style.color = '#e60023'} onMouseLeave={e => e.target.style.color = 'var(--text-muted)'} title="Pinterest">
-                    <div style={{ width: 16, height: 16, borderRadius: '50%', background: 'currentColor', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <span style={{ fontSize: '10px', color: '#06060c', fontWeight: 800 }}>P</span>
-                    </div>
-                  </a>
-                )}
-                {socialLinks.whatsapp && (
-                  <a href={socialLinks.whatsapp} target="_blank" rel="noreferrer" style={{ color: 'var(--text-muted)', transition: 'color 0.2s' }} onMouseEnter={e => e.target.style.color = '#25D366'} onMouseLeave={e => e.target.style.color = 'var(--text-muted)'} title="WhatsApp">
-                    <MessageCircle size={16} />
+                  <a href={socialLinks.pinterest} target="_blank" rel="noreferrer" style={socialLinkStyle} onMouseEnter={onEnter} onMouseLeave={onLeave} title="Pinterest">
+                    <PinterestIcon size={16} />
                   </a>
                 )}
               </div>
