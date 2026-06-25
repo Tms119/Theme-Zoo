@@ -2216,3 +2216,10 @@ body {
 
 .scrollable-filter::-webkit-scrollbar { display: none; }
 .scrollable-filter { -ms-overflow-style: none; scrollbar-width: none; overflow-x: auto; flex-wrap: nowrap; padding-bottom: 0.5rem; }
+
+/* Global Select Option Styling Fix */
+select option {
+  background-color: #0a0a0f !important;
+  color: #ffffff !important;
+}
+
