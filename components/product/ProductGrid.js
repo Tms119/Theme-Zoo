@@ -159,7 +159,8 @@ export default function ProductGrid() {
           </div>
 
           {/* Filter Toolbar - Category Pills */}
-          <div className="filter-container scrollable-filter" style={{ margin: 0, display: 'flex', gap: '0.5rem', flexWrap: 'nowrap' }}>
+          <div style={{ position: 'relative', width: '100%' }}>
+            <div className="filter-container scrollable-filter" style={{ margin: 0, display: 'flex', gap: '0.5rem', flexWrap: 'nowrap', paddingRight: '3rem' }}>
             {[{ id: 'all', label: 'All Resources' }, ...(dbCategories || []).map(c => ({ id: c.slug, label: c.name }))].map(pill => (
               <button 
                 key={pill.id}
@@ -182,6 +183,20 @@ export default function ProductGrid() {
                 {pill.label}
               </button>
             ))}
+            </div>
+            
+            {/* Right edge fade indicator to suggest scrollability on mobile */}
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              bottom: 0,
+              width: '60px',
+              background: 'linear-gradient(to right, transparent, var(--bg-color))',
+              pointerEvents: 'none',
+              zIndex: 2,
+              borderRadius: '0 0 16px 0'
+            }} />
           </div>
         </div>
         
