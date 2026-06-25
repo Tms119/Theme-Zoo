@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import ProductCard from './ProductCard';
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -11,6 +11,10 @@ export default function ProductGrid() {
   const [sortOption, setSortOption] = useState('newest');
   const [currentPage, setCurrentPage] = useState(1);
   
+  const scrollRef = useRef(null);
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [showHint, setShowHint] = useState(true);
+  
   const products = useQuery(api.products.listActive);
   const dbCategories = useQuery(api.categories.listAll);
   const itemsPerPage = 6;
@@ -19,6 +23,38 @@ export default function ProductGrid() {
   useEffect(() => {
     setCurrentPage(1);
   }, [filter, searchQuery, sortOption]);
+  
+  // Check if category container is scrollable
+  useEffect(() => {
+    const checkScrollable = () => {
+      if (scrollRef.current) {
+        if (scrollRef.current.scrollWidth <= scrollRef.current.clientWidth) {
+          setShowHint(false);
+        } else {
+          setShowHint(true);
+        }
+      }
+    };
+    const timer = setTimeout(checkScrollable, 500);
+    window.addEventListener('resize', checkScrollable);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', checkScrollable);
+    };
+  }, [dbCategories]);
+
+  const handleScroll = () => {
+    if (scrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+      const maxScroll = scrollWidth - clientWidth;
+      const progress = maxScroll > 0 ? (scrollLeft / maxScroll) * 100 : 0;
+      setScrollProgress(progress);
+      
+      if (scrollLeft > 10 && showHint) {
+        setShowHint(false);
+      }
+    }
+  };
   
   // Intersection Observer for products
   useEffect(() => {
@@ -160,7 +196,33 @@ export default function ProductGrid() {
 
           {/* Filter Toolbar - Category Pills */}
           <div style={{ position: 'relative', width: '100%' }}>
-            <div className="filter-container scrollable-filter" style={{ margin: 0, display: 'flex', gap: '0.5rem', flexWrap: 'nowrap', paddingRight: '3rem' }}>
+            
+            {/* Swipe Hint */}
+            <div style={{
+              position: 'absolute',
+              right: '20px',
+              top: '-25px',
+              fontSize: '0.75rem',
+              color: 'var(--primary)',
+              fontWeight: '700',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              opacity: showHint ? 1 : 0,
+              transform: showHint ? 'translateX(0)' : 'translateX(10px)',
+              transition: 'all 0.4s ease',
+              pointerEvents: 'none',
+              zIndex: 10
+            }}>
+              Swipe for more <span style={{ animation: 'bounceRight 1s infinite' }}>→</span>
+            </div>
+
+            <div 
+              ref={scrollRef}
+              onScroll={handleScroll}
+              className="filter-container scrollable-filter" 
+              style={{ margin: 0, display: 'flex', gap: '0.5rem', flexWrap: 'nowrap', paddingRight: '3rem' }}
+            >
             {[{ id: 'all', label: 'All Resources' }, ...(dbCategories || []).map(c => ({ id: c.slug, label: c.name }))].map(pill => (
               <button 
                 key={pill.id}
@@ -197,6 +259,11 @@ export default function ProductGrid() {
               zIndex: 2,
               borderRadius: '0 0 16px 0'
             }} />
+            
+            {/* Scroll Progress Bar */}
+            <div style={{ height: '2px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', width: '100%', marginTop: '0.75rem', overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${scrollProgress}%`, background: 'var(--primary)', transition: 'width 0.1s ease-out' }}></div>
+            </div>
           </div>
         </div>
         
