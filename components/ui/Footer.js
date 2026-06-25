@@ -86,9 +86,9 @@ export default function Footer() {
             <Link href="/services" style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', textDecoration: 'none', transition: 'color 0.2s' }} onMouseEnter={e => e.target.style.color = 'var(--primary)'} onMouseLeave={e => e.target.style.color = 'var(--text-secondary)'}>
               Custom Services
             </Link>
-            <a href="mailto:hello@themeszoo.com" style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', textDecoration: 'none', transition: 'color 0.2s' }} onMouseEnter={e => e.target.style.color = 'var(--primary)'} onMouseLeave={e => e.target.style.color = 'var(--text-secondary)'}>
+            <Link href="/support" style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', textDecoration: 'none', transition: 'color 0.2s' }} onMouseEnter={e => e.target.style.color = 'var(--primary)'} onMouseLeave={e => e.target.style.color = 'var(--text-secondary)'}>
               Contact
-            </a>
+            </Link>
 
             {/* Dynamic Social Links */}
             {socialLinks && (
@@ -116,6 +116,11 @@ export default function Footer() {
                 {socialLinks.pinterest && (
                   <a href={socialLinks.pinterest} target="_blank" rel="noreferrer" style={socialLinkStyle} onMouseEnter={onEnter} onMouseLeave={onLeave} title="Pinterest">
                     <PinterestIcon size={16} />
+                  </a>
+                )}
+                {socialLinks.whatsapp && (
+                  <a href={socialLinks.whatsapp} target="_blank" rel="noreferrer" style={socialLinkStyle} onMouseEnter={onEnter} onMouseLeave={onLeave} title="WhatsApp">
+                    <MessageCircle size={16} />
                   </a>
                 )}
               </div>
