@@ -1,5 +1,5 @@
 import { query, mutation } from "./_generated/server";
-import { v } from "convex/values";
+import { v, ConvexError } from "convex/values";
 import { requireAdmin } from "./auth";
 
 // ── Get all categories ─────────────────────────────────────────
@@ -27,7 +27,7 @@ export const create = mutation({
       .first();
 
     if (existing) {
-      throw new Error("Category already exists.");
+      throw new ConvexError("Category already exists.");
     }
     
     if (args.sort_order === undefined) {

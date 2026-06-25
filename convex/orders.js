@@ -1,5 +1,5 @@
 import { query, mutation, internalMutation } from "./_generated/server";
-import { v } from "convex/values";
+import { v, ConvexError } from "convex/values";
 import { requireAdmin } from "./auth";
 
 // ── List all orders (admin) ──────────────────────────────────────
@@ -194,15 +194,15 @@ export const getDownloadUrl = query({
   args: { order_id: v.id("orders"), email: v.string() },
   handler: async (ctx, { order_id, email }) => {
     const order = await ctx.db.get(order_id);
-    if (!order) throw new Error("Order not found");
+    if (!order) throw new ConvexError("Order not found");
     
     // Verify ownership
     if (order.buyer_email !== email) {
-      throw new Error("Unauthorized to access this download");
+      throw new ConvexError("Unauthorized to access this download");
     }
 
     const product = await ctx.db.get(order.product_id);
-    if (!product) throw new Error("Product no longer exists");
+    if (!product) throw new ConvexError("Product no longer exists");
 
     if (product.file_url) {
       // Return external link if it exists
@@ -214,7 +214,7 @@ export const getDownloadUrl = query({
       return await ctx.storage.getUrl(product.file_id);
     }
 
-    throw new Error("No file associated with this product");
+    throw new ConvexError("No file associated with this product");
   },
 });
 
@@ -223,15 +223,15 @@ export const getGuestDownloadUrl = mutation({
   args: { order_id: v.id("orders") },
   handler: async (ctx, { order_id }) => {
     const order = await ctx.db.get(order_id);
-    if (!order) throw new Error("Order not found");
+    if (!order) throw new ConvexError("Order not found");
     
     // Verify payment status
     if (order.status !== "paid") {
-      throw new Error("Order is not paid. Cannot access download.");
+      throw new ConvexError("Order is not paid. Cannot access download.");
     }
 
     const product = await ctx.db.get(order.product_id);
-    if (!product) throw new Error("Product no longer exists");
+    if (!product) throw new ConvexError("Product no longer exists");
 
     if (product.file_url) {
       return product.file_url;
@@ -241,7 +241,7 @@ export const getGuestDownloadUrl = mutation({
       return await ctx.storage.getUrl(product.file_id);
     }
 
-    throw new Error("No file associated with this product");
+    throw new ConvexError("No file associated with this product");
   },
 });
 

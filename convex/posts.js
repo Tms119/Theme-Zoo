@@ -1,5 +1,5 @@
 import { query, mutation } from "./_generated/server";
-import { v } from "convex/values";
+import { v, ConvexError } from "convex/values";
 
 // ────────────────────────────────────────────────────────
 // List all posts (Admin)
@@ -72,7 +72,7 @@ export const create = mutation({
       .first();
     
     if (existing) {
-      throw new Error("A post with this slug already exists.");
+      throw new ConvexError("A post with this slug already exists.");
     }
 
     const payload = {
@@ -105,7 +105,7 @@ export const update = mutation({
     const { id, ...updates } = args;
     const existingPost = await ctx.db.get(id);
 
-    if (!existingPost) throw new Error("Post not found");
+    if (!existingPost) throw new ConvexError("Post not found");
 
     // Enforce slug uniqueness if slug changed
     if (updates.slug !== existingPost.slug) {
@@ -114,7 +114,7 @@ export const update = mutation({
         .withIndex("by_slug", (q) => q.eq("slug", updates.slug))
         .first();
       
-      if (slugCheck) throw new Error("A post with this slug already exists.");
+      if (slugCheck) throw new ConvexError("A post with this slug already exists.");
     }
 
     // Handle published_at logic
@@ -146,7 +146,7 @@ export const toggleStatus = mutation({
   args: { id: v.id("posts") },
   handler: async (ctx, args) => {
     const post = await ctx.db.get(args.id);
-    if (!post) throw new Error("Post not found");
+    if (!post) throw new ConvexError("Post not found");
 
     const newStatus = post.status === "published" ? "draft" : "published";
     const publishedAt = newStatus === "published" ? Date.now() : undefined;

@@ -1,5 +1,5 @@
 import { query, mutation } from "./_generated/server";
-import { v } from "convex/values";
+import { v, ConvexError } from "convex/values";
 import { requireAdmin } from "./auth";
 
 // ── Global Settings (Banner) ──────────────────────────────────────
@@ -87,7 +87,7 @@ export const updateCampaign = mutation({
   handler: async (ctx, { id, isActive }) => {
     await requireAdmin(ctx);
     const target = await ctx.db.get(id);
-    if (!target) throw new Error("Campaign not found");
+    if (!target) throw new ConvexError("Campaign not found");
 
     if (isActive) {
       const activeOthers = await ctx.db
