@@ -13,9 +13,11 @@ export const getSocialLinks = query({
 
     return setting?.value || {
       x: "",
-      reddit: "",
+      facebook: "",
+      youtube: "",
       instagram: "",
       pinterest: "",
+      reddit: "",
       whatsapp: ""
     };
   },
@@ -23,11 +25,13 @@ export const getSocialLinks = query({
 
 export const updateSocialLinks = mutation({
   args: {
-    x: v.string(),
-    reddit: v.string(),
-    instagram: v.string(),
-    pinterest: v.string(),
-    whatsapp: v.string()
+    x: v.optional(v.string()),
+    facebook: v.optional(v.string()),
+    youtube: v.optional(v.string()),
+    instagram: v.optional(v.string()),
+    pinterest: v.optional(v.string()),
+    reddit: v.optional(v.string()),
+    whatsapp: v.optional(v.string())
   },
   handler: async (ctx, args) => {
     const setting = await ctx.db

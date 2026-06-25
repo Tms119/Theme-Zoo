@@ -23,10 +23,10 @@ export default function Footer() {
   const socialLinks = useQuery(api.settings?.getSocialLinks);
 
   return (
-    <footer style={{ padding: '3rem 0 2rem 0', borderTop: '1px solid var(--border-color)', marginTop: '4rem' }}>
+    <footer style={{ paddingTop: '3rem', paddingBottom: '8rem', borderTop: '1px solid var(--border-color)', marginTop: '4rem' }}>
       <div className="container" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
         
-        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '1.5rem' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: '3rem' }}>
           {/* Left Side: Brand & Copyright */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
@@ -86,7 +86,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', borderTop: '1px solid rgba(255,255,255,0.02)', paddingTop: '1.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap', gap: '2rem', borderTop: '1px solid rgba(255,255,255,0.02)', paddingTop: '1.5rem' }}>
           <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
             © {year} Themes Zoo. All rights reserved.
           </span>
