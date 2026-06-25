@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Save, MessageCircle, Link as LinkIcon, Facebook, Youtube } from 'lucide-react';
+import { Save, MessageCircle, Link as LinkIcon } from 'lucide-react';
 
 const TwitterIcon = ({ size=16 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -19,10 +19,24 @@ const InstagramIcon = ({ size=16 }) => (
   </svg>
 );
 
+const FacebookIcon = ({ size=16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+  </svg>
+);
+
+const YoutubeIcon = ({ size=16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"></path>
+    <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon>
+  </svg>
+);
+
 export default function SettingsAdmin() {
   const socialLinks = useQuery(api.settings.getSocialLinks);
   const updateSocialLinks = useMutation(api.settings.updateSocialLinks);
   
+  const [formData, setFormData] = useState({
     x: '',
     facebook: '',
     youtube: '',
@@ -124,6 +138,38 @@ export default function SettingsAdmin() {
             />
           </div>
 
+          {/* Facebook */}
+          <div className="form-group">
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+              <FacebookIcon size={14} /> Facebook URL
+            </label>
+            <input 
+              type="url" 
+              name="facebook"
+              value={formData.facebook}
+              onChange={handleChange}
+              placeholder="https://facebook.com/yourprofile" 
+              className="form-input"
+              style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: '#fff', fontSize: '0.9rem' }}
+            />
+          </div>
+
+          {/* YouTube */}
+          <div className="form-group">
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+              <YoutubeIcon size={14} /> YouTube URL
+            </label>
+            <input 
+              type="url" 
+              name="youtube"
+              value={formData.youtube}
+              onChange={handleChange}
+              placeholder="https://youtube.com/c/yourprofile" 
+              className="form-input"
+              style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: '#fff', fontSize: '0.9rem' }}
+            />
+          </div>
+
           {/* Reddit */}
           <div className="form-group">
             <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
@@ -135,70 +181,6 @@ export default function SettingsAdmin() {
               value={formData.reddit}
               onChange={handleChange}
               placeholder="https://reddit.com/user/yourprofile" 
-              className="form-input"
-              style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: '#fff', fontSize: '0.9rem' }}
-            />
-          </div>
-
-          {/* Facebook */}
-          <div className="form-group">
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-              <Facebook size={14} /> Facebook URL
-            </label>
-            <input 
-              type="url" 
-              name="facebook"
-              value={formData.facebook}
-              onChange={handleChange}
-              placeholder="https://facebook.com/yourprofile" 
-              className="form-input"
-              style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: '#fff', fontSize: '0.9rem' }}
-            />
-          </div>
-
-          {/* YouTube */}
-          <div className="form-group">
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-              <Youtube size={14} /> YouTube URL
-            </label>
-            <input 
-              type="url" 
-              name="youtube"
-              value={formData.youtube}
-              onChange={handleChange}
-              placeholder="https://youtube.com/c/yourprofile" 
-              className="form-input"
-              style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: '#fff', fontSize: '0.9rem' }}
-            />
-          </div>
-
-          {/* Facebook */}
-          <div className="form-group">
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-              <Facebook size={14} /> Facebook URL
-            </label>
-            <input 
-              type="url" 
-              name="facebook"
-              value={formData.facebook}
-              onChange={handleChange}
-              placeholder="https://facebook.com/yourprofile" 
-              className="form-input"
-              style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: '#fff', fontSize: '0.9rem' }}
-            />
-          </div>
-
-          {/* YouTube */}
-          <div className="form-group">
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-              <Youtube size={14} /> YouTube URL
-            </label>
-            <input 
-              type="url" 
-              name="youtube"
-              value={formData.youtube}
-              onChange={handleChange}
-              placeholder="https://youtube.com/c/yourprofile" 
               className="form-input"
               style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: '#fff', fontSize: '0.9rem' }}
             />
