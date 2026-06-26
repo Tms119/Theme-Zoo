@@ -18,9 +18,10 @@ const InstagramIcon = ({ size=16 }) => (
   </svg>
 );
 
-const FacebookIcon = ({ size=16 }) => (
+const TelegramIcon = ({ size=16 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+    <path d="M22 2L11 13"></path>
+    <path d="M22 2L15 22L11 13L2 9L22 2Z"></path>
   </svg>
 );
 
@@ -98,9 +99,9 @@ export default function Footer() {
                     <TwitterIcon size={16} />
                   </a>
                 )}
-                {socialLinks.facebook && (
-                  <a href={socialLinks.facebook} target="_blank" rel="noreferrer" style={socialLinkStyle} onMouseEnter={onEnter} onMouseLeave={onLeave} title="Facebook">
-                    <FacebookIcon size={16} />
+                {socialLinks.telegram && (
+                  <a href={socialLinks.telegram} target="_blank" rel="noreferrer" style={socialLinkStyle} onMouseEnter={onEnter} onMouseLeave={onLeave} title="Telegram">
+                    <TelegramIcon size={16} />
                   </a>
                 )}
                 {socialLinks.youtube && (

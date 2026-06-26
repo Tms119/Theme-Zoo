@@ -19,9 +19,10 @@ const InstagramIcon = ({ size=16 }) => (
   </svg>
 );
 
-const FacebookIcon = ({ size=16 }) => (
+const TelegramIcon = ({ size=16 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+    <path d="M22 2L11 13"></path>
+    <path d="M22 2L15 22L11 13L2 9L22 2Z"></path>
   </svg>
 );
 
@@ -54,7 +55,7 @@ export default function SettingsAdmin() {
     if (socialLinks) {
       setFormData({
         x: socialLinks.x || '',
-        facebook: socialLinks.facebook || '',
+        telegram: socialLinks.telegram || '',
         youtube: socialLinks.youtube || '',
         reddit: socialLinks.reddit || '',
         instagram: socialLinks.instagram || '',
@@ -138,17 +139,17 @@ export default function SettingsAdmin() {
             />
           </div>
 
-          {/* Facebook */}
+          {/* Telegram */}
           <div className="form-group">
             <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-              <FacebookIcon size={14} /> Facebook URL
+              <TelegramIcon size={14} /> Telegram URL
             </label>
             <input 
               type="url" 
-              name="facebook"
-              value={formData.facebook}
+              name="telegram"
+              value={formData.telegram}
               onChange={handleChange}
-              placeholder="https://facebook.com/yourprofile" 
+              placeholder="https://t.me/yourprofile" 
               className="form-input"
               style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: '#fff', fontSize: '0.9rem' }}
             />
