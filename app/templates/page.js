@@ -1,5 +1,7 @@
 
 import ProductGrid from '@/components/product/ProductGrid';
+import { fetchQuery } from "convex/nextjs";
+import { api } from "@/convex/_generated/api";
 
 export const metadata = {
   title: "Browse Premium Web Templates",
@@ -16,7 +18,10 @@ export const metadata = {
   },
 };
 
-export default function TemplatesPage() {
+export default async function TemplatesPage() {
+  const initialProducts = await fetchQuery(api.products.listActive);
+  const initialCategories = await fetchQuery(api.categories.listAll);
+
   return (
     <>
       <main style={{ minHeight: '80vh' }}>
@@ -31,7 +36,7 @@ export default function TemplatesPage() {
             </p>
           </div>
         </div>
-        <ProductGrid />
+        <ProductGrid initialProducts={initialProducts} initialCategories={initialCategories} />
       </main>
     </>
   );

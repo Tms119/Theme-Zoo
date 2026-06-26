@@ -5,7 +5,7 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-export default function ProductGrid() {
+export default function ProductGrid({ initialProducts, initialCategories }) {
   const [filter, setFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOption, setSortOption] = useState('newest');
@@ -15,8 +15,10 @@ export default function ProductGrid() {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [showHint, setShowHint] = useState(true);
   
-  const products = useQuery(api.products.listActive);
-  const dbCategories = useQuery(api.categories.listAll);
+  const queryProducts = useQuery(api.products.listActive);
+  const products = queryProducts ?? initialProducts;
+  const queryCategories = useQuery(api.categories.listAll);
+  const dbCategories = queryCategories ?? initialCategories;
   const itemsPerPage = 6;
 
   // Reset pagination if user changes filters

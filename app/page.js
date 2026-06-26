@@ -5,9 +5,13 @@ import ValueProp from '@/components/marketing/ValueProp';
 import BentoFeatures from '@/components/marketing/BentoFeatures';
 import Services from '@/components/marketing/Services';
 import ScrollReveal from '@/components/ui/ScrollReveal';
+import { fetchQuery } from "convex/nextjs";
+import { api } from "@/convex/_generated/api";
 
+export default async function Home() {
+  const initialProducts = await fetchQuery(api.products.listActive);
+  const initialCategories = await fetchQuery(api.categories.listAll);
 
-export default function Home() {
   return (
     <>
       <ScrollReveal />
@@ -17,7 +21,7 @@ export default function Home() {
         <Ticker />
         
         {/* Core Store Grid */}
-        <ProductGrid />
+        <ProductGrid initialProducts={initialProducts} initialCategories={initialCategories} />
 
         {/* Custom Website Order + Contact */}
         <Services />
