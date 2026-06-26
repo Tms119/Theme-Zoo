@@ -221,7 +221,7 @@ export default function ProductGrid() {
               ref={scrollRef}
               onScroll={handleScroll}
               className="filter-container scrollable-filter" 
-              style={{ margin: 0, display: 'flex', gap: '0.5rem', flexWrap: 'nowrap', paddingRight: '3rem' }}
+              style={{ margin: 0, display: 'flex', gap: '0.5rem', paddingRight: '3rem' }}
             >
             {[{ id: 'all', label: 'All Resources' }, ...(dbCategories || []).map(c => ({ id: c.slug, label: c.name }))].map(pill => (
               <button 
@@ -248,7 +248,7 @@ export default function ProductGrid() {
             </div>
             
             {/* Right edge fade indicator to suggest scrollability on mobile */}
-            <div style={{
+            <div className="scrollable-fade" style={{
               position: 'absolute',
               top: 0,
               right: 0,
@@ -261,7 +261,7 @@ export default function ProductGrid() {
             }} />
             
             {/* Scroll Progress Bar */}
-            <div style={{ height: '2px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', width: '100%', marginTop: '0.75rem', overflow: 'hidden' }}>
+            <div className="scrollable-progress-track" style={{ height: '2px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', width: '100%', marginTop: '0.75rem', overflow: 'hidden' }}>
               <div style={{ height: '100%', width: `${scrollProgress}%`, background: 'var(--primary)', transition: 'width 0.1s ease-out' }}></div>
             </div>
           </div>

@@ -2217,6 +2217,20 @@ body {
 .scrollable-filter::-webkit-scrollbar { display: none; }
 .scrollable-filter { -ms-overflow-style: none; scrollbar-width: none; overflow-x: auto; flex-wrap: nowrap; padding-bottom: 0.5rem; }
 
+@media (min-width: 768px) {
+  .scrollable-filter {
+    flex-wrap: wrap !important;
+    overflow-x: visible !important;
+    padding-right: 0 !important;
+  }
+  .scrollable-progress-track {
+    display: none !important;
+  }
+  .scrollable-fade {
+    display: none !important;
+  }
+}
+
 /* Global Select Option Styling Fix */
 select option {
   background-color: #0a0a0f !important;
