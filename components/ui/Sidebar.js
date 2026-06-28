@@ -34,7 +34,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
       {/* Logo */}
       <div className="sidebar-logo" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ display: 'flex', alignItems: 'center' }}>
-          <img src="/themezoo_logo.png" alt="Themes Zoo Logo" style={{ height: '32px', width: 'auto' }} />
+          <img src="/themezoo_logo.png" alt="Themes Zoo Logo" className="brand-logo-img" />
         </span>
         {/* Mobile Close Button */}
         {isOpen && (
