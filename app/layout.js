@@ -90,7 +90,7 @@ export default function RootLayout({ children }) {
     "@type": "Organization",
     "name": "Themes Zoo",
     "url": "https://www.themeszoo.com",
-    "logo": "https://www.themeszoo.com/themezoo_logo.png",
+    "logo": "https://www.themeszoo.com/og-image.jpg",
     "description": "Premium website templates and digital marketplace",
     "sameAs": [
       "https://twitter.com/themeszoo"
