@@ -72,9 +72,8 @@ export default function Footer() {
           {/* Left Side: Brand */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
-              <span style={{ fontSize: '1.1rem', fontWeight: 900, fontFamily: 'var(--font-display)', display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-main)' }}>
-                <LayoutGrid size={18} style={{ color: 'var(--primary)' }} />
-                THEMES ZOO
+              <span style={{ display: 'flex', alignItems: 'center' }}>
+                <img src="/themezoo_logo.png" alt="Themes Zoo Logo" style={{ height: '32px', width: 'auto' }} />
               </span>
             </Link>
           </div>
