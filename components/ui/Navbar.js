@@ -61,8 +61,7 @@ export default function Navbar() {
       >
         <div className="container navbar-inner">
           <Link href="/" className="logo">
-            <LayoutGrid size={24} strokeWidth={2.5} />
-            Themes<span>Zoo</span>
+            <img src="/themezoologo.svg" alt="Themes Zoo Logo" className="brand-logo-img" />
           </Link>
           
           <ul className="nav-links">

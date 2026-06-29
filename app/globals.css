@@ -2239,3 +2239,15 @@ select option {
 
 
 @keyframes bounceRight { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(3px); } }
+
+.brand-logo-img {
+  height: 28px;
+  width: auto;
+  transition: height 0.3s ease;
+}
+
+@media (min-width: 1024px) {
+  .brand-logo-img {
+    height: 36px;
+  }
+}
