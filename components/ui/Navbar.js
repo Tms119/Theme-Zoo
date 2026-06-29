@@ -61,7 +61,7 @@ export default function Navbar() {
       >
         <div className="container navbar-inner">
           <Link href="/" className="logo">
-            <img src="/themezoologo.svg" alt="Themes Zoo Logo" className="brand-logo-img" />
+            <img src="/themezoologo.png" alt="Themes Zoo Logo" className="brand-logo-img" />
           </Link>
           
           <ul className="nav-links">

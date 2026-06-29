@@ -88,7 +88,7 @@ export default function AdminLayout({ children }) {
         <div className="admin-header-container">
           <div className="admin-header-left">
             <Link href="/admin" className="admin-logo" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <img src="/themezoologo.svg" alt="Themes Zoo Logo" className="brand-logo-img" />
+              <img src="/themezoologo.png" alt="Themes Zoo Logo" className="brand-logo-img" />
               <span className="admin-badge">ADMIN</span>
             </Link>
           </div>

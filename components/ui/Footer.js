@@ -73,7 +73,7 @@ export default function Footer() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
               <span style={{ display: 'flex', alignItems: 'center' }}>
-                <img src="/themezoologo.svg" alt="Themes Zoo Logo" className="brand-logo-img" />
+                <img src="/themezoologo.png" alt="Themes Zoo Logo" className="brand-logo-img" />
               </span>
             </Link>
           </div>
