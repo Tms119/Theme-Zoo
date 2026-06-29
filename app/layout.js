@@ -78,7 +78,6 @@ export const metadata = {
     },
   },
   icons: {
-    icon: "/favicon.ico",
     apple: "/og-image.jpg",
   },
 };
